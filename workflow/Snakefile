@@ -1,4 +1,190 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
+# Main entrypoint of the workflow.
+# Please follow the best practices:
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+# in particular regarding the standardized folder structure mentioned there.
+# Lese die sample.tsv-Datei ein und speichere die Daten in einer Liste von Tupeln
+
+
+configfile: "config/config.yaml"
+
+
+include: "rules/get_data.smk"
+
+
+def read_sample_tsv(sample_tsv_path):
+    samples = {}
+    with open(sample_tsv_path, "r") as file:
+        next(file)
+        for line in file:
+            name, path, sequencer = line.strip().split("\t")
+            samples[name] = (path, sequencer)
+    return samples
+
+
+scattergather:
+    split_candidates=config["scatter_items"],
+
+
+sample_tsv_path = config["sample_path"]
+samples = read_sample_tsv(sample_tsv_path)
+
+
+chromosome_conf = config["sample"]
+
+
+rule all:
+    input:
+        alignments=expand("results/{sample}/calls.vcf", sample=list(samples.keys())),
+
+
+rule find_candidates:
+    input:
+        "resources/genome.fasta",
+    output:
+        "resources/candidates.bcf",
+    log:
+        "logs/find_candidates.log",
+    conda:
+        "envs/varlociraptor.yaml"
+    params:
+        varlo_path=config["varlo_path"],
+        pipeline_path=config["pipeline_path"],
+    shell:
+        """ 
+        cd {params.varlo_path}
+        cargo run -- methylation-candidates {params.pipeline_path}{input} {params.pipeline_path}{output}
+        """
+
+
+rule split_candidates:
+    input:
+        "resources/candidates.bcf",
+    output:
+        scatter.split_candidates("resources/candidates_{scatteritem}.bcf"),
+    log:
+        "logs/split_candidates.log",
+    conda:
+        "envs/rbt.yaml"
+    shell:
+        "rbt vcf-split {input} {output}"
+
+
+rule compute_meth_observations:
+    input:
+        genome="resources/genome.fasta",
+        genomeIndex="resources/genome.fasta.fai",
+        alignments=expand(
+            "resources/alignments/{sample}.bam", sample=list(samples.keys())
+        ),
+        alignments_index=expand(
+            "resources/alignments/{sample}.bam.bai", sample=list(samples.keys())
+        ),
+        candidates="resources/candidates_{scatteritem}.bcf",
+    output:
+        "results/{sample}/normal_{scatteritem}.bcf",
+    log:
+        "logs/compute_meth_observations_{sample}_{scatteritem}.log",
+    conda:
+        "envs/varlociraptor.yaml"
+    params:
+        varlo_path=config["varlo_path"],
+        pipeline_path=config["pipeline_path"],
+        sequencer=lambda wildcards: samples[wildcards.sample][1],
+    shell:
+        """ 
+        cd {params.varlo_path}
+        cargo run --release -- preprocess variants {params.pipeline_path}{input.genome} --candidates {params.pipeline_path}{input.candidates} --bam {params.pipeline_path}{input.alignments} --read-type $PLATFORM > {params.pipeline_path}{output}
+        """
+
+
+rule call_methylation:
+    input:
+        preprocess_obs="results/{sample}/normal_{scatteritem}.bcf",
+        scenario="resources/scenario.yaml",
+    output:
+        "results/{sample}/calls_{scatteritem}.bcf",
+    log:
+        "logs/call_methylation_{sample}_{scatteritem}.log",
+    conda:
+        "envs/varlociraptor.yaml"
+    params:
+        varlo_path=config["varlo_path"],
+        pipeline_path=config["pipeline_path"],
+    shell:
+        """ 
+        cd {params.varlo_path}
+        cargo run --release -- call variants --omit-strand-bias generic --scenario {params.pipeline_path}{input.scenario} --obs normal={params.pipeline_path}{input.preprocess_obs} > {params.pipeline_path}{output}
+        """
+
+
+# TODO: Reactivate, right now it deletes too much data
+rule filter_calls:
+    input:
+        "results/{sample}/calls_{scatteritem}.bcf",
+    output:
+        "results/{sample}/calls_{scatteritem}.filtered.bcf",
+    log:
+        "logs/filter_calls_{sample}_{scatteritem}.log",
+    conda:
+        "envs/varlociraptor.yaml"
+    params:
+        varlo_path=config["varlo_path"],
+        pipeline_path=config["pipeline_path"],
+        event="PRESENT",
+    shell:
+        """
+        cd {params.varlo_path}
+        cargo run --release -- filter-calls control-fdr --mode local-smart {params.pipeline_path}{input} --events {params.event} --fdr 0.01 > {params.pipeline_path}{output}
+        """
+
+
+rule calls_to_vcf:
+    input:
+        "results/{sample}/calls_{scatteritem}.bcf",
+    output:
+        "results/{sample}/calls_{scatteritem}.vcf",
+    conda:
+        "envs/samtools.yaml"
+    log:
+        "logs/convert_to_vcf_{sample}_{scatteritem}.log",
+    threads: 10
+    shell:
+        """
+        bcftools view --threads {threads} {input} -o {output}
+        """
+
+
+rule gather_calls:
+    input:
+        gather.split_candidates("results/{{sample}}/calls_{scatteritem}.vcf"),
+    output:
+        "results/{sample}/calls.vcf",
+    log:
+        "logs/gather_calls_{sample}.log",
+    conda:
+        "envs/cat.yaml"
+    shell:
+        "cat {input} > {output}"
+
+
+# rule plot_results:
+#     input:
+#         bedGraph="results/{sample}/alignments_CpG.combined.bed",
+#         calls="results/{sample}/calls.vcf",
+#         true_meth=expand(
+#             "resources/bed_avg_{chromosome}.bedGraph",
+#             chromosome=chromosome_conf["chromosome"],
+#         ),
+#     output:
+#         rt="results/{sample}/scatter_plot_rt.png",
+#         rv="results/{sample}/scatter_plot_rv.png",
+#         tv="results/{sample}/scatter_plot_tv.png",
+#         dist_rt="results/{sample}/scatter_plot_rt_distances.png",
+#         dist_rv="results/{sample}/scatter_plot_rv_distances.png",
+#         dist_tv="results/{sample}/scatter_plot_tv_distances.png",
+#     conda:
+#         "envs/plot.yaml"
+#     log:
+#         "logs/plot_results_{sample}.log",
+#     script:
+#         "scripts/scatter_plot.py"

@@ -1,0 +1,16 @@
+
+# https://github.com/varlociraptor/varlociraptor-methylation-evaluation
+
+sample:
+  species: "homo_sapiens"
+  datatype: "dna"
+  build: "GRCh38"
+  release: "110"
+  chromosome: "21"
+
+scatter_items: 20
+
+base_dir: "/home/adrian//Documents/Promotion/"
+varlo_path: "/home/adrian//Documents/Promotion/varlociraptor/"
+pipeline_path: "/home/adrian/Documents/Promotion/data_analysis/snakemake-workflow-template"
+sample_path: "/home/adrian/Documents/Promotion/data_analysis/snakemake-workflow-template/resources/sample.tsv"
