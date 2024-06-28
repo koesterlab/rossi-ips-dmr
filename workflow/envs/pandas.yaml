@@ -1,0 +1,6 @@
+name: datavzrd_env
+channels:
+  - conda-forge
+dependencies:
+  - pandas=2.2.2
+  - numpy=1.26.4

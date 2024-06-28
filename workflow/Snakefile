@@ -9,6 +9,7 @@ configfile: "config/config.yaml"
 
 
 include: "rules/get_data.smk"
+include: "rules/dmr_calling.smk"
 
 
 def read_sample_tsv(sample_tsv_path):
@@ -35,6 +36,30 @@ chromosome_conf = config["sample"]
 rule all:
     input:
         alignments=expand("results/{sample}/calls.vcf", sample=list(samples.keys())),
+        dmr_plots=expand(
+            "results/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
+            group2=[
+                sample for sample in samples.keys() if sample != config["ref_sample"]
+            ],
+        ),
+        pval_plots=expand(
+            "results/dmr_calls/{group2}/plots/pvals.png",
+            group2=[
+                sample for sample in samples.keys() if sample != config["ref_sample"]
+            ],
+        ),
+        datavzrd=expand(
+            "results/datavzrd-report/{group2}",
+            group2=[
+                sample for sample in samples.keys() if sample != config["ref_sample"]
+            ],
+        ),
+        # regulations=expand(
+        #     "results/dmr_calls/{group2}_annotated_regulations.tsv",
+        #     group2=[
+        #         sample for sample in samples.keys() if sample != config["ref_sample"]
+        #     ],
+        # ),
 
 
 rule find_candidates:
@@ -73,15 +98,15 @@ rule compute_meth_observations:
     input:
         genome="resources/genome.fasta",
         genomeIndex="resources/genome.fasta.fai",
-        alignments=expand(
-            "resources/alignments/{sample}.bam", sample=list(samples.keys())
-        ),
-        alignments_index=expand(
-            "resources/alignments/{sample}.bam.bai", sample=list(samples.keys())
-        ),
+        # alignments="resources/alignments/BC04-ref-sorted_debug.bam",
+        alignments="resources/alignments/{sample}.bam",
+        # alignments_index="resources/alignments/BC04-ref-sorted_debug.bam.bai",
+        alignments_index="resources/alignments/{sample}.bam.bai",
         candidates="resources/candidates_{scatteritem}.bcf",
+        # candidates="resources/candidates_debug_{scatteritem}.bcf",
     output:
         "results/{sample}/normal_{scatteritem}.bcf",
+        # "results/normal_{scatteritem}.bcf",
     log:
         "logs/compute_meth_observations_{sample}_{scatteritem}.log",
     conda:
@@ -90,10 +115,11 @@ rule compute_meth_observations:
         varlo_path=config["varlo_path"],
         pipeline_path=config["pipeline_path"],
         sequencer=lambda wildcards: samples[wildcards.sample][1],
+        # sequencer="Nanopore",
     shell:
         """ 
         cd {params.varlo_path}
-        cargo run --release -- preprocess variants {params.pipeline_path}{input.genome} --candidates {params.pipeline_path}{input.candidates} --bam {params.pipeline_path}{input.alignments} --read-type $PLATFORM > {params.pipeline_path}{output}
+        cargo run --release -- preprocess variants {params.pipeline_path}{input.genome} --candidates {params.pipeline_path}{input.candidates} --bam {params.pipeline_path}{input.alignments} --read-type {params.sequencer} > {params.pipeline_path}{output}
         """
 
 
@@ -114,27 +140,6 @@ rule call_methylation:
         """ 
         cd {params.varlo_path}
         cargo run --release -- call variants --omit-strand-bias generic --scenario {params.pipeline_path}{input.scenario} --obs normal={params.pipeline_path}{input.preprocess_obs} > {params.pipeline_path}{output}
-        """
-
-
-# TODO: Reactivate, right now it deletes too much data
-rule filter_calls:
-    input:
-        "results/{sample}/calls_{scatteritem}.bcf",
-    output:
-        "results/{sample}/calls_{scatteritem}.filtered.bcf",
-    log:
-        "logs/filter_calls_{sample}_{scatteritem}.log",
-    conda:
-        "envs/varlociraptor.yaml"
-    params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
-        event="PRESENT",
-    shell:
-        """
-        cd {params.varlo_path}
-        cargo run --release -- filter-calls control-fdr --mode local-smart {params.pipeline_path}{input} --events {params.event} --fdr 0.01 > {params.pipeline_path}{output}
         """
 
 
@@ -167,24 +172,22 @@ rule gather_calls:
         "cat {input} > {output}"
 
 
-# rule plot_results:
-#     input:
-#         bedGraph="results/{sample}/alignments_CpG.combined.bed",
-#         calls="results/{sample}/calls.vcf",
-#         true_meth=expand(
-#             "resources/bed_avg_{chromosome}.bedGraph",
-#             chromosome=chromosome_conf["chromosome"],
-#         ),
-#     output:
-#         rt="results/{sample}/scatter_plot_rt.png",
-#         rv="results/{sample}/scatter_plot_rv.png",
-#         tv="results/{sample}/scatter_plot_tv.png",
-#         dist_rt="results/{sample}/scatter_plot_rt_distances.png",
-#         dist_rv="results/{sample}/scatter_plot_rv_distances.png",
-#         dist_tv="results/{sample}/scatter_plot_tv_distances.png",
-#     conda:
-#         "envs/plot.yaml"
-#     log:
-#         "logs/plot_results_{sample}.log",
-#     script:
-#         "scripts/scatter_plot.py"
+rule plot_results:
+    input:
+        tool="results/BC02-ref-sorted/calls_shortened.vcf",
+        true_meth=expand(
+            "results/{base_experiment}/calls_shortened.vcf",
+            base_experiment=config["ref_sample"],
+        ),
+    output:
+        # html="results/plots/html.html",
+        png="results/plots/png.png",
+        tool_dist="results/plots/dist.png",
+    conda:
+        "envs/plot.yaml"
+    log:
+        "logs/plot_results.log",
+    # params:
+    #     cov_bins=config["cov_bins"],
+    script:
+        "scripts/scatter_plot.py"
