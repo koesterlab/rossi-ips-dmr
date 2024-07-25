@@ -59,7 +59,7 @@ df['absolute_signed_pi_val'] = abs(-np.log10(df['p(MWU)'])
                                    * df['mean_methylation_difference'])
 
 # Sortierung der Tabelle aufsteigend nach der neuen Spalte
-df = df.sort_values(by='absolute_signed_pi_val', ascending=True)
+df = df.sort_values(by='absolute_signed_pi_val', ascending=False)
 
 
 df = df.dropna(axis=1, how='all')
