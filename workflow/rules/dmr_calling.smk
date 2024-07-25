@@ -171,7 +171,7 @@ rule postprocess_annotation:
 
 rule datavzrd:
     input:
-        config="resources/datavzrd.yaml",
+        config=workflow.source_path("../resources/datavzrd.yaml"),
         genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/annotated_complete.tsv",
         regulations="results/dmr_calls/{group2}/regulations/annotated_complete.tsv",
     output:
