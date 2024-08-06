@@ -14,9 +14,11 @@ container: "docker://continuumio/miniconda3"
 configfile: "config/config.yaml"
 
 
-include: "rules/get_data.smk"
+include: "rules/common.smk"
 include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
+include: "rules/get_data.smk"
+include: "rules/methylation_calling.smk"
 
 
 def read_sample_tsv(sample_tsv_path):
@@ -27,10 +29,6 @@ def read_sample_tsv(sample_tsv_path):
             name, path, sequencer = line.strip().split("\t")
             samples[name] = (path, sequencer)
     return samples
-
-
-scattergather:
-    split_candidates=config["scatter_items"],
 
 
 sample_tsv_path = config["sample_path"]
@@ -62,174 +60,4 @@ rule modified_all:
     default_target: True
     input:
         # rules.all.input,
-        "results/dmr_calls/heatmap.png",
-        alignments=expand("results/{sample}/calls.vcf", sample=list(samples.keys())),
-        dmr_plots=expand(
-            "results/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
-            group2=[
-                sample for sample in samples.keys() if sample != config["ref_sample"]
-            ],
-        ),
-        pval_plots=expand(
-            "results/dmr_calls/{group2}/plots/pvals.png",
-            group2=[
-                sample for sample in samples.keys() if sample != config["ref_sample"]
-            ],
-        ),
-        datavzrd=expand(
-            "results/datavzrd-report/{group2}",
-            group2=[
-                sample for sample in samples.keys() if sample != config["ref_sample"]
-            ],
-        ),
-
-
-rule find_candidates:
-    input:
-        "resources/genome.fasta",
-    output:
-        "resources/candidates.bcf",
-    log:
-        "logs/find_candidates.log",
-    conda:
-        "envs/varlociraptor.yaml"
-    params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
-    shell:
-        """ 
-        cd {params.varlo_path}
-        cargo run -- methylation-candidates {params.pipeline_path}{input} {params.pipeline_path}{output}
-        """
-
-
-rule split_candidates:
-    input:
-        "resources/candidates.bcf",
-    output:
-        scatter.split_candidates("resources/candidates_{scatteritem}.bcf"),
-    log:
-        "logs/split_candidates.log",
-    conda:
-        "envs/rbt.yaml"
-    shell:
-        "rbt vcf-split {input} {output}"
-
-
-rule compute_meth_observations:
-    input:
-        genome="resources/genome.fasta",
-        genomeIndex="resources/genome.fasta.fai",
-        # alignments="resources/alignments/BC04-ref-sorted_debug.bam",
-        alignments="resources/alignments/{sample}.bam",
-        # alignments_index="resources/alignments/BC04-ref-sorted_debug.bam.bai",
-        alignments_index="resources/alignments/{sample}.bam.bai",
-        candidates="resources/candidates_{scatteritem}.bcf",
-        # candidates="resources/candidates_debug_{scatteritem}.bcf",
-    output:
-        "results/{sample}/normal_{scatteritem}.bcf",
-        # "results/normal_{scatteritem}.bcf",
-    log:
-        "logs/compute_meth_observations_{sample}_{scatteritem}.log",
-    conda:
-        "envs/varlociraptor.yaml"
-    params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
-        sequencer=lambda wildcards: samples[wildcards.sample][1],
-        # sequencer="Nanopore",
-    shell:
-        """ 
-        cd {params.varlo_path}
-        cargo run --release -- preprocess variants {params.pipeline_path}{input.genome} --candidates {params.pipeline_path}{input.candidates} --bam {params.pipeline_path}{input.alignments} --read-type {params.sequencer} > {params.pipeline_path}{output}
-        """
-
-
-rule call_methylation:
-    input:
-        preprocess_obs="results/{sample}/normal_{scatteritem}.bcf",
-        scenario="resources/scenario.yaml",
-    output:
-        "results/{sample}/calls_{scatteritem}.bcf",
-    log:
-        "logs/call_methylation_{sample}_{scatteritem}.log",
-    conda:
-        "envs/varlociraptor.yaml"
-    params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
-    shell:
-        """ 
-        cd {params.varlo_path}
-        cargo run --release -- call variants --omit-strand-bias generic --scenario {params.pipeline_path}{input.scenario} --obs normal={params.pipeline_path}{input.preprocess_obs} > {params.pipeline_path}{output}
-        """
-
-
-rule calls_to_vcf:
-    input:
-        "results/{sample}/calls_{scatteritem}.bcf",
-    output:
-        "results/{sample}/calls_{scatteritem}.vcf",
-    conda:
-        "envs/samtools.yaml"
-    log:
-        "logs/convert_to_vcf_{sample}_{scatteritem}.log",
-    threads: 10
-    shell:
-        """
-        bcftools view --threads {threads} {input} -o {output}
-        """
-
-
-rule gather_calls:
-    input:
-        gather.split_candidates("results/{{sample}}/calls_{scatteritem}.vcf"),
-    output:
-        "results/{sample}/calls.vcf",
-    log:
-        "logs/gather_calls_{sample}.log",
-    conda:
-        "envs/cat.yaml"
-    shell:
-        "cat {input} > {output}"
-
-
-rule plot_results:
-    input:
-        tool="results/BC02-ref-sorted/calls_shortened.vcf",
-        true_meth=expand(
-            "results/{base_experiment}/calls_shortened.vcf",
-            base_experiment=config["ref_sample"],
-        ),
-    output:
-        # html="results/plots/html.html",
-        png="results/plots/png.png",
-        tool_dist="results/plots/dist.png",
-    conda:
-        "envs/plot.yaml"
-    log:
-        "logs/plot_results.log",
-    # params:
-    #     cov_bins=config["cov_bins"],
-    script:
-        "scripts/scatter_plot.py"
-
-
-# module enrichment:
-#     snakefile:
-#         # github(
-#         #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-#         #     path="workflow/Snakefile",
-#         #     # tag="v2.5.4",
-#         #     branch="locotact_p18",
-#         # )
-#         # "/homes/johannes/scms/rna-seq-kallisto-sleuth/workflow/Snakefile"
-#         "/home/adrian/Documents/Promotion/locotact_stuff/enrichment/workflow/Snakefile"
-#     config:
-#         config
-# # use all rules from https://github.com/snakemake-workflows/rna-seq-kallisto-sleuth
-# use rule * from enrichment
-# rule modified_all:
-#     default_target: True
-#     input:
-#         rules.all.input,
+        all_input,
