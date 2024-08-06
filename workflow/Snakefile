@@ -3,6 +3,12 @@
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
 # in particular regarding the standardized folder structure mentioned there.
 # Lese die sample.tsv-Datei ein und speichere die Daten in einer Liste von Tupeln
+from snakemake.utils import min_version
+
+min_version("8.13.0")
+
+
+container: "docker://continuumio/miniconda3"
 
 
 configfile: "config/config.yaml"
@@ -31,11 +37,33 @@ sample_tsv_path = config["sample_path"]
 samples = read_sample_tsv(sample_tsv_path)
 
 
-chromosome_conf = config["sample"]
+chromosome_conf = config["resources"]["ref"]
 
 
-rule all:
+# declare https://github.com/snakemake-workflows/rna-seq-kallisto-sleuth as a module
+module enrichment:
+    snakefile:
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     # tag="v2.5.4",
+        #     branch="locotact_p18",
+        # )
+        # "/homes/johannes/scms/rna-seq-kallisto-sleuth/workflow/Snakefile"
+        "/home/adrian/Documents/Promotion/locotact_stuff/enrichment/workflow/Snakefile"
+    config:
+        config
+
+
+# use all rules from https://github.com/snakemake-workflows/rna-seq-kallisto-sleuth
+use rule * from enrichment
+
+
+rule modified_all:
+    default_target: True
     input:
+        # rules.all.input,
+        "results/dmr_calls/heatmap.png",
         alignments=expand("results/{sample}/calls.vcf", sample=list(samples.keys())),
         dmr_plots=expand(
             "results/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
@@ -55,12 +83,6 @@ rule all:
                 sample for sample in samples.keys() if sample != config["ref_sample"]
             ],
         ),
-        # regulations=expand(
-        #     "results/dmr_calls/{group2}_annotated_regulations.tsv",
-        #     group2=[
-        #         sample for sample in samples.keys() if sample != config["ref_sample"]
-        #     ],
-        # ),
 
 
 rule find_candidates:
@@ -192,3 +214,23 @@ rule plot_results:
     #     cov_bins=config["cov_bins"],
     script:
         "scripts/scatter_plot.py"
+
+
+# module enrichment:
+#     snakefile:
+#         # github(
+#         #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+#         #     path="workflow/Snakefile",
+#         #     # tag="v2.5.4",
+#         #     branch="locotact_p18",
+#         # )
+#         # "/homes/johannes/scms/rna-seq-kallisto-sleuth/workflow/Snakefile"
+#         "/home/adrian/Documents/Promotion/locotact_stuff/enrichment/workflow/Snakefile"
+#     config:
+#         config
+# # use all rules from https://github.com/snakemake-workflows/rna-seq-kallisto-sleuth
+# use rule * from enrichment
+# rule modified_all:
+#     default_target: True
+#     input:
+#         rules.all.input,

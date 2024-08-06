@@ -22,9 +22,9 @@ gr <- GRanges(seqnames = Rle(metilene$chr),
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 
 # print for debugging because not all the chromosomes are the same
-colnames(metilene) <- c("chr", "start", "end", "q_value", "mean_methylation_difference", "num_CpGs", "p_MWU", "p_2D_KS", "mean_g1", "mean_g2")
-print("")
-seqlevels(txdb)
+# colnames(metilene) <- c("chr", "start", "end", "q_value", "mean_methylation_difference", "num_CpGs", "p_MWU", "p_2D_KS", "mean_g1", "mean_g2")
+# print("")
+# seqlevels(txdb)
 
 chipseeker_output <- annotatePeak(gr, TxDb = txdb)
 chipseeker_output_df <- as.data.frame(chipseeker_output)

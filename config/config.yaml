@@ -1,12 +1,17 @@
 
 # https://github.com/varlociraptor/varlociraptor-methylation-evaluation
 
-sample:
-  species: "homo_sapiens"
-  datatype: "dna"
-  build: "GRCh38"
-  release: "110"
-  chromosome: "21"
+resources:
+  ref:
+    species: "homo_sapiens"
+    datatype: "dna"
+    build: "GRCh38"
+    release: "110"
+    chromosome: "21"
+  ontology:
+    # gene ontology to download, used e.g. in goatools
+    gene_ontology: "http://current.geneontology.org/ontology/go-basic.obo"
+
 
 scatter_items: 100
 
@@ -19,7 +24,47 @@ scatter_items: 100
 base_dir: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen"
 varlo_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/varlociraptor/"
 pipeline_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/"
-sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/resources/sample.tsv"
+# sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/resources/sample.tsv"
+sample_path: "/home/adrian/Documents/Promotion/data_analysis_jochen/compare_meth/resources/sample.tsv"
 
 ref_sample: "BC01-ref-sorted"
 ref_sample_number: "BC01"
+
+enrichment:
+  goatools:
+    # tool is only run if set to `true`
+    activate: true
+    fdr_genes: 0.05
+    fdr_go_terms: 0.05
+  fgsea:
+    gene_sets_file: "resources/gene_sets/dummy.gmt"
+    # tool is only run if set to `true`
+    activate: true
+    # if activated, you need to provide a GMT file with gene sets of interest
+    fdr_gene_set: 0.05
+    eps: 1.0e-50
+  spia:
+    # tool is only run if set to `true`
+    activate: true
+    # pathway database to use in SPIA, needs to be available for
+    # the species specified by resources -> ref -> species above
+    pathway_database: "reactome"
+    # OrgDB Genome wide annotation package (https://www.bioconductor.org/packages/release/BiocViews.html#___OrgDb) for the species under consideration. 
+    # Only required if you want to have a gene analysis for your pathways. Else NA
+    orgDb: org.Hs.eg.db
+
+
+meta_comparisons:
+  # comparison is only run if set to `true`
+  activate: true
+  # Define here the comparisons under interest
+  comparisons:
+    # Define any name for comparison. You can add as many comparisions as you want
+    model_X_vs_model_Y:
+      items:
+        # Define the two underlying models for the comparison. The models must be defined in the diffexp/models in the config
+        # items must be of form <arbitrary label>: <existing diffexp model from config> 
+        - X: model_X
+        - Y: model_Y
+      # Define label for datavzrd report
+      label: model X vs. model Y

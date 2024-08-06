@@ -1,4 +1,4 @@
-chromosome_conf = config["sample"]
+chromosome_conf = config["resources"]["ref"]
 
 
 rule get_genome:
