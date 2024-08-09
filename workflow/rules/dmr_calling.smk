@@ -112,79 +112,11 @@ rule plot_pvals:
         "../scripts/plot_pvals.py"
 
 
-rule download_genes_and_transcripts:
-    output:
-        "resources/genes_transcripts.gff3",
-    shell:
-        """
-        wget -O {output}.gz https://ftp.ensembl.org/pub/release-112/gff3/homo_sapiens/Homo_sapiens.GRCh38.112.gff3.gz &&
-        gzip -d {output}.gz
-        """
-
-
-rule download_regulations:
-    output:
-        "resources/regulations.gff3",
-    shell:
-        """
-        wget -O {output}.gz https://ftp.ensembl.org/pub/release-112/regulation/homo_sapiens/GRCh38/annotation/Homo_sapiens.GRCh38.regulatory_features.v112.gff3.gz
-        gzip -d {output}.gz
-        """
-
-
-rule annotate_dmrs:
-    input:
-        metilene="results/dmr_calls/{group2}/metilene_output.bed",
-        gene_annotation="resources/{comparison}.gff3",
-    output:
-        "results/dmr_calls/{group2}/{comparison}/annotated.tsv",
-    conda:
-        "../envs/bedtools.yaml"
-    shell:
-        """
-        bedtools intersect -a {input.metilene} -b {input.gene_annotation} -wa -wb > {output}
-        """
-
-
-rule add_header:
-    input:
-        "results/dmr_calls/{group2}/{comparison}/annotated.tsv",
-    output:
-        "results/dmr_calls/{group2}/{comparison}/annotated_header.tsv",
-    shell:
-        """
-        echo -e "chr\tstart_dmr\tend_dmr\tq-value\tmean_methylation_difference\tnumber_CpGs\tp(MWU)\tp(2DKS)\tmean_g1\tmean_g2\tseqif\tsource\ttype\tstart_feature\tend_feature\tscore\tstrand\tphase\tattributes" > {output}
-        cat {input} >> {output}
-        """
-
-
-rule postprocess_annotation:
-    input:
-        "results/dmr_calls/{group2}/{comparison}/annotated_header.tsv",
-    output:
-        "results/dmr_calls/{group2}/{comparison}/annotated_complete.tsv",
-    conda:
-        "../envs/pandas.yaml"
-    script:
-        "../scripts/postprocess_annotation.py"
-
-
-rule datavzrd:
-    input:
-        config=workflow.source_path("../resources/datavzrd.yaml"),
-        genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/annotated_complete.tsv",
-        regulations="results/dmr_calls/{group2}/regulations/annotated_complete.tsv",
-    output:
-        report(
-            directory("results/datavzrd-report/{group2}"),
-            htmlindex="index.html",
-            category="Annotated DMRs",
-            labels=lambda wildcards: {
-                "experiment 1": config["ref_sample"],
-                "experiment 2": wildcards.group2,
-            },
-        ),
-    params:
-        base_experiment=lambda wildcards: config["ref_sample"],
-    wrapper:
-        "v3.13.0/utils/datavzrd"
+# rule download_genes_and_transcripts:
+#     output:
+#         "resources/genes_transcripts.gff3",
+#     shell:
+#         """
+#         wget -O {output}.gz https://ftp.ensembl.org/pub/release-112/gff3/homo_sapiens/Homo_sapiens.GRCh38.112.gff3.gz &&
+#         gzip -d {output}.gz
+#         """

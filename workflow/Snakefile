@@ -19,6 +19,7 @@ include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
 include: "rules/get_data.smk"
 include: "rules/methylation_calling.smk"
+include: "rules/annotate_dmrs.smk"
 
 
 def read_sample_tsv(sample_tsv_path):

@@ -23,26 +23,9 @@ views:
           plot:
             heatmap:
               scale: ordinal
-              color-scheme: tableau20
-        p(MWU):
-          display-mode: hidden
-        p(2DKS):
-          display-mode: hidden
-        seqif:
-          display-mode: hidden
-        score:
-          display-mode: hidden
-        strand:
-          display-mode: hidden
-        phase:
-          display-mode: hidden
-        mean_g1:
-          display-mode: hidden
-        mean_g2:
-          display-mode: hidden             
-        number_CpGs:
-          display-mode: hidden          
-        q-value:
+              color-scheme: tableau20       
+        q_value:
+          label: q-value
           plot:
             heatmap:
               scale: linear
@@ -66,7 +49,7 @@ views:
                 - -1
                 - 0
                 - 1 
-        type:
+        annotation:
           plot:
             heatmap:
               scale: ordinal
@@ -76,35 +59,10 @@ views:
             heatmap:
               scale: ordinal
               color-scheme: tableau20
-        ID:
-          display-mode: hidden
-        biotype:
-          display-mode: hidden
-        tag:
-          display-mode: hidden
-        transcript_support_level:
-          display-mode: hidden
-        version:
-          display-mode: hidden
-        ccdsid:
-          display-mode: hidden
-        transcript_id:
-          display-mode: hidden
-        Parent:
-          display-mode: hidden
-        Name:
-          label: "feature"
+        transcriptID:
           link-to-url: 
             Ensembl:
               url: "http://www.ensembl.org/Homo_sapiens/Gene/Summary?g={transcript_id}"
-        source:
-          display-mode: detail
-        start_feature:
-          display-mode: detail
-        end_feature:
-          display-mode: detail
-        absolute_signed_pi_val:
-          display-mode: hidden
   regulations:
     dataset: regulations
     desc: |

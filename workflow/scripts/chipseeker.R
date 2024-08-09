@@ -28,6 +28,6 @@ chipseeker_output_df <- chipseeker_output_df %>%
   rename(chr = seqnames)
 output <- merge(chipseeker_output_df, metilene, by = c("chr", "start", "end"))
 output <- output %>%
-  dplyr::select(chr, start, end, mean_methylation_difference, annotation, transcriptId)
+  dplyr::select(chr, start, end, mean_methylation_difference, annotation, transcriptId, q_value)
 
 write.table(output, file = snakemake@output[['chipseeker']], sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
