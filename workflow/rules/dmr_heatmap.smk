@@ -11,7 +11,7 @@ rule create_heatmap:
         report(
             "results/dmr_calls/heatmaps/{type}.png",
             category="DMR plots",
-            subcatecory="heatmaps",
+            subcategory="heatmaps",
             labels=lambda wildcards: {
                 "experiment 1": config["ref_sample_number"],
                 "experiment 2": wildcards.sample,
