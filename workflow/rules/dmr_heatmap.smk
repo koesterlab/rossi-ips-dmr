@@ -15,6 +15,7 @@ rule create_heatmap:
             labels=lambda wildcards: {
                 "experiment 1": config["ref_sample_number"],
                 "experiment 2": wildcards.sample,
+                "genetic element": wildcards.type,
             },
         ),
     conda:
