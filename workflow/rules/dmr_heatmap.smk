@@ -8,7 +8,15 @@ rule create_heatmap:
             sample=["BC02", "BC03", "BC04"],
         ),
     output:
-        "results/dmr_calls/heatmaps/{type}.png",
+        report(
+            "results/dmr_calls/heatmaps/{type}.png",
+            category="DMR plots",
+            subcatecory="heatmaps",
+            labels=lambda wildcards: {
+                "experiment 1": config["ref_sample_number"],
+                "experiment 2": wildcards.sample,
+            },
+        ),
     conda:
         "../envs/plot.yaml"
     script:

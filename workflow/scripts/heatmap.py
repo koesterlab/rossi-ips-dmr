@@ -2,6 +2,7 @@ import pandas as pd
 import altair as alt
 import os
 from sklearn import cluster
+import seaborn as sns
 
 filename_to_name = {
     "distal_intergenic": "Distal Intergenic",
@@ -32,20 +33,6 @@ def aggregate_by_gene_region(df):
     )
     return df_grouped[["region", "annotation_type", "mean_methylation_difference"]]
 
-
-def cluster_data(df):
-    # Perform clustering
-    df_cluster = df.drop(["region", "annotation_type"], axis=1)
-    # 5 Cluster because: All same, 1&2, 2&3, 1&3, all different
-    # Or 2 Clusters because SSE is best there
-    k_means = cluster.KMeans(n_clusters=2)
-    k_means.fit(df_cluster)
-    labels = k_means.labels_
-    heatmap_data["cluster"] = labels
-    return df.sort_values("cluster")
-    # print(heatmap_data.to_string())
-
-
 input_files = snakemake.input
 output = snakemake.output[0]
 
@@ -66,50 +53,28 @@ heatmap_data = (
 heatmap_data = heatmap_data.fillna(0)
 
 
-heatmap_data = cluster_data(heatmap_data)
-
-# import matplotlib.pyplot as plt
-# numClusters = [1,2,3,4,5,6, 7, 8, 9, 10]
-# SSE = []
-# for k in numClusters:
-#     k_means = cluster.KMeans(n_clusters=k)
-#     k_means.fit(df_cluster)
-#     SSE.append(k_means.inertia_)
-
-# plt.plot(numClusters, SSE)
-# plt.xlabel('Number of Clusters')
-# plt.ylabel('SSE')
-# plt.show()
-
-
-# Convert to plotable form
-df_melted = heatmap_data.melt(
-    id_vars=["region", "annotation_type", "cluster"],
-    value_vars=["BC02", "BC03", "BC04"],
-    var_name="sample",
-    value_name="Methylation difference",
-)
-
 # Filter on annotation_type
 name = os.path.basename(output).replace(".png", "")
 annotation_type = filename_to_name[name]
-df_filtered = df_melted[df_melted["annotation_type"] == annotation_type]
+df_filtered = heatmap_data[heatmap_data["annotation_type"] == annotation_type]
+df_filtered = df_filtered[["BC02", "BC03", "BC04"]]
 
-# Create heatmap
-color_scale = alt.Scale(domain=[-1, 0, 1], range=["red", "white", "blue"])
-heatmap = (
-    alt.Chart(df_filtered)
-    .mark_rect()
-    .encode(
-        x=alt.X("sample:N", title="Samples"),
-        y=alt.Y("region:N", title="Generegions", axis=alt.Axis(labels=False)),
-        color=alt.Color(
-            "Methylation difference:Q",
-            scale=color_scale,
-            title="Methylation Difference",
-        ),
-    )
-    .properties(title=f"DMRs in {annotation_type}", width=800, height=600)
+# Create heatmap with seaborn
+heatmap = sns.clustermap(
+    df_filtered,
+    z_score=0,
+    cmap="vlag_r",
+    center=0,
+    row_cluster=False,
+    col_cluster=False,
 )
+heatmap.ax_heatmap.set_title(
+    f"DMRs between Samples and BC01 for annotation type {annotation_type}"
+)
+heatmap.ax_heatmap.set_xlabel("Samples")
+heatmap.ax_heatmap.set_ylabel("Generegions")
+heatmap.ax_heatmap.yaxis.set_label_position("left")
+heatmap.ax_heatmap.yaxis.set_ticks([])
 
-heatmap.save(output, format="png")
+
+heatmap.savefig(output, format="png")
