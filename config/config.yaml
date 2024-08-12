@@ -24,8 +24,8 @@ scatter_items: 100
 base_dir: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen"
 varlo_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/varlociraptor/"
 pipeline_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/"
-# sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/resources/sample.tsv"
-sample_path: "/home/adrian/Documents/Promotion/data_analysis_jochen/compare_meth/resources/sample.tsv"
+sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/resources/sample.tsv"
+# sample_path: "/home/adrian/Documents/Promotion/data_analysis_jochen/compare_meth/resources/sample.tsv"
 
 ref_sample: "BC01-ref-sorted"
 ref_sample_number: "BC01"

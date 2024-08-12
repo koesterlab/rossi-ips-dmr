@@ -54,12 +54,12 @@ views:
             heatmap:
               scale: ordinal
               color-scheme: tableau20
-        source:
-          plot:
-            heatmap:
-              scale: ordinal
-              color-scheme: tableau20
-        transcriptID:
+        # source:
+        #   plot:
+        #     heatmap:
+        #       scale: ordinal
+        #       color-scheme: tableau20
+        transcriptId:
           link-to-url: 
             Ensembl:
               url: "http://www.ensembl.org/Homo_sapiens/Gene/Summary?g={transcript_id}"

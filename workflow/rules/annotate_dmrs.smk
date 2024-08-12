@@ -14,7 +14,7 @@ rule annotate_regulations_dmrs:
         metilene="results/dmr_calls/{group2}/metilene_output.bed",
         gene_annotation="resources/ref/regulations.gff3",
     output:
-        "results/dmr_calls/{group2}/reculations/annotated.tsv",
+        "results/dmr_calls/{group2}/regulations/annotated.tsv",
     conda:
         "../envs/bedtools.yaml"
     shell:
@@ -25,9 +25,9 @@ rule annotate_regulations_dmrs:
 
 rule add_regulations_header:
     input:
-        "results/dmr_calls/{group2}/reculations/annotated.tsv",
+        "results/dmr_calls/{group2}/regulations/annotated.tsv",
     output:
-        "results/dmr_calls/{group2}/reculations/annotated_header.tsv",
+        "results/dmr_calls/{group2}/regulations/annotated_header.tsv",
     shell:
         """
         echo -e "chr\tstart_dmr\tend_dmr\tq-value\tmean_methylation_difference\tnumber_CpGs\tp(MWU)\tp(2DKS)\tmean_g1\tmean_g2\tseqif\tsource\ttype\tstart_feature\tend_feature\tscore\tstrand\tphase\tattributes" > {output}
@@ -80,9 +80,9 @@ rule chipseeker_annotate:
 
 rule postprocess_annotation:
     input:
-        "results/dmr_calls/{group2}/{comparison}/annotated_header.tsv",
+        "results/dmr_calls/{group2}/regulations/annotated_header.tsv",
     output:
-        "results/dmr_calls/{group2}/{comparison}/annotated_complete.tsv",
+        "results/dmr_calls/{group2}/regulations/annotated_complete.tsv",
     conda:
         "../envs/pandas.yaml"
     script:
@@ -92,7 +92,7 @@ rule postprocess_annotation:
 rule datavzrd:
     input:
         config=workflow.source_path("../resources/datavzrd.yaml"),
-        genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/annotated_complete.tsv",
+        genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/chipseeker_regions.tsv",
         regulations="results/dmr_calls/{group2}/regulations/annotated_complete.tsv",
     output:
         report(
