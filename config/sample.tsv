@@ -1,2 +1,5 @@
 name	path	sequencer
-name_of_experiment_1 path_of_data_1 Nanopore/Illumina/PacBio
+BC01-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC01-ref-sorted.bam	Nanopore
+BC02-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC02-ref-sorted.bam	Nanopore
+BC03-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC03-ref-sorted.bam	Nanopore
+BC04-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC04-ref-sorted.bam	Nanopore
