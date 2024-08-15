@@ -1,35 +1,26 @@
 
-# https://github.com/varlociraptor/varlociraptor-methylation-evaluation
-
 resources:
   ref:
     species: "homo_sapiens"
     datatype: "dna"
     build: "GRCh38"
-    release: "110"
+    release: "112"
     chromosome: "21"
   ontology:
     # gene ontology to download, used e.g. in goatools
     gene_ontology: "http://current.geneontology.org/ontology/go-basic.obo"
 
-
+#
 scatter_items: 100
 
-# base_dir: "/home/adrian//Documents/Promotion/"
-# varlo_path: "/home/adrian//Documents/Promotion/varlociraptor/"
-# pipeline_path: "/home/adrian/Documents/Promotion/data_analysis/snakemake-workflow-template"
-# sample_path: "/home/adrian/Documents/Promotion/data_analysis/snakemake-workflow-template/resources/sample.tsv"
+# Path of the sample file
+sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/config/sample.tsv"
 
-
-base_dir: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen"
-varlo_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/varlociraptor/"
-pipeline_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/"
-sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/resources/sample.tsv"
-# sample_path: "/home/adrian/Documents/Promotion/data_analysis_jochen/compare_meth/resources/sample.tsv"
-
+# Name of base experiment
 ref_sample: "BC01-ref-sorted"
 ref_sample_number: "BC01"
 
+# Not used right now
 enrichment:
   goatools:
     # tool is only run if set to `true`
@@ -53,7 +44,7 @@ enrichment:
     # Only required if you want to have a gene analysis for your pathways. Else NA
     orgDb: org.Hs.eg.db
 
-
+# Not used right now
 meta_comparisons:
   # comparison is only run if set to `true`
   activate: true

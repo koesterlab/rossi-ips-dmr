@@ -4,6 +4,6 @@ channels:
 dependencies:
   - bioconductor-genomicranges=1.54.1
   - bioconductor-chipseeker=1.38.0
+  - bioconductor-genomicfeatures=1.54.1
   - r-biocmanager=1.30.23
   - r-tidyverse=2.0.0
-  - bioconductor-genomicfeatures=1.54.1

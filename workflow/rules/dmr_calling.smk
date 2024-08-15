@@ -9,13 +9,12 @@ rule filter_calls:
     conda:
         "envs/varlociraptor.yaml"
     params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
         event="PRESENT",
     shell:
         """
+        PIPELINE_PATH=$(pwd)
         cd {params.varlo_path}
-        cargo run --release -- filter-calls control-fdr --mode local-smart {params.pipeline_path}{input} --events {params.event} --fdr 0.01 > {params.pipeline_path}{output}
+        cargo run --release -- filter-calls control-fdr --mode local-smart $PIPELINE_PATH/{input} --events {params.event} --fdr 0.01 > $PIPELINE_PATH/{output}
         """
 
 
@@ -80,7 +79,9 @@ rule plot_dmrs:
         "results/dmr_calls/{group2}/plots/dmr_qval.0.05.bedgraph",
         report(
             "results/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
+            caption="../report/metilene_plots.rst",
             category="DMR plots",
+            subcategory="Metilene plots",
             labels=lambda wildcards: {
                 "experiment 1": config["ref_sample"],
                 "experiment 2": wildcards.group2,
@@ -98,7 +99,8 @@ rule plot_dmrs:
         """
 
 
-rule plot_pvals:
+# Still included for debugging reason but not used right now
+rule _plot_pvals:
     input:
         met_out="results/dmr_calls/{group2}/metilene_output.bed",
     output:
@@ -110,13 +112,3 @@ rule plot_pvals:
         sample=lambda wildcards: {wildcards.group2.split("-")[0]},
     script:
         "../scripts/plot_pvals.py"
-
-
-# rule download_genes_and_transcripts:
-#     output:
-#         "resources/genes_transcripts.gff3",
-#     shell:
-#         """
-#         wget -O {output}.gz https://ftp.ensembl.org/pub/release-112/gff3/homo_sapiens/Homo_sapiens.GRCh38.112.gff3.gz &&
-#         gzip -d {output}.gz
-#         """

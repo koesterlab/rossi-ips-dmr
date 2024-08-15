@@ -1,1 +1,2 @@
-Differentially methylated region analysis!
+Pairwise Differentially methylated region (DMR) calling between a base experiment and any number of other experiments. The DMRs were found with `Metilene <http://legacy.bioinf.uni-leipzig.de/Software/metilene/>`_ and subsequently annotated with genetic and regulatory elements.
+For visualisation we use the standard plots of metilene, as well as a heatmap comparing the different DMRs between the experiments.

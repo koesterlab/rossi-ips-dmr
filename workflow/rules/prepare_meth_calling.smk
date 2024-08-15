@@ -1,4 +1,19 @@
-chromosome_conf = config["resources"]["ref"]
+rule download_varlociraptor:
+    output:
+        directory(
+            "resources/tools/varlociraptor",
+        ),
+    log:
+        "logs/download_varlociraptor.log",
+    shell:
+        """
+        PARENT_DIR=$(dirname {output})        
+        mkdir -p $PARENT_DIR        
+        cd $PARENT_DIR
+        git clone git@github.com:varlociraptor/varlociraptor.git varlociraptor
+        cd varlociraptor
+        git checkout methylation-paired-end
+        """
 
 
 rule get_genome:
@@ -25,11 +40,10 @@ rule genome_index:
         "logs/genome_index.log",
     conda:
         "../envs/samtools.yaml"
-    params:
-        pipeline_path=config["pipeline_path"],
     shell:
         """ 
-        samtools faidx {params.pipeline_path}{input}
+        PIPELINE_PATH=$(pwd)
+        samtools faidx $PIPELINE_PATH{input}
         """
 
 
@@ -42,10 +56,9 @@ rule aligned_downsampled_index:
         "logs/aligned_downsampled_index_{sample}.log",
     conda:
         "../envs/samtools.yaml"
-    params:
-        pipeline_path=config["pipeline_path"],
     threads: 10
     shell:
         """
-        samtools index -@ {threads} {params.pipeline_path}{input}
+        PIPELINE_PATH=$(pwd)
+        samtools index -@ {threads} $PIPELINE_PATH{input}
         """

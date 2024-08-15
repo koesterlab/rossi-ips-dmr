@@ -23,11 +23,19 @@ txnames <- readRDS(snakemake@input[["txnames"]])
 chipseeker_output <- annotatePeak(gr, TxDb = txdb)
 chipseeker_output_df <- as.data.frame(chipseeker_output)
 
-# Create filtered output
+# Postprocess output
 chipseeker_output_df <- chipseeker_output_df %>%
   rename(chr = seqnames)
-output <- merge(chipseeker_output_df, metilene, by = c("chr", "start", "end"))
-output <- output %>%
-  dplyr::select(chr, start, end, mean_methylation_difference, annotation, transcriptId, q_value)
+output <- merge(chipseeker_output_df, metilene, by = c("chr", "start", "end")) %>%
+  filter(q_value <= 0.25) %>%
+  mutate(
+    absolute_signed_pi_val = ifelse(q_value == 0, NaN, abs(-log10(q_value) * mean_methylation_difference))
+  ) %>%
+  arrange(desc(absolute_signed_pi_val)) %>%
+  rename(start_dmr = start) %>%
+  rename(end_dmr = end) %>%
+  dplyr::select(chr, start_dmr, end_dmr, mean_methylation_difference, annotation, transcriptId, q_value, absolute_signed_pi_val)
 
 write.table(output, file = snakemake@output[['chipseeker']], sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
+
+

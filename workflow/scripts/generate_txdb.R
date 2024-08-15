@@ -10,11 +10,7 @@ annotation_gtf <- snakemake@input[[1]]
 txdb <- makeTxDbFromGFF(annotation_gtf)
 
 saveDb(txdb, snakemake@output[["txdb"]])
-print("TXDB")
-print(txdb)
 gtf <- import(annotation_gtf, "gtf", colnames=c("transcript_id", "transcript_name"))
-print("GTF")
-print(gtf)
 txnames <- gtf$transcript_name
 names(txnames) <- gtf$transcript_id
 

@@ -6,27 +6,26 @@ scattergather:
 rule find_candidates:
     input:
         "resources/genome.fasta",
+        varlo_path="resources/ref/varlociraptor",
     output:
-        "resources/candidates.bcf",
+        "resources/candidates/candidates.bcf",
     log:
         "logs/find_candidates.log",
     conda:
         "../envs/varlociraptor.yaml"
-    params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
     shell:
         """ 
-        cd {params.varlo_path}
-        cargo run -- methylation-candidates {params.pipeline_path}{input} {params.pipeline_path}{output}
+        PIPELINE_PATH=$(pwd)
+        cd {input.varlo_path}
+        cargo run -- methylation-candidates $PIPELINE_PATH/{input} $PIPELINE_PATH/{output}
         """
 
 
 rule split_candidates:
     input:
-        "resources/candidates.bcf",
+        "resources/candidates/candidates.bcf",
     output:
-        scatter.split_candidates("resources/candidates_{scatteritem}.bcf"),
+        scatter.split_candidates("resources/candidates/candidates_{scatteritem}.bcf"),
     log:
         "logs/split_candidates.log",
     conda:
@@ -37,35 +36,31 @@ rule split_candidates:
 
 rule compute_meth_observations:
     input:
+        varlo_path="resources/ref/varlociraptor",
         genome="resources/genome.fasta",
         genomeIndex="resources/genome.fasta.fai",
-        # alignments="resources/alignments/BC04-ref-sorted_debug.bam",
         alignments="resources/alignments/{sample}.bam",
-        # alignments_index="resources/alignments/BC04-ref-sorted_debug.bam.bai",
         alignments_index="resources/alignments/{sample}.bam.bai",
-        candidates="resources/candidates_{scatteritem}.bcf",
-        # candidates="resources/candidates_debug_{scatteritem}.bcf",
+        candidates="resources/candidates/candidates_{scatteritem}.bcf",
     output:
         "results/{sample}/normal_{scatteritem}.bcf",
-        # "results/normal_{scatteritem}.bcf",
     log:
         "logs/compute_meth_observations_{sample}_{scatteritem}.log",
     conda:
         "../envs/varlociraptor.yaml"
     params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
         sequencer=lambda wildcards: samples[wildcards.sample][1],
-        # sequencer="Nanopore",
     shell:
         """ 
-        cd {params.varlo_path}
-        cargo run --release -- preprocess variants {params.pipeline_path}{input.genome} --candidates {params.pipeline_path}{input.candidates} --bam {params.pipeline_path}{input.alignments} --read-type {params.sequencer} > {params.pipeline_path}{output}
+        PIPELINE_PATH=$(pwd)
+        cd {input.varlo_path}
+        cargo run --release -- preprocess variants $PIPELINE_PATH{input.genome} --candidates $PIPELINE_PATH{input.candidates} --bam $PIPELINE_PATH{input.alignments} --read-type {params.sequencer} --max-depth 1000 > $PIPELINE_PATH{output}
         """
 
 
 rule call_methylation:
     input:
+        varlo_path="resources/ref/varlociraptor",
         preprocess_obs="results/{sample}/normal_{scatteritem}.bcf",
         scenario="resources/scenario.yaml",
     output:
@@ -74,13 +69,11 @@ rule call_methylation:
         "logs/call_methylation_{sample}_{scatteritem}.log",
     conda:
         "../envs/varlociraptor.yaml"
-    params:
-        varlo_path=config["varlo_path"],
-        pipeline_path=config["pipeline_path"],
     shell:
         """ 
-        cd {params.varlo_path}
-        cargo run --release -- call variants --omit-strand-bias generic --scenario {params.pipeline_path}{input.scenario} --obs normal={params.pipeline_path}{input.preprocess_obs} > {params.pipeline_path}{output}
+        PIPELINE_PATH
+        cd {input.varlo_path}
+        cargo run --release -- call variants --omit-strand-bias generic --scenario $PIPELINE_PATH{input.scenario} --obs normal=$PIPELINE_PATH{input.preprocess_obs} > $PIPELINE_PATH{output}
         """
 
 

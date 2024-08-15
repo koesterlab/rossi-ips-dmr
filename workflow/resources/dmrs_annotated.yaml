@@ -7,16 +7,17 @@ datasets:
   genes_transcripts:
     path: ?input.genes_transcripts
     separator: "\t"
-  regulations:
-    path: ?input.regulations
+  regulatory_elements:
+    path: ?input.regulatory_elements
     separator: "\t"
 default-view: genes_transcripts
 views:
   genes_transcripts:
     dataset: genes_transcripts
-    desc: |
-      Differentially methylated region between the two experiments under consideration  annotated with genes/transcripts.
-    page-size: 25
+    desc: ?f"Differentially methylated regions (DMRs) between the experiments {params.base_experiment} and {wildcards.group2}. The DMRs were annotated with genomic elements using chipseeker (https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html ).\n
+      The table is structured as follows; \n
+      The chr, start_dmr, and end_dmr columns give the exact position of the DMR. The mean_methylation_difference column shows the difference in methylation between the two experiments. The annotation and transcriptID columns show genetic elements, while the absolute_signed_pi_val is the absolute value of the signed version of the pi-value score of the mean methylation difference (as proposed by Xiao et al. 2014 https://pubmed.ncbi.nlm.nih.gov/22321699/ ). \n
+      The table is sorted in descending order by the absolute values of the signed versions of the pi-value score. Thus, values with small q-value but large methylation difference (and therefore values of importance) appear first."
     render-table:
       columns:
         chr:
@@ -54,19 +55,24 @@ views:
             heatmap:
               scale: ordinal
               color-scheme: tableau20
-        # source:
-        #   plot:
-        #     heatmap:
-        #       scale: ordinal
-        #       color-scheme: tableau20
+        absolute_signed_pi_val:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "white"
+                - "#6baed6"
         transcriptId:
           link-to-url: 
             Ensembl:
-              url: "http://www.ensembl.org/Homo_sapiens/Gene/Summary?g={transcript_id}"
-  regulations:
-    dataset: regulations
-    desc: |
-      Differentially methylated region between the two experiments under consideration annotated with genes/transcripts.
+              url: "http://www.ensembl.org/Homo_sapiens/Gene/Summary?g={transcriptId}"
+  regulatory_elements:
+    dataset: regulatory_elements
+    desc: ?f"Differentially methylated regions (DMRs) between the experiments {params.base_experiment} and {wildcards.group2}. The DMRs were annotated with genomic elements using chipseeker (https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html ).\n
+      The table is structured as follows; \n
+      The chr, start_dmr, and end_dmr columns give the exact position of the DMR. The mean_methylation_difference column shows the difference in methylation between the two experiments. The type, gene_name and gene_biotype columns show regulatory elements, while the absolute_signed_pi_val is the absolute value of the signed version of the pi-value score of the mean methylation difference (as proposed by Xiao et al. 2014 https://pubmed.ncbi.nlm.nih.gov/22321699/ ). \n
+      The table is sorted in descending order by the absolute values of the signed versions of the pi-value score. Thus, values with small q-value but large methylation difference (and therefore values of importance) appear first."
+
     page-size: 25
     render-table:
       columns:
@@ -120,7 +126,7 @@ views:
         type:
           link-to-url: 
             Ensembl:
-              url: "https://www.ensembl.org/Homo_sapiens/Regulation/Summary?fdb=funcgen;r=7:50781435-50784400;rf={ID}"
+              url: "https://www.ensembl.org/Homo_sapiens/regulatory_elements/Summary?fdb=funcgen;r=7:50781435-50784400;rf={ID}"
         source:
           plot:
             heatmap:
@@ -152,4 +158,9 @@ views:
               scale: ordinal
               color-scheme: tableau20
         absolute_signed_pi_val:
-          display-mode: hidden
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "white"
+                - "#6baed6"

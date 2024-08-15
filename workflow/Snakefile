@@ -20,26 +20,9 @@ configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
-include: "rules/get_data.smk"
+include: "rules/prepare_meth_calling.smk"
 include: "rules/methylation_calling.smk"
 include: "rules/annotate_dmrs.smk"
-
-
-def read_sample_tsv(sample_tsv_path):
-    samples = {}
-    with open(sample_tsv_path, "r") as file:
-        next(file)
-        for line in file:
-            name, path, sequencer = line.strip().split("\t")
-            samples[name] = (path, sequencer)
-    return samples
-
-
-sample_tsv_path = config["sample_path"]
-samples = read_sample_tsv(sample_tsv_path)
-
-
-chromosome_conf = config["resources"]["ref"]
 
 
 # declare https://github.com/Addimator/enrichment as a module

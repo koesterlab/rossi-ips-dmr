@@ -1,20 +1,24 @@
-
-rule download_regulations:
+rule download_regulatory_elements:
     output:
-        "resources/ref/regulations.gff3",
+        "resources/ref/regulatory_elements.gff3",
+    params:
+        species=chromosome_conf["species"],
+        species_cap=chromosome_conf["species"].capitalize(),
+        build=chromosome_conf["build"],
+        release=chromosome_conf["release"],
     shell:
         """
-        wget -O {output}.gz https://ftp.ensembl.org/pub/release-112/regulation/homo_sapiens/GRCh38/annotation/Homo_sapiens.GRCh38.regulatory_features.v112.gff3.gz
+        wget -O {output}.gz https://ftp.ensembl.org/pub/release-{params.release}/regulation/{params.species}/{params.build}/annotation/{params.species_cap}.{params.build}.regulatory_features.v{params.release}.gff3.gz
         gzip -d {output}.gz
         """
 
 
-rule annotate_regulations_dmrs:
+rule annotate_regulatory_elements:
     input:
         metilene="results/dmr_calls/{group2}/metilene_output.bed",
-        gene_annotation="resources/ref/regulations.gff3",
+        gene_annotation="resources/ref/regulatory_elements.gff3",
     output:
-        "results/dmr_calls/{group2}/regulations/annotated.tsv",
+        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
     conda:
         "../envs/bedtools.yaml"
     shell:
@@ -23,11 +27,11 @@ rule annotate_regulations_dmrs:
         """
 
 
-rule add_regulations_header:
+rule add_regulatory_elements_header:
     input:
-        "results/dmr_calls/{group2}/regulations/annotated.tsv",
+        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
     output:
-        "results/dmr_calls/{group2}/regulations/annotated_header.tsv",
+        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
     shell:
         """
         echo -e "chr\tstart_dmr\tend_dmr\tq-value\tmean_methylation_difference\tnumber_CpGs\tp(MWU)\tp(2DKS)\tmean_g1\tmean_g2\tseqif\tsource\ttype\tstart_feature\tend_feature\tscore\tstrand\tphase\tattributes" > {output}
@@ -35,13 +39,24 @@ rule add_regulations_header:
         """
 
 
-rule get_annotation:
+rule postprocess_regulatory_elements:
+    input:
+        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
+    output:
+        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
+    conda:
+        "../envs/python_standard.yaml"
+    script:
+        "../scripts/postprocess_regulatory_elements.py"
+
+
+rule get_gene_elements_annotation:
     output:
         "resources/ref/annotation.gtf.gz",
     params:
-        species=config_ref["species"],
-        build=config_ref["build"],
-        release=config_ref["release"],
+        species=chromosome_conf["species"],
+        build=chromosome_conf["build"],
+        release=chromosome_conf["release"],
     log:
         "logs/get_annotation.log",
     cache: "omit-software"  # save space and time with between workflow caching (see docs)
@@ -53,8 +68,8 @@ rule generate_txdb:
     input:
         "resources/ref/annotation.gtf.gz",
     output:
-        txdb="resources/txdb.db",
-        txnames="resources/txnames.tsv",
+        txdb="resources/ref/txdb.db",
+        txnames="resources/ref/txnames.tsv",
     log:
         "logs/generate_txdb.log",
     conda:
@@ -63,13 +78,13 @@ rule generate_txdb:
         "../scripts/generate_txdb.R"
 
 
-rule chipseeker_annotate:
+rule annotate_gene_elements:
     input:
         metilene="results/dmr_calls/{group2}/metilene_output.bed",
-        txdb="resources/txdb.db",
-        txnames="resources/txnames.tsv",
+        txdb="resources/ref/txdb.db",
+        txnames="resources/ref/txnames.tsv",
     output:
-        chipseeker="results/dmr_calls/{group2}/genes_transcripts/chipseeker_regions.tsv",
+        chipseeker="results/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
     log:
         "logs/chipseeker_annotate_{group2}.log",
     conda:
@@ -78,25 +93,15 @@ rule chipseeker_annotate:
         "../scripts/chipseeker.R"
 
 
-rule postprocess_annotation:
+rule datavzrd_annotations:
     input:
-        "results/dmr_calls/{group2}/regulations/annotated_header.tsv",
-    output:
-        "results/dmr_calls/{group2}/regulations/annotated_complete.tsv",
-    conda:
-        "../envs/pandas.yaml"
-    script:
-        "../scripts/postprocess_annotation.py"
-
-
-rule datavzrd:
-    input:
-        config=workflow.source_path("../resources/datavzrd.yaml"),
-        genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/chipseeker_regions.tsv",
-        regulations="results/dmr_calls/{group2}/regulations/annotated_complete.tsv",
+        config=workflow.source_path("../resources/dmrs_annotated.yaml"),
+        genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        regulatory_elements="results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
         report(
             directory("results/datavzrd-report/{group2}"),
+            caption="../report/annotations.rst",
             htmlindex="index.html",
             category="Annotated DMRs",
             labels=lambda wildcards: {

@@ -1,8 +1,5 @@
 import pandas as pd
-import altair as alt
 import os
-import numpy as np
-from sklearn import cluster
 import seaborn as sns
 
 # We need his to cluster huge data
@@ -36,23 +33,9 @@ def aggregate_by_gene_region(df):
     return df_grouped[["region", "annotation_type", "mean_methylation_difference"]]
 
 
-# def cluster_data(df):
-#     # Perform clustering
-#     df_cluster = df.drop(["region", "annotation_type"], axis=1)
-#     # 5 Cluster because: All same, 1&2, 2&3, 1&3, all different
-#     # Or 2 Clusters because SSE is best there
-#     k_means = cluster.KMeans(n_clusters=2)
-#     k_means.fit(df_cluster)
-#     labels = k_means.labels_
-#     heatmap_data["cluster"] = labels
-#     return df.sort_values("cluster")
-#     # print(heatmap_data.to_string())
-
-
 input_files = snakemake.input
 output = snakemake.output[0]
 
-# Merge single dfs to one df
 aggregated_data = [
     aggregate_by_gene_region(
         pd.read_csv(
@@ -61,6 +44,8 @@ aggregated_data = [
     )
     for file in input_files
 ]
+
+# Merge single dfs to one df
 all_regions = set(region for df in aggregated_data for region in df["region"])
 for idx, df in enumerate(aggregated_data):
     aggregated_data[idx] = df.rename(
@@ -72,10 +57,6 @@ heatmap_data = (
     .merge(aggregated_data[2], on=["region", "annotation_type"], how="outer")
 )
 heatmap_data = heatmap_data.fillna(0)
-
-
-# heatmap_data = cluster_data(heatmap_data)
-
 
 # Filter on annotation_type
 name = os.path.basename(output).replace(".png", "")
