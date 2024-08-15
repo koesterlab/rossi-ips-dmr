@@ -1,6 +1,7 @@
 results/**
 resources/**
 logs/**
+config/samples.tsv
 .snakemake
 .snakemake/**
 report.zip

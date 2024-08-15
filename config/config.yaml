@@ -14,7 +14,7 @@ resources:
 scatter_items: 100
 
 # Path of the sample file
-sample_path: "/projects/koesterlab/benchmark-methylation/data_analysis_jochen/compare_meth/config/sample.tsv"
+sample_path: "config/sample.tsv"
 
 # Name of base experiment
 ref_sample: "BC01-ref-sorted"

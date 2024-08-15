@@ -12,9 +12,8 @@ rule filter_calls:
         event="PRESENT",
     shell:
         """
-        PIPELINE_PATH=$(pwd)
         cd {params.varlo_path}
-        cargo run --release -- filter-calls control-fdr --mode local-smart $PIPELINE_PATH/{input} --events {params.event} --fdr 0.01 > $PIPELINE_PATH/{output}
+        cargo run --release -- filter-calls control-fdr --mode local-smart {input} --events {params.event} --fdr 0.01 > {output}
         """
 
 

@@ -42,8 +42,7 @@ rule genome_index:
         "../envs/samtools.yaml"
     shell:
         """ 
-        PIPELINE_PATH=$(pwd)
-        samtools faidx $PIPELINE_PATH{input}
+        samtools faidx {input}
         """
 
 
@@ -59,6 +58,5 @@ rule aligned_downsampled_index:
     threads: 10
     shell:
         """
-        PIPELINE_PATH=$(pwd)
-        samtools index -@ {threads} $PIPELINE_PATH{input}
+        samtools index -@ {threads} {input}
         """
