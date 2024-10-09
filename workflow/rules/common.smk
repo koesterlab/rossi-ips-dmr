@@ -15,6 +15,12 @@ def read_sample_tsv(sample_tsv_path):
 samples = read_sample_tsv(sample_tsv_path)
 
 
+def get_bioc_species_name():
+    first_letter = config["resources"]["ref"]["species"][0]
+    subspecies = config["resources"]["ref"]["species"].split("_")[1]
+    return first_letter + subspecies
+
+
 def all_input(wildcards):
     wanted_input = []
     wanted_input.extend(

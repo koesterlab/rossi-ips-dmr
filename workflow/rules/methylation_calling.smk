@@ -5,7 +5,7 @@ scattergather:
 
 rule find_candidates:
     input:
-        "resources/genome.fasta",
+        fasta="resources/genome.fasta",
         varlo_path="resources/tools/varlociraptor",
     output:
         "resources/candidates/candidates.bcf",
@@ -15,8 +15,9 @@ rule find_candidates:
         "../envs/varlociraptor.yaml"
     shell:
         """ 
+        PIPELINE_PATH=$(pwd)
         cd {input.varlo_path}
-        cargo run -- methylation-candidates {input} {output}
+        cargo run -- methylation-candidates $PIPELINE_PATH/{input.fasta} $PIPELINE_PATH/{output}
         """
 
 
@@ -51,8 +52,9 @@ rule compute_meth_observations:
         sequencer=lambda wildcards: samples[wildcards.sample][1],
     shell:
         """ 
+        PIPELINE_PATH=$(pwd)
         cd {input.varlo_path}
-        cargo run --release -- preprocess variants {input.genome} --candidates {input.candidates} --bam {input.alignments} --read-type {params.sequencer} --max-depth 1000 > {output}
+        cargo run --release -- preprocess variants $PIPELINE_PATH/{input.genome} --candidates $PIPELINE_PATH/{input.candidates} --bam $PIPELINE_PATH/{input.alignments} --read-type {params.sequencer} --max-depth 1000 > $PIPELINE_PATH/{output}
         """
 
 
@@ -69,8 +71,9 @@ rule call_methylation:
         "../envs/varlociraptor.yaml"
     shell:
         """ 
+        PIPELINE_PATH=$(pwd)
         cd {input.varlo_path}
-        cargo run --release -- call variants --omit-strand-bias generic --scenario {input.scenario} --obs normal={input.preprocess_obs} > {output}
+        cargo run --release -- call variants --omit-strand-bias generic --scenario $PIPELINE_PATH/{input.scenario} --obs normal=$PIPELINE_PATH/{input.preprocess_obs} > $PIPELINE_PATH/{output}
         """
 
 

@@ -27,27 +27,46 @@ enrichment:
     activate: true
     fdr_genes: 0.05
     fdr_go_terms: 0.05
+    pathvars:
+      input_file: "results/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
+      output_file: "results/enrichment/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
+      # Must contain ns
+      plot_file: "results/enrichment/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
+      datavzrd_file: "results/enrichment/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
+      # Must contain all wildcards from the other files
+      log_file_name: "{group}_{gene_fdr}_{go_term_fdr}"      
+      wildcards:
+        # group: 'read_sample_tsv(config["sample_path"])'
+        group: '["BC02-ref-sorted", "BC03-ref-sorted", "BC04-ref-sorted",]'
+        gene_fdr: "str(config['enrichment']['goatools']['fdr_genes']).replace('.', '-')"
+        go_term_fdr: "str(config['enrichment']['goatools']['fdr_go_terms']).replace('.', '-')"
+        ns: '["BP", "CC", "MF"]'
   fgsea:
     gene_sets_file: "resources/gene_sets/dummy.gmt"
     # tool is only run if set to `true`
-    activate: true
+    activate: false
     # if activated, you need to provide a GMT file with gene sets of interest
     fdr_gene_set: 0.05
     eps: 1.0e-50
-  spia:
-    # tool is only run if set to `true`
-    activate: true
-    # pathway database to use in SPIA, needs to be available for
-    # the species specified by resources -> ref -> species above
-    pathway_database: "reactome"
-    # OrgDB Genome wide annotation package (https://www.bioconductor.org/packages/release/BiocViews.html#___OrgDb) for the species under consideration. 
-    # Only required if you want to have a gene analysis for your pathways. Else NA
-    orgDb: org.Hs.eg.db
+    pathvars:
+      sleuth_sample: "results/sleuth/{group}.samples.tsv"
+      input_file: "results/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
+      output_file: "results/tables/fgsea/{group}"
+      plot_file: "results/plots/fgsea/{group}"
+      log_file_name: "{group}"
+      wildcards:
+        # group: 'read_sample_tsv(config["sample_path"])'
+        group: '["BC02-ref-sorted", "BC03-ref-sorted", "BC04-ref-sorted",]'
+
+  effect_col:
+    dynamic: false
+    dynamic_expression: ""
+    static_value: "mean_methylation_difference"
 
 # Not used right now
 meta_comparisons:
   # comparison is only run if set to `true`
-  activate: true
+  activate: false
   # Define here the comparisons under interest
   comparisons:
     # Define any name for comparison. You can add as many comparisions as you want

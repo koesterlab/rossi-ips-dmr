@@ -21,6 +21,7 @@ include: "rules/common.smk"
 include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
 include: "rules/prepare_meth_calling.smk"
+include: "rules/prepare_enrichment.smk"
 include: "rules/methylation_calling.smk"
 include: "rules/annotate_dmrs.smk"
 
@@ -28,13 +29,13 @@ include: "rules/annotate_dmrs.smk"
 # declare https://github.com/Addimator/enrichment as a module
 module enrichment:
     snakefile:
-        github(
-            "Addimator/enrichment",
-            path="workflow/Snakefile",
-            # tag="v2.5.4",
-            branch="main",
-        )
-        # "/home/adrian/Documents/Promotion/locotact_stuff/enrichment/workflow/Snakefile"
+        # github(
+        #     "Addimator/enrichment",
+        #     path="workflow/Snakefile",
+        #     # tag="v2.5.4",
+        #     branch="main",
+        # )
+        "/homes/aprinz/enrichment/workflow/Snakefile"
     config:
         config
 
@@ -46,5 +47,5 @@ use rule * from enrichment
 rule modified_all:
     default_target: True
     input:
-        # rules.all.input,
         all_input,
+        rules.all.input,
