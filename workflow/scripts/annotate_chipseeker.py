@@ -26,6 +26,7 @@ filtered_df = filtered_df.rename(
         "q_value": "qval",
         "ensembl_gene_id": "ens_gene",
         "external_gene_name": "ext_gene",
+        "p_MWU": "pval",
     }
 )
 

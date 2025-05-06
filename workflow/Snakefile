@@ -8,6 +8,7 @@ from snakemake.utils import min_version
 min_version("8.13.0")
 
 
+
 container: "docker://continuumio/miniconda3"
 
 
@@ -20,10 +21,15 @@ configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
+include: "rules/plots_paper.smk"
 include: "rules/prepare_meth_calling.smk"
 include: "rules/prepare_enrichment.smk"
+include: "rules/modkit.smk"
 include: "rules/methylation_calling.smk"
 include: "rules/annotate_dmrs.smk"
+
+inputflags:
+access.sequential
 
 
 # declare https://github.com/Addimator/enrichment as a module

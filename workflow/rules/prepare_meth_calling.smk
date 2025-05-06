@@ -46,13 +46,11 @@ rule genome_index:
         """
 
 
-rule aligned_downsampled_index:
+rule index_alignment:
     input:
-        "resources/alignments/{sample}.bam",
+        "resources/{platform}/{sample}.bam",
     output:
-        "resources/alignments/{sample}.bam.bai",
-    log:
-        "logs/aligned_downsampled_index_{sample}.log",
+        "resources/{platform}/{sample}.bam.bai",
     conda:
         "../envs/samtools.yaml"
     threads: 10
@@ -60,3 +58,18 @@ rule aligned_downsampled_index:
         """
         samtools index -@ {threads} {input}
         """
+
+
+# Problem: The candidates span more than one chromosome... We would have to look at each chromosome indiviually
+rule scatter_aligned_reads:
+    input:
+        alignment="resources/{platform}/{sample}.bam",
+        candidate=lambda wildcards: "resources/candidates/candidates_{scatteritem}.bed",
+    output:
+        "resources/{platform}/{sample}/alignment_{scatteritem}.bam",
+    log:
+        "logs/scatter_aligned_reads_{platform}_{sample}_{scatteritem}.log",
+    conda:
+        "../envs/samtools.yaml"
+    shell:
+        "samtools view -b -L {input.candidate} {input.alignment} > {output}"

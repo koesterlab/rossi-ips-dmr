@@ -75,7 +75,7 @@ heatmap = sns.clustermap(
 )
 
 heatmap.ax_heatmap.set_title(
-    f"DMRs between Samples and BC01 for annotation type {annotation_type}"
+    f"DMRs between Samples and psc for annotation type {annotation_type}"
 )
 heatmap.ax_row_dendrogram.set_visible(False)
 heatmap.ax_col_dendrogram.set_visible(False)

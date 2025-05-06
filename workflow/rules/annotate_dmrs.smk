@@ -15,10 +15,10 @@ rule download_regulatory_elements:
 
 rule annotate_regulatory_elements:
     input:
-        metilene="results/dmr_calls/{group2}/metilene_output.bed",
+        metilene="results/{platform}/dmr_calls/{group2}/metilene_output.bed",
         gene_annotation="resources/ref/regulatory_elements.gff3",
     output:
-        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
+        "results/{platform}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
     conda:
         "../envs/bedtools.yaml"
     shell:
@@ -29,9 +29,9 @@ rule annotate_regulatory_elements:
 
 rule add_regulatory_elements_header:
     input:
-        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
+        "results/{platform}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
     output:
-        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
+        "results/{platform}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
     shell:
         """
         echo -e "chr\tstart_dmr\tend_dmr\tq-value\tmean_methylation_difference\tnumber_CpGs\tp(MWU)\tp(2DKS)\tmean_g1\tmean_g2\tseqif\tsource\ttype\tstart_feature\tend_feature\tscore\tstrand\tphase\tattributes" > {output}
@@ -41,9 +41,9 @@ rule add_regulatory_elements_header:
 
 rule postprocess_regulatory_elements:
     input:
-        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
+        "results/{platform}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
     output:
-        "results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
+        "results/{platform}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     conda:
         "../envs/python_standard.yaml"
     script:
@@ -80,31 +80,42 @@ rule generate_txdb:
 
 rule annotate_gene_elements:
     input:
-        metilene="results/dmr_calls/{group2}/metilene_output.bed",
+        metilene="results/{platform}/dmr_calls/{group2}/metilene_output.bed",
         txdb="resources/ref/txdb.db",
         txnames="resources/ref/txnames.tsv",
     output:
-        chipseeker="results/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        chipseeker="results/{platform}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
     log:
-        "logs/chipseeker_annotate_{group2}.log",
+        "logs/annotate_gene_elements_{platform}_{group2}.log",
     conda:
         "../envs/chipseeker.yaml"
     script:
         "../scripts/chipseeker.R"
 
+rule rename_chipseeker_column:
+    input:
+        "data/input.tsv"
+    output:
+        "data/output.tsv"
+    shell:
+        """
+        awk 'NR==1{{gsub("q_value", "qval")}}1' {input} > {output}
+        """
+
 
 rule datavzrd_annotations:
     input:
         config=workflow.source_path("../resources/dmrs_annotated.yaml"),
-        genes_transcripts="results/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
-        regulatory_elements="results/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
+        genes_transcripts="results/{platform}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        regulatory_elements="results/{platform}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
         report(
-            directory("results/datavzrd-report/{group2}"),
+            directory("results/{platform}/datavzrd-report/{group2}"),
             caption="../report/annotations.rst",
             htmlindex="index.html",
             category="Annotated DMRs",
             labels=lambda wildcards: {
+                "platform": wildcards.platform,
                 "experiment 1": config["ref_sample"],
                 "experiment 2": wildcards.group2,
             },

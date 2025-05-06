@@ -33,8 +33,9 @@ output <- merge(chipseeker_output_df, metilene, by = c("chr", "start", "end")) %
   ) %>%
   arrange(desc(absolute_signed_pi_val)) %>%
   rename(start_dmr = start) %>%
-  rename(end_dmr = end) %>%
-  dplyr::select(chr, start_dmr, end_dmr, mean_methylation_difference, annotation, transcriptId, q_value, absolute_signed_pi_val)
+  rename(end_dmr = end) 
+  # %>%
+  # dplyr::select(chr, start_dmr, end_dmr, mean_methylation_difference, annotation, transcriptId, q_value, p_MWU, absolute_signed_pi_val)
 
 write.table(output, file = snakemake@output[['chipseeker']], sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 

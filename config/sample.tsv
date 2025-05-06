@@ -1,5 +1,9 @@
 name	path	sequencer
-BC01-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC01-ref-sorted.bam	Nanopore
-BC02-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC02-ref-sorted.bam	Nanopore
-BC03-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC03-ref-sorted.bam	Nanopore
-BC04-ref-sorted	/projects/koesterlab/rossi-ips-dmr/resources/alignments/BC04-ref-sorted.bam	Nanopore
+psc	/projects/koesterlab/rossi-ips-dmr/resources/nanopore/psc.bam	Nanopore
+mesoderm	/projects/koesterlab/rossi-ips-dmr/resources/nanopore/mesoderm.bam	Nanopore
+endoderm	/projects/koesterlab/rossi-ips-dmr/resources/nanopore/endoderm.bam	Nanopore
+ectoderm	/projects/koesterlab/rossi-ips-dmr/resources/nanopore/ectoderm.bam	Nanopore
+psc	/projects/koesterlab/rossi-ips-dmr/resources/pacbio/psc.bam	PacBio
+mesoderm	/projects/koesterlab/rossi-ips-dmr/resources/pacbio/mesoderm.bam	PacBio
+endoderm	/projects/koesterlab/rossi-ips-dmr/resources/pacbio/endoderm.bam	PacBio
+ectoderm	/projects/koesterlab/rossi-ips-dmr/resources/pacbio/ectoderm.bam	PacBio

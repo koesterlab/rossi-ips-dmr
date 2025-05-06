@@ -13,12 +13,12 @@ resources:
 #
 scatter_items: 100
 
+platforms: [pacbio, nanopore]
 # Path of the sample file
 sample_path: "/projects/koesterlab/rossi-ips-dmr/config/sample.tsv"
 
 # Name of base experiment
-ref_sample: "BC01-ref-sorted"
-ref_sample_number: "BC01"
+ref_sample: "psc"
 
 # Not used right now
 enrichment:
@@ -28,35 +28,35 @@ enrichment:
     fdr_genes: 0.05
     fdr_go_terms: 0.05
     pathvars:
-      input_file: "results/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
-      output_file: "results/enrichment/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
+      input_file: "results/{platform}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
+      output_file: "results/{platform}/enrichment/goatools/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
       # Must contain ns
-      plot_file: "results/enrichment/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
-      datavzrd_file: "results/enrichment/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
+      plot_file: "results/{{platform}}/enrichment/goatools/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
+      datavzrd_file: "results/{platform}/enrichment/goatools/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
       # Must contain all wildcards from the other files
-      log_file_name: "{group}_{gene_fdr}_{go_term_fdr}"      
+      log_file_name: "{platform}_{group}_{gene_fdr}_{go_term_fdr}"      
       wildcards:
-        # group: 'read_sample_tsv(config["sample_path"])'
-        group: '["BC02-ref-sorted", "BC03-ref-sorted", "BC04-ref-sorted",]'
+        platform: '["pacbio", "nanopore"]'
+        group: '["mesoderm", "endoderm", "ectoderm",]'
         gene_fdr: "str(config['enrichment']['goatools']['fdr_genes']).replace('.', '-')"
         go_term_fdr: "str(config['enrichment']['goatools']['fdr_go_terms']).replace('.', '-')"
         ns: '["BP", "CC", "MF"]'
   fgsea:
     gene_sets_file: "resources/gene_sets/dummy.gmt"
     # tool is only run if set to `true`
-    activate: false
+    activate: False
     # if activated, you need to provide a GMT file with gene sets of interest
     fdr_gene_set: 0.05
     eps: 1.0e-50
     pathvars:
-      sleuth_sample: "results/sleuth/{group}.samples.tsv"
+      # sleuth_sample: "results/sleuth/{group}.samples.tsv"
       input_file: "results/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
-      output_file: "results/tables/fgsea/{group}"
-      plot_file: "results/plots/fgsea/{group}"
+      output_file: "results/enrichment/fgsea/{group}/tables/{group}"
+      plot_file: "results/enrichment/fgsea/{group}/plots/{group}"
       log_file_name: "{group}"
       wildcards:
         # group: 'read_sample_tsv(config["sample_path"])'
-        group: '["BC02-ref-sorted", "BC03-ref-sorted", "BC04-ref-sorted",]'
+        group: '["mesoderm", "endoderm", "ectoderm",]'
 
   effect_col:
     dynamic: false

@@ -23,24 +23,26 @@ def get_bioc_species_name():
 
 def all_input(wildcards):
     wanted_input = []
-    wanted_input.extend(
-        expand(
-            "results/dmr_calls/heatmaps/{type}.png",
-            type=[
-                "distal_intergenic",
-                "promoter",
-                "intron",
-                "exon",
-                "3_utr",
-                "5_utr",
-                "downstream",
-            ],
-        )
-    )
+    # wanted_input.extend(
+    #     expand(
+    #         "results/{platform}/dmr_calls/heatmaps/{type}.png",
+    #         platform=[platform for platform in config["platforms"]],
+    #         type=[
+    #             "distal_intergenic",
+    #             "promoter",
+    #             "intron",
+    #             "exon",
+    #             "3_utr",
+    #             "5_utr",
+    #             "downstream",
+    #         ],
+    #     )
+    # )
 
     wanted_input.extend(
         expand(
-            "results/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
+            "results/{platform}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
+            platform=[platform for platform in config["platforms"]],
             group2=[
                 sample for sample in samples.keys() if sample != config["ref_sample"]
             ],
@@ -48,7 +50,7 @@ def all_input(wildcards):
     )
     # wanted_input.extend(
     #     expand(
-    #         "results/dmr_calls/{group2}/plots/pvals.png",
+    #         "results/{platform}/dmr_calls/{group2}/plots/pvals.png",
     #         group2=[
     #             sample for sample in samples.keys() if sample != config["ref_sample"]
     #         ],
@@ -56,10 +58,47 @@ def all_input(wildcards):
     # )
     wanted_input.extend(
         expand(
-            "results/datavzrd-report/{group2}",
+            "results/{platform}/datavzrd-report/{group2}",
+            platform=[platform for platform in config["platforms"]],
             group2=[
                 sample for sample in samples.keys() if sample != config["ref_sample"]
             ],
         ),
     )
+
+    # Plots paper
+    wanted_input.extend(
+        expand(
+            "results/{platform}/plots_paper/{group2}/scatter_plot.png",
+            platform=[platform for platform in config["platforms"]],
+            group2=[
+                sample for sample in samples.keys() if sample != config["ref_sample"]
+            ],
+        ),
+    )
+    wanted_input.extend(
+        expand(
+            "results/{platform}/plots_paper/endo_meso/scatter_plot.png",
+            platform=[platform for platform in config["platforms"]],
+        )
+    )
+    wanted_input.extend(
+        expand(
+            "results/{platform}/plots_paper/pluripotency_score_all.html",
+            platform=[platform for platform in config["platforms"]],
+        )
+    )
+    wanted_input.extend(
+        expand(
+            "results/{platform}/plots_paper/pluripotency_score_psc.png",
+            platform=[platform for platform in config["platforms"]],
+        )
+    )
+    wanted_input.extend(
+        expand(
+            "results/comp_pb_np/meth_comp_pb_np_{group}.png",
+            group=[sample for sample in samples.keys()],
+        )
+    )
+
     return wanted_input
