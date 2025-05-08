@@ -15,7 +15,7 @@ scatter_items: 100
 
 platforms: [pacbio, nanopore]
 # Path of the sample file
-sample_path: "/projects/koesterlab/rossi-ips-dmr/config/sample.tsv"
+sample_path: "config/sample.tsv"
 
 # Name of base experiment
 ref_sample: "psc"
