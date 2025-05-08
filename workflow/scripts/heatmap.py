@@ -59,7 +59,7 @@ heatmap_data = (
 heatmap_data = heatmap_data.fillna(0)
 
 # Filter on annotation_type
-name = os.path.basename(output).replace(".png", "")
+name = os.path.basename(output).replace(".html", "")
 annotation_type = filename_to_name[name]
 df_filtered = heatmap_data[heatmap_data["annotation_type"] == annotation_type]
 df_filtered = df_filtered[["BC02", "BC03", "BC04"]]

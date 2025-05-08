@@ -86,7 +86,7 @@ rule _plot_pvals:
     input:
         met_out="results/{platform}/dmr_calls/{group2}/metilene_output.bed",
     output:
-        "results/{platform}/dmr_calls/{group2}/plots/pvals.png",
+        "results/{platform}/dmr_calls/{group2}/plots/pvals.html",
     conda:
         "../envs/plot.yaml"
     params:

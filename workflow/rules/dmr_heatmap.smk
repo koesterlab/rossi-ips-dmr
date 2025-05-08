@@ -8,7 +8,7 @@ rule create_heatmap:
         ),
     output:
         report(
-            "results/{platform}/dmr_calls/heatmaps/{type}.png",
+            "results/{platform}/dmr_calls/heatmaps/{type}.html",
             caption="../report/heatmap.rst",
             category="DMR plots",
             subcategory="Heatmaps",

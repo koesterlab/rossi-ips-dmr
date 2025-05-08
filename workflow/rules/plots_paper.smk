@@ -27,10 +27,10 @@ rule most_variable_positions:
 rule scatter_plot:
     input:
         calls="results/{platform}/meth_calling/calls.parquet",
-        most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
+        # most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/{group2}/scatter_plot.png",
+            "results/{platform}/plots_paper/{group2}/scatter_plot.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory="Plot 1B",
@@ -55,7 +55,7 @@ rule scatter_plot_pb_np:
         pacbio="results/nanopore/meth_calling/calls.parquet",
         nanopore="results/pacbio/meth_calling/calls.parquet",
     output:
-        "results/comp_pb_np/meth_comp_pb_np_{group}.png",
+        "results/comp_pb_np/meth_comp_pb_np_{group}.html",
     params:
         group=lambda wildcards: wildcards.group,
     wildcard_constraints:
@@ -73,7 +73,7 @@ rule scatter_plot_endo_meso:
         most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/endo_meso/scatter_plot.png",
+            "results/{platform}/plots_paper/endo_meso/scatter_plot.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory="Plot 1C",
@@ -83,8 +83,8 @@ rule scatter_plot_endo_meso:
             },
         ),
     params:
-        group1="endoderm",
-        group2="mesoderm",
+        group1="mesoderm",
+        group2="endoderm",
     conda:
         "../envs/plot.yaml"
     script:
@@ -96,7 +96,7 @@ rule pluripotency_score_psc:
         "results/{platform}/meth_calling/calls.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/pluripotency_score_psc.png",
+            "results/{platform}/plots_paper/pluripotency_score_psc.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory="Plot 2B",
