@@ -8,6 +8,8 @@ rule modkit_compute_methylation:
         "results/nanopore/meth_calling/{sample}/alignments_CpG.combined.bed",
     conda:
         "../envs/modkit.yaml"
+    log:
+        "logs/modkit/{sample}.log",
     shell:
         """
         export PATH=$PATH:~/.cargo/bin 2> {log}

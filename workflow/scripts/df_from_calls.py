@@ -2,30 +2,15 @@ import pandas as pd
 import re
 
 
-def compute_bias(prob, format_values):
-    probs = re.split("[=;]", prob)
-    probs_values = [probs[i] for i in [1, 3, 5]]
-    try:
-        [float(value) for value in probs_values]
-    except:
-        return "bias"
-
-    # min_value = min(prob_values)
-    # min_index = prob_values.index(min_value)
-
+def compute_bias(format_values):
+    """Returns the bias label if present in FORMAT values, else 'normal'."""
     bias_labels = ["SB", "ROB", "RPB", "SCB", "HE", "ALB"]
-
     if any(value != "." for value in format_values[6:12]):
-        bias = bias_labels[format_values[6:12].index(".")]
-    else:
-        bias = "normal"
-
-    # if min_index != 0:
-    #     bias = "normal"
-    return bias
+        return bias_labels[format_values[6:12].index(".")]
+    return "normal"
 
 
-def read_call_file(file_path, axis_name):
+def read_tool_file(file_path, axis_name):
     df = []
     with open(file_path, "r") as tool_file:
 
@@ -52,13 +37,13 @@ def read_call_file(file_path, axis_name):
                 coverage = int(values[dp_index])
 
                 match = re.search(r"PROB_PRESENT=([\d\.]+)", info_field)
-                prob_present = 1000
+                prob_present = 0
                 try:
                     prob_present = 10 ** (-float(match.group(1)) / 10)
                 except:
                     print("Prob present not found")
 
-                bias = compute_bias(info_field, values)
+                bias = compute_bias(values)
 
                 df.append([chrom, position, meth_rate, coverage, bias, prob_present])
     columns = [
@@ -98,10 +83,10 @@ meso_file = snakemake.input["meso"]
 endo_file = snakemake.input["endo"]
 ecto_file = snakemake.input["ecto"]
 
-undiff_df = read_call_file(undiff_file, "psc")
-meso_df = read_call_file(meso_file, "mesoderm")
-endo_df = read_call_file(endo_file, "endoderm")
-ecto_df = read_call_file(ecto_file, "ectoderm")
+undiff_df = read_tool_file(undiff_file, "psc")
+meso_df = read_tool_file(meso_file, "mesoderm")
+endo_df = read_tool_file(endo_file, "endoderm")
+ecto_df = read_tool_file(ecto_file, "ectoderm")
 
 print(undiff_df)
 print(meso_df)

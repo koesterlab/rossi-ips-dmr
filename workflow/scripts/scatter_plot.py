@@ -16,51 +16,70 @@ def compute_rmse(df, x_axis_name, y_axis_name):
 
 def plot_meth_vals(df, output, x_axis_name, y_axis_name):
     rmse = compute_rmse(df, x_axis_name, y_axis_name)
-    df[f"prob_present_{x_axis_name}_thresh"] = np.where(df[f"{x_axis_name}_prob_present"] >= 0.95, 0, 1)
-    df[f"prob_present_{y_axis_name}_thresh"] = np.where(df[f"{y_axis_name}_prob_present"] >= 0.95, 0, 1)
-    df["prob_present"] = df[f"prob_present_{x_axis_name}_thresh"] + 2 * df[f"prob_present_{y_axis_name}_thresh"]
 
-    x = df[f"{x_axis_name}_methylation"]
-    y = df[f"{y_axis_name}_methylation"]
+    df[f"prob_present_{x_axis_name}_thresh"] = np.where(
+        df[f"{x_axis_name}_prob_present"] >= 0.95, 0, 1
+    )
+    df[f"prob_present_{y_axis_name}_thresh"] = np.where(
+        df[f"{y_axis_name}_prob_present"] >= 0.95, 0, 1
+    )
 
-    color_map = {4: "grey", 3: "purple", 2: "blue", 1: "red", 0: "black"}
-    df["color"] = df["prob_present"].map(color_map)
+    df["prob_present"] = (
+        df[f"prob_present_{x_axis_name}_thresh"]
+        + 2 * df[f"prob_present_{y_axis_name}_thresh"]
+    )
+
+    # Reassign category 4 for small methylation difference
+    diff = abs(df[f"{x_axis_name}_methylation"] - df[f"{y_axis_name}_methylation"])
+    df["prob_present"] = np.where(diff <= 20, 4, df["prob_present"])
+
+    color_map = {
+        0: "black",
+        1: "red",
+        2: "blue",
+        3: "purple",
+        4: "grey",
+    }
+
     category_desc = {
-        0: "no prob present",
+        0: "No prob present",
         1: f"Only {y_axis_name} significant",
         2: f"Only {x_axis_name} significant",
         3: "Both significant",
         4: "Beta val <= 20",
     }
 
-    df["prob_present"] = np.where(
-        abs(df[f"{x_axis_name}_methylation"] - df[f"{y_axis_name}_methylation"]) <= 20,
-        4,
-        df["prob_present"],
-    )
-
-    for category, color in color_map.items():
-        subset = df[df["prob_present"] == category]
-        plt.scatter(
-            subset[x.name],
-            subset[y.name],
-            color=color,
-            label=f"{category_desc[category]}",
-            s=3,
-            alpha=0.3,
+    df["color"] = df["prob_present"].map(color_map)
+    df["category"] = df["prob_present"].map(category_desc)
+    print(df)
+    chart = (
+        alt.Chart(df)
+        .mark_circle(size=30, opacity=0.3)
+        .encode(
+            x=alt.X(f"{x_axis_name}_methylation", title=f"{x_axis_name} Methylation"),
+            y=alt.Y(f"{y_axis_name}_methylation", title=f"{y_axis_name} Methylation"),
+            color=alt.Color(
+                "category:N",
+                title="Prob Present Categories",
+                scale=alt.Scale(
+                    domain=list(category_desc.values()), range=list(color_map.values())
+                ),
+            ),
+            tooltip=[
+                f"{x_axis_name}_methylation",
+                f"{y_axis_name}_methylation",
+                "category",
+            ],
         )
-
-    plt.xlabel(f"{x_axis_name} Methylation")
-    plt.ylabel(f"{y_axis_name} Methylation")
-    plt.title(
-        f"{x_axis_name} vs. {y_axis_name}\nRmse: {rmse:.2f}, Datapoints: {len(df)}"
+        .properties(
+            title=f"{x_axis_name} vs. {y_axis_name} — RMSE: {rmse:.2f}, N: {len(df)}",
+            width=500,
+            height=500,
+        )
+        .configure_legend(titleFontSize=12, labelFontSize=10)
     )
 
-    plt.legend(title="Prob Present Categories")
-
-    plt.tight_layout()
-    plt.savefig(output, dpi=200)
-    plt.close()
+    chart.save(output)
 
 
 # Einstellungen für DataFrames
@@ -68,9 +87,9 @@ alt.data_transformers.enable("vegafusion")
 pd.set_option("display.max_columns", None)
 
 df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow")
-df = df[(df['psc_coverage'] > 50) & (df['mesoderm_coverage'] > 50) & (df['endoderm_coverage'] > 50) & (df['ectoderm_coverage'] > 50)]
 x_axis = snakemake.params["group1"]
 y_axis = snakemake.params["group2"]
+df = df[(df[f"{x_axis}_coverage"] > 50) & (df["{y_axis}_coverage"] > 50)]
 
 
 # most_variable_positions_df = pd.read_parquet(
