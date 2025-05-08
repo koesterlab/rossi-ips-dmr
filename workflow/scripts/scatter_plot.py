@@ -18,35 +18,35 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
     rmse = compute_rmse(df, x_axis_name, y_axis_name)
 
     df[f"prob_present_{x_axis_name}_thresh"] = np.where(
-        df[f"{x_axis_name}_prob_present"] >= 0.95, 0, 1
+        df[f"{x_axis_name}_prob_present"] >= 0.95, 1, 0
     )
     df[f"prob_present_{y_axis_name}_thresh"] = np.where(
-        df[f"{y_axis_name}_prob_present"] >= 0.95, 0, 1
+        df[f"{y_axis_name}_prob_present"] >= 0.95, 1, 0
     )
-
+    #  0 if both are significant, 1 if only psc is significant, 2 if only group2 is significant, 3 not significant
     df["prob_present"] = (
         df[f"prob_present_{x_axis_name}_thresh"]
         + 2 * df[f"prob_present_{y_axis_name}_thresh"]
     )
+    df = df[df["prob_present"] != 0]
 
     # Reassign category 4 for small methylation difference
     diff = abs(df[f"{x_axis_name}_methylation"] - df[f"{y_axis_name}_methylation"])
-    df["prob_present"] = np.where(diff <= 20, 4, df["prob_present"])
+    # 4 if the difference is less than or equal to 20
+    df["prob_present"] = np.where(diff <= 20, 0, df["prob_present"])
 
     color_map = {
-        0: "black",
+        0: "grey",
         1: "red",
         2: "blue",
-        3: "purple",
-        4: "grey",
+        3: "black",
     }
 
     category_desc = {
-        0: "No prob present",
-        1: f"Only {y_axis_name} significant",
-        2: f"Only {x_axis_name} significant",
+        0: "Beta val <= 20",
+        1: f"Only {x_axis_name} significant",
+        2: f"Only {y_axis_name} significant",
         3: "Both significant",
-        4: "Beta val <= 20",
     }
 
     df["color"] = df["prob_present"].map(color_map)
@@ -54,7 +54,7 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
     print(df)
     chart = (
         alt.Chart(df)
-        .mark_circle(size=30, opacity=0.3)
+        .mark_circle(size=15, opacity=0.5)
         .encode(
             x=alt.X(f"{x_axis_name}_methylation", title=f"{x_axis_name} Methylation"),
             y=alt.Y(f"{y_axis_name}_methylation", title=f"{y_axis_name} Methylation"),
@@ -87,9 +87,10 @@ alt.data_transformers.enable("vegafusion")
 pd.set_option("display.max_columns", None)
 
 df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow")
-x_axis = snakemake.params["group1"]
-y_axis = snakemake.params["group2"]
-df = df[(df[f"{x_axis}_coverage"] > 50) & (df["{y_axis}_coverage"] > 50)]
+x_axis = snakemake.params["group2"]
+y_axis = snakemake.params["group1"]
+
+df = df[(df[f"{x_axis}_coverage"] > 20) & (df[f"{y_axis}_coverage"] > 20)]
 
 
 # most_variable_positions_df = pd.read_parquet(
