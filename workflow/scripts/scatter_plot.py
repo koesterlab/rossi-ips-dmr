@@ -90,7 +90,7 @@ df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow")
 x_axis = snakemake.params["group2"]
 y_axis = snakemake.params["group1"]
 
-df = df[(df[f"{x_axis}_coverage"] > 20) & (df[f"{y_axis}_coverage"] > 20)]
+df = df[(df[f"{x_axis}_coverage"] > 50) & (df[f"{y_axis}_coverage"] > 50)]
 
 
 # most_variable_positions_df = pd.read_parquet(
