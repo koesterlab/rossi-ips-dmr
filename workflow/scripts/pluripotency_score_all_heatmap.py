@@ -7,65 +7,56 @@ pd.set_option("display.max_columns", None)
 
 df = pd.read_parquet(snakemake.input, engine="pyarrow")
 
-
+print(df)
 # cg21699252 - 2:15938891-15938892 (-1)
 # cg00933813 - 10:35594676-35594677 (-1)
 # cg00661673 - 4:168841140-168841141 (1)
 
 # Die chromosomen-Positionen, nach denen gefiltert werden soll
-psc_position_pairs = [("2", 15938891), ("10", 35594676), ("4", 168841140)]
-endo_position_pairs = [("6", 12886978), ("11", 8840472), ("8", 125637563)]
-meso_position_pairs = [("2", 128638846), ("17", 15966293), ("12", 122872581)]
-endomeso_position_pairs = [("5", 111309143), ("5", 24208809), ("10", 33773306)]
-ecto_position_pairs = [("15", 71314056), ("5", 107661548), ("14", 68569167)]
-
+psc_position_pairs = {
+    ("2", 15938891): "cg21699252",
+    ("10", 35594676): "cg00933813",
+    ("4", 168841140): "cg00661673",
+    # usw. – ergänze die restlichen Mappings
+}
+endo_position_pairs = {
+    ("6", 12886978): "cg20548013",
+    ("11", 8840472): "cg14521421",
+    ("8", 125637563): "cg08913523",
+}
+meso_position_pairs = {
+    ("2", 128638846): "cg14708360",
+    ("17", 15966293): "cg08826152",
+    ("12", 122872581): "cg11599718",
+}
+endomeso_position_pairs = {
+    ("5", 111309143): "cg23385847",
+    ("5", 24208809): "cg24919344",
+    ("10", 33773306): "cg11147278",
+}
+ecto_position_pairs = {
+    ("15", 71314056): "cg01907071",
+    ("5", 107661548): "cg18118164",
+    ("14", 68569167): "cg13075942",
+}
 
 all_positions = (
     psc_position_pairs
-    + endo_position_pairs
-    + meso_position_pairs
-    + ecto_position_pairs
-    + endomeso_position_pairs
+    | endo_position_pairs
+    | meso_position_pairs
+    | ecto_position_pairs
+    | endomeso_position_pairs
 )
-print(all_positions)
-# Filter anwenden
-filtered_df = df[
-    df.apply(
-        lambda row: (row["chromosome"], row["position"]) in all_positions,
-        axis=1,
-    )
-].reset_index(drop=True)
 
-# filtered_df["biomarker"] = filtered_df.apply(
-#     lambda row: (
-#         "PSC"
-#         if (row["chromosome"], row["position"]) in psc_position_pairs
-#         else (
-#             "ENDO"
-#             if (row["chromosome"], row["position"]) in endo_position_pairs
-#             else (
-#                 "MESO"
-#                 if (row["chromosome"], row["position"]) in meso_position_pairs
-#                 else (
-#                     "ECTO"
-#                     if (row["chromosome"], row["position"]) in ecto_position_pairs
-#                     else (
-#                         "ENDOMESO"
-#                         if (row["chromosome"], row["position"])
-#                         in endomeso_position_pairs
-#                         else None
-#                     )
-#                 )
-#             )
-#         )
-#     ),
-#     axis=1,
-# )
 
-# print(filtered_df)
+df["position_pair"] = list(zip(df["chromosome"].astype(str), df["position"]))
+filtered_df = df[df["position_pair"].isin(all_positions)].reset_index(drop=True)
+filtered_df["cg_id"] = filtered_df["position_pair"].map(all_positions)
+print("filtered_df")
+print(filtered_df)
 
 df_melted = filtered_df.melt(
-    id_vars=["position", "chromosome"],
+    id_vars=["position", "chromosome", "cg_id"],
     value_vars=[
         "psc_methylation",
         "endoderm_methylation",
@@ -86,21 +77,21 @@ df_melted["Cell_Type"] = df_melted["Cell_Type"].replace(
     }
 )
 
-print(df_melted)
 
 df_melted["biomarker"] = df_melted.apply(
     lambda row: (
         "PSC"
-        if (row["chromosome"], row["position"]) in psc_position_pairs
+        if (row["chromosome"], row["position"]) in psc_position_pairs.keys()
         else (
             "ENDO"
-            if (row["chromosome"], row["position"]) in endo_position_pairs
+            if (row["chromosome"], row["position"]) in endo_position_pairs.keys()
             else (
                 "MESO"
-                if (row["chromosome"], row["position"]) in meso_position_pairs
+                if (row["chromosome"], row["position"]) in meso_position_pairs.keys()
                 else (
                     "ECTO"
-                    if (row["chromosome"], row["position"]) in ecto_position_pairs
+                    if (row["chromosome"], row["position"])
+                    in ecto_position_pairs.keys()
                     else (
                         "ENDOMESO"
                         if (row["chromosome"], row["position"])
@@ -124,8 +115,6 @@ df_melted["Methylation_diff"] = df_melted.apply(
 )
 
 
-print(df_melted)
-
 # Altair Heatmap
 charts = []
 for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
@@ -136,13 +125,14 @@ for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
         .encode(
             x=alt.X("Cell_Type:N", title="Cell Type"),
             y=alt.Y(
-                "position:N",
+                "cg_id:N",
                 title="Genomic Position",
                 # sort=alt.EncodingSortField(field="position", op="count", order="descending"),
             ),
             color=alt.Color("Methylation_diff:Q", scale=alt.Scale(scheme="redblue")),
             tooltip=[
                 "position",
+                "chromosome",
                 "Cell_Type",
                 "Methylation",
                 "Methylation_diff",
@@ -175,7 +165,6 @@ alt.vconcat(*charts).save(snakemake.output[0], scale_factor=2.0)
 # pluripotency_scores = []
 # for biomarker in biomarkers:
 #     biomarker_df = filtered_df[filtered_df["biomarker"] == biomarker]
-#     print("biomarker_df", biomarker_df)
 #     for methylation_type, methylation_col in [
 #         ("PSC", "psc_methylation"),
 #         ("MESO", "mesoderm_methylation"),
@@ -196,7 +185,6 @@ alt.vconcat(*charts).save(snakemake.output[0], scale_factor=2.0)
 #             }
 #         )
 # plot_df = pd.DataFrame(pluripotency_scores)
-# print(plot_df)
 # chart = (
 #     alt.Chart(plot_df)
 #     .mark_point(size=100)
