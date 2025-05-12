@@ -23,5 +23,7 @@ rule modkit_rename_output:
         "results/nanopore/meth_calling/{sample}/alignments_CpG.combined.bed",
     output:
         "results/nanopore/meth_calling/{sample}/modkit.bed",
+    log:
+        "logs/modkit/{sample}_rename.log",
     shell:
         "mv {input} {output} 2> {log}"
