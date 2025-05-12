@@ -25,7 +25,7 @@ def all_input(wildcards):
     wanted_input = []
     # wanted_input.extend(
     #     expand(
-    #         "results/{platform}/dmr_calls/heatmaps/{type}.html",
+    #         "results/{platform}/dmr_calls/heatmaps/{type}.png",
     #         platform=[platform for platform in config["platforms"]],
     #         type=[
     #             "distal_intergenic",
@@ -50,7 +50,7 @@ def all_input(wildcards):
     )
     # wanted_input.extend(
     #     expand(
-    #         "results/{platform}/dmr_calls/{group2}/plots/pvals.html",
+    #         "results/{platform}/dmr_calls/{group2}/plots/pvals.png",
     #         group2=[
     #             sample for sample in samples.keys() if sample != config["ref_sample"]
     #         ],
@@ -69,7 +69,7 @@ def all_input(wildcards):
     # Plots paper
     wanted_input.extend(
         expand(
-            "results/{platform}/plots_paper/{group2}/scatter_plot.html",
+            "results/{platform}/plots_paper/{group2}/scatter_plot.png",
             platform=[platform for platform in config["platforms"]],
             group2=[
                 sample for sample in samples.keys() if sample != config["ref_sample"]
@@ -78,7 +78,7 @@ def all_input(wildcards):
     )
     wanted_input.extend(
         expand(
-            "results/{platform}/plots_paper/endo_meso/scatter_plot.html",
+            "results/{platform}/plots_paper/endo_meso/scatter_plot.png",
             platform=[platform for platform in config["platforms"]],
         )
     )
@@ -96,7 +96,7 @@ def all_input(wildcards):
     )
     wanted_input.extend(
         expand(
-            "results/comp_pb_np/meth_comp_pb_np_{group}.html",
+            "results/comp_pb_np/meth_comp_pb_np_{group}.png",
             group=[sample for sample in samples.keys()],
         )
     )

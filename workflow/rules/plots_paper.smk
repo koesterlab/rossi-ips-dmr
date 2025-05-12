@@ -30,7 +30,7 @@ rule scatter_plot:
         # most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/{group2}/scatter_plot.html",
+            "results/{platform}/plots_paper/{group2}/scatter_plot.png",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory="Plot 1B",
@@ -55,7 +55,7 @@ rule scatter_plot_pb_np:
         pacbio="results/nanopore/meth_calling/calls.parquet",
         nanopore="results/pacbio/meth_calling/calls.parquet",
     output:
-        "results/comp_pb_np/meth_comp_pb_np_{group}.html",
+        "results/comp_pb_np/meth_comp_pb_np_{group}.png",
     params:
         group=lambda wildcards: wildcards.group,
     wildcard_constraints:
@@ -73,7 +73,7 @@ rule scatter_plot_endo_meso:
         most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/endo_meso/scatter_plot.html",
+            "results/{platform}/plots_paper/endo_meso/scatter_plot.png",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory="Plot 1C",
