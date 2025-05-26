@@ -5,11 +5,13 @@ rule modkit_compute_methylation:
         alignment_index="resources/nanopore/{sample}.bam.bai",
         genome="resources/genome.fasta",
     output:
-        "results/nanopore/meth_calling/{sample}/alignments_CpG.combined.bed",
+        "results/nanopore/{caller}/meth_calling/{sample}/alignments_CpG.combined.bed",
     conda:
         "../envs/modkit.yaml"
     log:
-        "logs/modkit/{sample}.log",
+        "logs/modkit/{caller}/{sample}.log",
+    resources:
+        mem_mb=16000
     shell:
         """
         export PATH=$PATH:~/.cargo/bin 2> {log}
@@ -20,10 +22,10 @@ rule modkit_compute_methylation:
 
 rule modkit_rename_output:
     input:
-        "results/nanopore/meth_calling/{sample}/alignments_CpG.combined.bed",
+        "results/nanopore/{caller}/meth_calling/{sample}/alignments_CpG.combined.bed",
     output:
-        "results/nanopore/meth_calling/{sample}/modkit.bed",
+        "results/nanopore/{caller}/meth_calling/{sample}/modkit.vcf",
     log:
-        "logs/modkit/{sample}_rename.log",
+        "logs/modkit/{sample}_{caller}rename.log",
     shell:
         "mv {input} {output} 2> {log}"

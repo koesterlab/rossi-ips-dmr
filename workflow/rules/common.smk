@@ -23,82 +23,79 @@ def get_bioc_species_name():
 
 def all_input(wildcards):
     wanted_input = []
-    # wanted_input.extend(
-    #     expand(
-    #         "results/{platform}/dmr_calls/heatmaps/{type}.png",
-    #         platform=[platform for platform in config["platforms"]],
-    #         type=[
-    #             "distal_intergenic",
-    #             "promoter",
-    #             "intron",
-    #             "exon",
-    #             "3_utr",
-    #             "5_utr",
-    #             "downstream",
-    #         ],
-    #     )
-    # )
 
     wanted_input.extend(
-        expand(
-            "results/{platform}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
-            platform=[platform for platform in config["platforms"]],
-            group2=[
-                sample for sample in samples.keys() if sample != config["ref_sample"]
-            ],
-        ),
-    )
-    # wanted_input.extend(
-    #     expand(
-    #         "results/{platform}/dmr_calls/{group2}/plots/pvals.png",
-    #         group2=[
-    #             sample for sample in samples.keys() if sample != config["ref_sample"]
-    #         ],
-    #     ),
-    # )
-    wanted_input.extend(
-        expand(
-            "results/{platform}/datavzrd-report/{group2}",
-            platform=[platform for platform in config["platforms"]],
-            group2=[
-                sample for sample in samples.keys() if sample != config["ref_sample"]
-            ],
-        ),
+        [
+            f"results/{platform}/{caller}/dmr_calls/heatmaps/{type}.png"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for type in [
+                "distal_intergenic",
+                "promoter",
+                "intron",
+                "exon",
+                "3_utr",
+                "5_utr",
+                "downstream",
+            ]
+        ]
     )
 
-    # Plots paper
     wanted_input.extend(
-        expand(
-            "results/{platform}/plots_paper/{group2}/scatter_plot.png",
-            platform=[platform for platform in config["platforms"]],
-            group2=[
-                sample for sample in samples.keys() if sample != config["ref_sample"]
-            ],
-        ),
+        [
+            f"results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
+        ]
     )
+
     wanted_input.extend(
-        expand(
-            "results/{platform}/plots_paper/endo_meso/scatter_plot.png",
-            platform=[platform for platform in config["platforms"]],
-        )
+        [
+            f"results/{platform}/{caller}/datavzrd-report/{group2}"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
+        ]
     )
+
     wanted_input.extend(
-        expand(
-            "results/{platform}/plots_paper/pluripotency_score_all.html",
-            platform=[platform for platform in config["platforms"]],
-        )
+        [
+            f"results/{platform}/{caller}/plots_paper/{group2}/scatter_plot.html"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
+        ]
     )
+
     wanted_input.extend(
-        expand(
-            "results/{platform}/plots_paper/pluripotency_score_psc.html",
-            platform=[platform for platform in config["platforms"]],
-        )
+        [
+            f"results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.html"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+        ]
     )
+
     wanted_input.extend(
-        expand(
-            "results/comp_pb_np/meth_comp_pb_np_{group}.png",
-            group=[sample for sample in samples.keys()],
-        )
+        [
+            f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+        ]
     )
+
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
+        ]
+    )
+
+    # wanted_input.extend([
+    #         f"results/comp_pb_np/meth_comp_pb_np_{group}.png"
+    #         for group in [s for s in samples.keys() ]
+    #     ])
 
     return wanted_input

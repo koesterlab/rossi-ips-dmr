@@ -1,23 +1,24 @@
 rule create_heatmap:
     input:
         expand(
-            "results/{{platform}}/dmr_calls/{sample}/genes_transcripts/chipseeker.tsv",
+            "results/{{platform}}/{{caller}}/dmr_calls/{sample}/genes_transcripts/chipseeker.tsv",
             sample=[
                 sample for sample in samples.keys() if sample != config["ref_sample"]
             ],
         ),
     output:
         report(
-            "results/{platform}/dmr_calls/heatmaps/{type}.html",
+            "results/{platform}/{caller}/dmr_calls/heatmaps/{type}.png",
             caption="../report/heatmap.rst",
             category="DMR plots",
-            subcategory="Heatmaps",
+            subcategory=lambda wildcards: f"Heatmaps: {wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "platform": wildcards.platform,
                 "genetic element": wildcards.type,
             },
         ),
     conda:
         "../envs/plot.yaml"
+    log:
+        "logs/heatmap/{platform}/{caller}/{type}.log",
     script:
         "../scripts/heatmap.py"

@@ -1,23 +1,41 @@
 rule df_from_calls:
     input:
-        undifferentiated="results/{platform}/meth_calling/psc/calls.vcf",
-        meso="results/{platform}/meth_calling/mesoderm/calls.vcf",
-        endo="results/{platform}/meth_calling/endoderm/calls.vcf",
-        ecto="results/{platform}/meth_calling/ectoderm/calls.vcf",
-        # "results/{platform}/meth_calling/{group}/calls.vcf",
+        undifferentiated="results/{platform}/{caller}/meth_calling/psc/{caller}.vcf",
+        meso="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.vcf",
+        endo="results/{platform}/{caller}/meth_calling/endoderm/{caller}.vcf",
+        ecto="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.vcf",
+        # "results/{platform}/{caller}/meth_calling/{group}/calls.vcf",
     output:
-        "results/{platform}/meth_calling/calls.parquet",
+        "results/{platform}/{caller}/meth_calling/calls.parquet",
     conda:
         "../envs/plot.yaml"
+    log:
+        "logs/df_from_calls/{platform}/{caller}.log"
+    params:
+        meth_caller=lambda wildcards: wildcards.caller
     script:
         "../scripts/df_from_calls.py"
+
+rule focus_df_on_diff_methylated_loci:
+    input:
+        "results/{platform}/{caller}/meth_calling/calls.parquet",
+    output:
+        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+    conda:
+        "../envs/plot.yaml"
+    log:
+        "logs/focus_df_on_diff_methylated_loci/{platform}/{caller}.log"
+    params:
+        meth_threshold=config["meth_threshold"],
+    script:
+        "../scripts/focus_loci.py"
 
 
 rule most_variable_positions:
     input:
-        "results/{platform}/meth_calling/calls.parquet",
+        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
     output:
-        "results/{platform}/meth_calling/most_variable_positions.parquet",
+        "results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     conda:
         "../envs/plot.yaml"
     script:
@@ -26,22 +44,23 @@ rule most_variable_positions:
 
 rule scatter_plot:
     input:
-        calls="results/{platform}/meth_calling/calls.parquet",
-        # most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
+        calls="results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        # most_variable_positions="results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/{group2}/scatter_plot.png",
+            "results/{platform}/{caller}/plots_paper/{group2}/scatter_plot.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
-            subcategory="Plot 1B",
+            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "Platform": wildcards.platform,
+                "Plot": "1B",
                 "Type": wildcards.group2,
             },
         ),
     params:
         group1=config["ref_sample"],
         group2=lambda wildcards: wildcards.group2,
+        meth_caller=lambda wildcards: wildcards.caller
     wildcard_constraints:
         group2="(?!endo_meso).*",
     conda:
@@ -52,8 +71,8 @@ rule scatter_plot:
 
 rule scatter_plot_pb_np:
     input:
-        pacbio="results/nanopore/meth_calling/calls.parquet",
-        nanopore="results/pacbio/meth_calling/calls.parquet",
+        pacbio="results/nanopore/{caller}/meth_calling/calls_focused.parquet",
+        nanopore="results/pacbio/{caller}/meth_calling/calls_focused.parquet",
     output:
         "results/comp_pb_np/meth_comp_pb_np_{group}.png",
     params:
@@ -69,22 +88,23 @@ rule scatter_plot_pb_np:
 rule scatter_plot_endo_meso:
     input:
         # Must be list because uses same plot function as scatter_plot
-        calls="results/{platform}/meth_calling/calls.parquet",
-        most_variable_positions="results/{platform}/meth_calling/most_variable_positions.parquet",
+        calls="results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        # most_variable_positions="results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/endo_meso/scatter_plot.png",
+            "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
-            subcategory="Plot 1C",
+            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "Platform": wildcards.platform,
+                "Plot": "1C",
                 "Type": "endo_meso",
             },
         ),
     params:
         group1="mesoderm",
         group2="endoderm",
+        meth_caller=lambda wildcards: wildcards.caller
     conda:
         "../envs/plot.yaml"
     script:
@@ -93,15 +113,15 @@ rule scatter_plot_endo_meso:
 
 rule pluripotency_score_psc:
     input:
-        "results/{platform}/meth_calling/calls.parquet",
+        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/pluripotency_score_psc.html",
+            "results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
-            subcategory="Plot 2B",
+            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "Platform": wildcards.platform,
+                "Plot": "2B",
                 "Type": "undifferentiated",
             },
         ),
@@ -113,15 +133,15 @@ rule pluripotency_score_psc:
 
 rule pluripotency_score_all:
     input:
-        "results/{platform}/meth_calling/calls.parquet",
+        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
     output:
         report(
-            "results/{platform}/plots_paper/pluripotency_score_all.html",
+            "results/{platform}/{caller}/plots_paper/pluripotency_score_all.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
-            subcategory="Plot 3B",
+            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "Platform": wildcards.platform,
+                "Plot": "3B",
                 "Type": "differentiated",
             },
         ),

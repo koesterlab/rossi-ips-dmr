@@ -1,3 +1,8 @@
+meth_caller:
+  pacbio: [varlo]
+  nanopore: [varlo]
+
+
 
 resources:
   ref:
@@ -14,11 +19,18 @@ resources:
 scatter_items: 100
 
 platforms: [pacbio, nanopore]
+# platforms: []
 # Path of the sample file
 sample_path: "config/sample.tsv"
 
 # Name of base experiment
 ref_sample: "psc"
+
+# Define threshhold for false positive cutoff
+prob_pres_threshhold: 0.95
+prob_absent_threshhold: 0.95
+# Define the minimum percantage  of methylation to be considered as a methylated site
+meth_threshold: 5
 
 # Not used right now
 enrichment:
@@ -28,15 +40,16 @@ enrichment:
     fdr_genes: 0.05
     fdr_go_terms: 0.05
     pathvars:
-      input_file: "results/{platform}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
-      output_file: "results/{platform}/enrichment/goatools/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
+      input_file: "results/{platform}/{caller}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
+      output_file: "results/{platform}/{caller}/enrichment/goatools/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
       # Must contain ns
-      plot_file: "results/{{platform}}/enrichment/goatools/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
-      datavzrd_file: "results/{platform}/enrichment/goatools/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
+      plot_file: "results/{{platform}}/{{caller}}/enrichment/goatools/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
+      datavzrd_file: "results/{platform}/{caller}/enrichment/goatools/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
       # Must contain all wildcards from the other files
-      log_file_name: "{platform}_{group}_{gene_fdr}_{go_term_fdr}"      
+      log_file_name: "{platform}_{caller}_{group}_{gene_fdr}_{go_term_fdr}"      
       wildcards:
         platform: '["pacbio", "nanopore"]'
+        caller: '["varlo"]'
         group: '["mesoderm", "endoderm", "ectoderm",]'
         gene_fdr: "str(config['enrichment']['goatools']['fdr_genes']).replace('.', '-')"
         go_term_fdr: "str(config['enrichment']['goatools']['fdr_go_terms']).replace('.', '-')"

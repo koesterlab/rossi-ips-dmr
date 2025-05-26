@@ -6,7 +6,6 @@ import os
 
 
 def compute_rmse(df, x_axis_name, y_axis_name):
-    print(df, x_axis_name)
     squared_errors = (
         df[f"{x_axis_name}_methylation"] - df[f"{y_axis_name}_methylation"]
     ) ** 2
@@ -17,41 +16,45 @@ def compute_rmse(df, x_axis_name, y_axis_name):
 def plot_meth_vals(df, output, x_axis_name, y_axis_name):
     rmse = compute_rmse(df, x_axis_name, y_axis_name)
 
-    df[f"prob_present_{x_axis_name}_thresh"] = np.where(
-        df[f"{x_axis_name}_prob_present"] >= 0.95, 1, 0
-    )
-    df[f"prob_present_{y_axis_name}_thresh"] = np.where(
-        df[f"{y_axis_name}_prob_present"] >= 0.95, 1, 0
-    )
-    #  0 if both are significant, 1 if only psc is significant, 2 if only group2 is significant, 3 not significant
-    df["prob_present"] = (
-        df[f"prob_present_{x_axis_name}_thresh"]
-        + 2 * df[f"prob_present_{y_axis_name}_thresh"]
-    )
-    df = df[df["prob_present"] != 0]
+    if snakemake.params["meth_caller"] == "varlo":
+        df[f"prob_present_{x_axis_name}_thresh"] = np.where(
+            df[f"{x_axis_name}_prob_present"] >= 0.95, 1, 0
+        )
+        df[f"prob_present_{y_axis_name}_thresh"] = np.where(
+            df[f"{y_axis_name}_prob_present"] >= 0.95, 1, 0
+        )
+        # 0 if both are significant, 1 if only x is significant, 2 if only y is significant, 3 if neither
+        df["prob_present"] = (
+            df[f"prob_present_{x_axis_name}_thresh"]
+            + 2 * df[f"prob_present_{y_axis_name}_thresh"]
+        )
+        df = df[df["prob_present"] != 0]
 
-    # Reassign category 4 for small methylation difference
-    diff = abs(df[f"{x_axis_name}_methylation"] - df[f"{y_axis_name}_methylation"])
-    # 4 if the difference is less than or equal to 20
-    df["prob_present"] = np.where(diff <= 20, 0, df["prob_present"])
+        diff = abs(df[f"{x_axis_name}_methylation"] - df[f"{y_axis_name}_methylation"])
+        df["prob_present"] = np.where(diff <= 20, 0, df["prob_present"])
 
-    color_map = {
-        0: "grey",
-        1: "red",
-        2: "blue",
-        3: "black",
-    }
+        color_map = {
+            0: "grey",
+            1: "red",
+            2: "blue",
+            3: "black",
+        }
 
-    category_desc = {
-        0: "Beta val <= 20",
-        1: f"Only {x_axis_name} significant",
-        2: f"Only {y_axis_name} significant",
-        3: "Both significant",
-    }
+        category_desc = {
+            0: "Beta val <= 20",
+            1: f"Only {x_axis_name} significant",
+            2: f"Only {y_axis_name} significant",
+            3: "Both significant",
+        }
 
-    df["color"] = df["prob_present"].map(color_map)
-    df["category"] = df["prob_present"].map(category_desc)
-    print(df)
+        df["color"] = df["prob_present"].map(color_map)
+        df["category"] = df["prob_present"].map(category_desc)
+
+    else:
+        df["color"] = "grey"
+        df["category"] = "No probs given"
+
+    print(df, file=sys.stderr)
     chart = (
         alt.Chart(df)
         .mark_circle(size=15, opacity=0.5)
@@ -62,10 +65,13 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
                 "category:N",
                 title="Prob Present Categories",
                 scale=alt.Scale(
-                    domain=list(category_desc.values()), range=list(color_map.values())
+                    domain=df["category"].unique().tolist(),
+                    range=df["color"].unique().tolist(),
                 ),
             ),
             tooltip=[
+                "chromosome",
+                "position",
                 f"{x_axis_name}_methylation",
                 f"{y_axis_name}_methylation",
                 "category",
@@ -86,11 +92,15 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
 alt.data_transformers.enable("vegafusion")
 pd.set_option("display.max_columns", None)
 
+
 df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow")
+
+print(df, file=sys.stderr)
 x_axis = snakemake.params["group2"]
 y_axis = snakemake.params["group1"]
 
 df = df[(df[f"{x_axis}_coverage"] > 50) & (df[f"{y_axis}_coverage"] > 50)]
+print(df, file=sys.stderr)
 
 
 # most_variable_positions_df = pd.read_parquet(

@@ -58,7 +58,7 @@ rule compute_meth_observations:
         # alignments_index="resources/{platform}/meth_calling/{sample}.bam.bai",
         candidates="resources/candidates/candidates_{scatteritem}.bcf",
     output:
-        "results/{platform}/meth_calling/{sample}/normal_{scatteritem}.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
     conda:
         "../envs/varlociraptor.yaml"
     params:
@@ -73,10 +73,10 @@ rule compute_meth_observations:
 rule call_methylation:
     input:
         varlo_path="resources/tools/varlociraptor",
-        preprocess_obs="results/{platform}/meth_calling/{sample}/normal_{scatteritem}.bcf",
+        preprocess_obs="results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
         scenario="resources/scenario.yaml",
     output:
-        "results/{platform}/meth_calling/{sample}/calls_{scatteritem}.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     conda:
         "../envs/varlociraptor.yaml"
     shell:
@@ -89,10 +89,10 @@ rule call_methylation:
 # TODO: Reactivate, right now it deletes too much data
 rule filter_calls:
     input:
-        calls="results/{platform}/meth_calling/{sample}/calls_{scatteritem}.bcf",
+        calls="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
         varlo_path="resources/tools/varlociraptor",
     output:
-        "results/{platform}/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
     conda:
         "../envs/varlociraptor.yaml"
     params:
@@ -107,9 +107,9 @@ rule filter_calls:
 
 rule calls_to_vcf:
     input:
-        "results/{platform}/meth_calling/{sample}/calls_{scatteritem}.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     output:
-        "results/{platform}/meth_calling/{sample}/calls_{scatteritem}.vcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.vcf",
     conda:
         "../envs/samtools.yaml"
     threads: 10
@@ -122,10 +122,10 @@ rule calls_to_vcf:
 rule gather_calls:
     input:
         gather.split_candidates(
-            "results/{{platform}}/meth_calling/{{sample}}/calls_{scatteritem}.vcf"
+            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.vcf"
         ),
     output:
-        "results/{platform}/meth_calling/{sample}/calls.vcf",
+        "results/{platform}/varlo/meth_calling/{sample}/varlo.vcf",
     conda:
         "../envs/cat.yaml"
     shell:

@@ -25,7 +25,9 @@ include: "rules/plots_paper.smk"
 include: "rules/prepare_meth_calling.smk"
 include: "rules/prepare_enrichment.smk"
 include: "rules/modkit.smk"
+include: "rules/pbCpgTools.smk"
 include: "rules/methylation_calling.smk"
+include: "rules/compare_rna.smk"
 include: "rules/annotate_dmrs.smk"
 
 inputflags:

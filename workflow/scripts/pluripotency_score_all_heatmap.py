@@ -129,7 +129,9 @@ for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
                 title="Genomic Position",
                 # sort=alt.EncodingSortField(field="position", op="count", order="descending"),
             ),
-            color=alt.Color("Methylation_diff:Q", scale=alt.Scale(scheme="redblue")),
+            color=alt.Color(
+                "Methylation_diff:Q", scale=alt.Scale(scheme="redblue", domain=[-1, 1])
+            ),
             tooltip=[
                 "position",
                 "chromosome",

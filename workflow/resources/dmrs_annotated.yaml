@@ -20,12 +20,7 @@ views:
       The table is sorted in descending order by the absolute values of the signed versions of the pi-value score. Thus, values with small q-value but large methylation difference (and therefore values of importance) appear first."
     render-table:
       columns:
-        chr:
-          plot:
-            heatmap:
-              scale: ordinal
-              color-scheme: tableau20       
-        q_value:
+        qval:
           label: q-value
           plot:
             heatmap:
@@ -50,7 +45,7 @@ views:
                 - -1
                 - 0
                 - 1 
-        annotation:
+        annotation_type:
           plot:
             heatmap:
               scale: ordinal
@@ -66,6 +61,11 @@ views:
           link-to-url: 
             Ensembl:
               url: "http://www.ensembl.org/Homo_sapiens/Gene/Summary?g={transcriptId}"
+        ens_gene:
+          display-mode: hidden
+        annotation:
+          display-mode: hidden
+        
   regulatory_elements:
     dataset: regulatory_elements
     desc: ?f"Differentially methylated regions (DMRs) between the experiments {params.base_experiment} and {wildcards.group2}. The DMRs were annotated with genomic elements using chipseeker (https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html ).\n
