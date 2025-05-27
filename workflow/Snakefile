@@ -31,7 +31,7 @@ include: "rules/compare_rna.smk"
 include: "rules/annotate_dmrs.smk"
 
 inputflags:
-access.sequential
+    access.sequential
 
 
 # declare https://github.com/Addimator/enrichment as a module

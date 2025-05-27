@@ -5,7 +5,6 @@ import sys
 sys.stderr = open(snakemake.log[0], "w")
 
 
-
 def compute_bias(format_values):
     """Returns the bias label if present in FORMAT values, else 'normal'."""
     bias_labels = ["SB", "ROB", "RPB", "SCB", "HE", "ALB"]
@@ -34,24 +33,50 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                     parts[9].split(":"),
                 )
 
-                if alternative == "<METH>":
-                    format_fields = format_field.split(":")
-                    dp_index = format_fields.index("DP")
-                    af_index = format_fields.index("AF")
+                if alternative != "<METH>":
+                    continue
 
-                    meth_rate = float(values[af_index]) * 100
-                    coverage = int(values[dp_index])
+                format_fields = format_field.split(":")
+                dp_index = format_fields.index("DP")
+                af_index = format_fields.index("AF")
 
-                    match = re.search(r"PROB_PRESENT=([\d\.]+)", info_field)
-                    prob_present = 0
-                    try:
-                        prob_present = 10 ** (-float(match.group(1)) / 10)
-                    except:
-                        print("Prob present not found")
+                meth_rate = float(values[af_index]) * 100
+                coverage = int(values[dp_index])
 
-                    bias = compute_bias(values)
+                info_dict = dict(
+                    item.split("=", 1)
+                    for item in info_field.strip().split(";")
+                    if "=" in item
+                )
 
-                    df.append([chrom, position, meth_rate, coverage, bias, prob_present])
+                # Zugriff auf Werte
+                prob_present = info_dict["PROB_PRESENT"]
+                prob_absent = info_dict["PROB_ABSENT"]
+                print(
+                    f"Prob present: {prob_present}, Prob absent: {prob_absent}",
+                    file=sys.stderr,
+                )
+                try:
+                    # TODO: Shoud I inclue PROB_LOW?
+                    prob_present = 10 ** (-float(prob_present) / 10)
+                    print(f"Converted prob present: {prob_present}", file=sys.stderr)
+                    prob_absent = 10 ** (-float(prob_absent) / 10)
+                    print(f"Converted prob absent: {prob_absent}", file=sys.stderr)
+                    if (
+                        prob_present < snakemake.params["prob_pres_threshhold"]
+                        and prob_absent < snakemake.params["prob_absent_threshhold"]
+                    ):
+                        continue
+                except Exception:
+                    print(
+                        f"Prob present not found on chrom {chrom}, position {position}",
+                        file=sys.stderr,
+                    )
+                    continue
+
+                bias = compute_bias(values)
+
+                df.append([chrom, position, meth_rate, coverage, bias, prob_present])
             elif meth_caller == "modkit":
                 chrom = parts[0].removeprefix("chr")
                 position = int(parts[2])
@@ -128,8 +153,6 @@ endo_df = read_tool_file(endo_file, "endoderm", meth_caller)
 print("Finished going through endo", file=sys.stderr)
 ecto_df = read_tool_file(ecto_file, "ectoderm", meth_caller)
 print("Finished going through ecto", file=sys.stderr)
-
-
 
 
 df = merge_dfs(undiff_df, meso_df, endo_df, ecto_df)

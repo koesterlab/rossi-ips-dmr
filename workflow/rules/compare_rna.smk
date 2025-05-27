@@ -20,7 +20,7 @@ rule rna_seq_annotations:
         rna_annotations="results/{platform}/{caller}/rna_seq/{group2}.tsv",
     output:
         report(
-            directory("results/{platform}/{caller}/rna_seq/{group2}"),
+            directory("results/{platform}/{caller}/rna_seq/datavzrd/{group2}"),
             caption="../report/annotations.rst",
             htmlindex="index.html",
             category="RNA Seq Comparison",
