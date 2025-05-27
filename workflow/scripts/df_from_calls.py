@@ -64,7 +64,7 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                     print(f"Converted prob absent: {prob_absent}", file=sys.stderr)
                     if (
                         prob_present < snakemake.params["prob_pres_threshhold"]
-                        and prob_absent < snakemake.params["prob_absent_threshhold"]
+                        and prob_absent < snakemake.params["prob_abs_threshhold"]
                     ):
                         continue
                 except Exception:

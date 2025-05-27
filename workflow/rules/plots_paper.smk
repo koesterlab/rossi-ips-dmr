@@ -12,7 +12,9 @@ rule df_from_calls:
     log:
         "logs/df_from_calls/{platform}/{caller}.log"
     params:
-        meth_caller=lambda wildcards: wildcards.caller
+        meth_caller=lambda wildcards: wildcards.caller,
+        prob_pres_threshhold=config["prob_pres_threshold"],
+        prob_abs_threshhold=config["prob_abs_threshold"],
     script:
         "../scripts/df_from_calls.py"
 

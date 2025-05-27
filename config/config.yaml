@@ -27,8 +27,8 @@ sample_path: "config/sample.tsv"
 ref_sample: "psc"
 
 # Define threshhold for false positive cutoff
-prob_pres_threshhold: 0.95
-prob_absent_threshhold: 0.95
+prob_pres_threshold: 0.95
+prob_abs_threshold: 0.95
 # Define the minimum percantage  of methylation to be considered as a methylated site
 meth_threshold: 5
 
