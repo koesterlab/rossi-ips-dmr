@@ -37,13 +37,13 @@ inputflags:
 # declare https://github.com/Addimator/enrichment as a module
 module enrichment:
     snakefile:
-        # github(
-        #     "Addimator/enrichment",
-        #     path="workflow/Snakefile",
-        #     # tag="v2.5.4",
-        #     branch="main",
-        # )
-        "/homes/aprinz/enrichment/workflow/Snakefile"
+        github(
+            "Addimator/enrichment",
+            path="workflow/Snakefile",
+            # tag="v2.5.4",
+            branch="main",
+        )
+        # "/homes/aprinz/enrichment/workflow/Snakefile"
     config:
         config
 

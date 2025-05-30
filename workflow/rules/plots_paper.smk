@@ -35,7 +35,7 @@ rule focus_df_on_diff_methylated_loci:
 
 rule most_variable_positions:
     input:
-        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        "results/{platform}/{caller}/meth_calling/calls.parquet",
     output:
         "results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     conda:
@@ -46,7 +46,7 @@ rule most_variable_positions:
 
 rule scatter_plot:
     input:
-        calls="results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        calls="results/{platform}/{caller}/meth_calling/calls.parquet",
         # most_variable_positions="results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     output:
         report(
@@ -73,8 +73,8 @@ rule scatter_plot:
 
 rule scatter_plot_pb_np:
     input:
-        pacbio="results/nanopore/{caller}/meth_calling/calls_focused.parquet",
-        nanopore="results/pacbio/{caller}/meth_calling/calls_focused.parquet",
+        nanopore="results/nanopore/{caller}/meth_calling/calls.parquet",
+        pacbio="results/pacbio/{caller}/meth_calling/calls.parquet",
     output:
         "results/comp_pb_np/meth_comp_pb_np_{group}.png",
     params:
@@ -90,7 +90,7 @@ rule scatter_plot_pb_np:
 rule scatter_plot_endo_meso:
     input:
         # Must be list because uses same plot function as scatter_plot
-        calls="results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        calls="results/{platform}/{caller}/meth_calling/calls.parquet",
         # most_variable_positions="results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     output:
         report(
@@ -115,7 +115,7 @@ rule scatter_plot_endo_meso:
 
 rule pluripotency_score_psc:
     input:
-        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        "results/{platform}/{caller}/meth_calling/calls.parquet",
     output:
         report(
             "results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html",
@@ -135,7 +135,7 @@ rule pluripotency_score_psc:
 
 rule pluripotency_score_all:
     input:
-        "results/{platform}/{caller}/meth_calling/calls_focused.parquet",
+        "results/{platform}/{caller}/meth_calling/calls.parquet",
     output:
         report(
             "results/{platform}/{caller}/plots_paper/pluripotency_score_all.html",

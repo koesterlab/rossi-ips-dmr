@@ -36,6 +36,7 @@ rule metilene_input:
         "../scripts/metilene_input.py"
 
 
+# | chr | start | stop | q-value | mean methylation difference | #CpGs | p (MWU) | p (2D KS) | mean g1 | mean g2 |
 rule call_metilene:
     input:
         "results/{platform}/{caller}/dmr_calls/{group2}/metilene_input.txt",
@@ -52,13 +53,32 @@ rule call_metilene:
         """
 
 
+rule focus_dmrs:
+    input:
+        ecto="results/{platform}/{caller}/dmr_calls/ectoderm/metilene_output.bed",
+        meso="results/{platform}/{caller}/dmr_calls/endoderm/metilene_output.bed",
+        endo="results/{platform}/{caller}/dmr_calls/mesoderm/metilene_output.bed",
+    output:
+        ecto="results/{platform}/{caller}/dmr_calls/ectoderm/metilene_output_focused.bed",
+        meso="results/{platform}/{caller}/dmr_calls/endoderm/metilene_output_focused.bed",
+        endo="results/{platform}/{caller}/dmr_calls/mesoderm/metilene_output_focused.bed",
+    conda:
+        "../envs/bedtools.yaml"
+    log:
+        "logs/focus_dmrs/{platform}/{caller}.log",
+    params:
+        meth_threshold=config["meth_threshold"],
+    script:
+        "../scripts/focus_dmrs.py"
+
+
 rule plot_dmrs:
     input:
-        met=directory("resources/tools/metilene"),
+        met="resources/tools/metilene",
         met_out="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
     output:
-        "results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.bedgraph",
-        report(
+        bed="results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.bedgraph",
+        pdf=report(
             "results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
             caption="../report/metilene_plots.rst",
             category="DMR plots",
@@ -76,23 +96,8 @@ rule plot_dmrs:
         base_exp_number=config["ref_sample"],
     shell:
         """
-        PARENT_DIR=$(dirname {output})/dmr
+        PARENT_DIR=$(dirname {output.bed})/dmr
         echo {params.base_exp_number}
         echo $PARENT_DIR
         perl {input.met}/metilene_output.pl -q {input.met_out} -o $PARENT_DIR -a {params.base_exp_number} -b {wildcards.group2}
         """
-
-
-# Still included for debugging reason but not used right now
-rule _plot_pvals:
-    input:
-        met_out="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
-    output:
-        "results/{platform}/{caller}/dmr_calls/{group2}/plots/pvals.html",
-    conda:
-        "../envs/plot.yaml"
-    params:
-        path_prefix=lambda wildcards: f"results/{platform}/{caller}/dmr_calls/{wildcards.group2}",
-        sample=lambda wildcards: {wildcards.group2.split("-")[0]},
-    script:
-        "../scripts/plot_pvals.py"

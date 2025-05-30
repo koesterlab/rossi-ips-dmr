@@ -3,7 +3,18 @@ rule rna_seq:
         genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
         rna_seq="resources/rna_seq/rna_seq.xlsx",
     output:
-        "results/{platform}/{caller}/rna_seq/{group2}.tsv",
+        table="results/{platform}/{caller}/rna_seq/{group2}.tsv",
+        plot=report(
+            "results/{platform}/{caller}/rna_seq/{group2}.html",
+            caption="../report/annotations.rst",
+            htmlindex="index.html",
+            category="RNA Seq Comparison",
+            subcategory=lambda wildcards: f"Scatter: {wildcards.platform} - {wildcards.caller}",
+            labels=lambda wildcards: {
+                "experiment 1": config["ref_sample"],
+                "experiment 2": wildcards.group2,
+            },
+        ),
     params:
         germ_layer=lambda wildcards: wildcards.group2,
     conda:
@@ -24,10 +35,11 @@ rule rna_seq_annotations:
             caption="../report/annotations.rst",
             htmlindex="index.html",
             category="RNA Seq Comparison",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            subcategory=lambda wildcards: f"Tables: {wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
                 "experiment 1": config["ref_sample"],
                 "experiment 2": wildcards.group2,
+                "type": "table",
             },
         ),
     params:

@@ -52,16 +52,11 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                 # Zugriff auf Werte
                 prob_present = info_dict["PROB_PRESENT"]
                 prob_absent = info_dict["PROB_ABSENT"]
-                print(
-                    f"Prob present: {prob_present}, Prob absent: {prob_absent}",
-                    file=sys.stderr,
-                )
+
                 try:
                     # TODO: Shoud I inclue PROB_LOW?
                     prob_present = 10 ** (-float(prob_present) / 10)
-                    print(f"Converted prob present: {prob_present}", file=sys.stderr)
                     prob_absent = 10 ** (-float(prob_absent) / 10)
-                    print(f"Converted prob absent: {prob_absent}", file=sys.stderr)
                     if (
                         prob_present < snakemake.params["prob_pres_threshhold"]
                         and prob_absent < snakemake.params["prob_abs_threshhold"]
