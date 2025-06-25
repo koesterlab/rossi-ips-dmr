@@ -4,3 +4,4 @@ channels:
 dependencies:
   - bioconductor-biomart =2.58
   - r-tidyverse =2.0
+  - r-r.utils =2.13

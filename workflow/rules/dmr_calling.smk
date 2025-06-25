@@ -75,7 +75,7 @@ rule focus_dmrs:
 rule plot_dmrs:
     input:
         met="resources/tools/metilene",
-        met_out="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
+        met_out="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output_focused.bed",
     output:
         bed="results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.bedgraph",
         pdf=report(

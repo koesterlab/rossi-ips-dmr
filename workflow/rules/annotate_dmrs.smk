@@ -15,7 +15,7 @@ rule download_regulatory_elements:
 
 rule annotate_regulatory_elements:
     input:
-        metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
+        metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output_focused.bed",
         gene_annotation="resources/ref/regulatory_elements.gff3",
     output:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
@@ -80,7 +80,7 @@ rule generate_txdb:
 
 rule annotate_gene_elements:
     input:
-        metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
+        metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output_focused.bed",
         txdb="resources/ref/txdb.db",
         txnames="resources/ref/txnames.tsv",
     output:

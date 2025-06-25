@@ -2,4 +2,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - metilene=0.2.8
+  - metilene =0.2.8
+  - perl =5.32

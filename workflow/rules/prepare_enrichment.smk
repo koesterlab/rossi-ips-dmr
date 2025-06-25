@@ -8,6 +8,8 @@ rule get_ensembl_genes:
     params:
         species=get_bioc_species_name(),
         version=config["resources"]["ref"]["release"],
+    log:
+        "logs/get_ensembl_genes/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts.log",
     script:
         "../scripts/get_ensembl_genes.R"
 
