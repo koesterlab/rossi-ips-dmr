@@ -1,7 +1,7 @@
 rule create_heatmap:
     input:
         expand(
-            "results/{{platform}}/{{caller}}/dmr_calls/{sample}/genes_transcripts/chipseeker.tsv",
+            "results/{{platform}}/{{caller}}/dmr_calls/{sample}/genes_transcripts/chipseeker_filtered.tsv",
             sample=[
                 sample for sample in samples.keys() if sample != config["ref_sample"]
             ],

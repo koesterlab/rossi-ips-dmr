@@ -78,13 +78,29 @@ rule generate_txdb:
         "../scripts/generate_txdb.R"
 
 
-rule annotate_gene_elements:
+rule annotate_gene_elements_filtered:
     input:
         metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output_focused.bed",
         txdb="resources/ref/txdb.db",
         txnames="resources/ref/txnames.tsv",
     output:
-        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_filtered.tsv",
+    log:
+        "logs/annotate_gene_elements_{platform}_{caller}_{group2}.log",
+    conda:
+        "../envs/chipseeker.yaml"
+    script:
+        "../scripts/chipseeker.R"
+
+
+# We need the complete unfiltered list for rna seq comparison
+rule annotate_gene_elements_complete:
+    input:
+        metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
+        txdb="resources/ref/txdb.db",
+        txnames="resources/ref/txnames.tsv",
+    output:
+        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
     log:
         "logs/annotate_gene_elements_{platform}_{caller}_{group2}.log",
     conda:
@@ -104,10 +120,23 @@ rule rename_chipseeker_column:
         """
 
 
+# We only merge with polars because the join in get_ensembl_genes.R does not work
+rule annotate_chipseeker:
+    input:
+        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_{type}.tsv",
+        genes="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
+    output:
+        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_{type}.tsv",
+    conda:
+        "../envs/python_standard.yaml"
+    script:
+        "../scripts/annotate_chipseeker.py"
+
+
 rule datavzrd_annotations:
     input:
         config=workflow.source_path("../resources/dmrs_annotated.yaml"),
-        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
         regulatory_elements="results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
         report(

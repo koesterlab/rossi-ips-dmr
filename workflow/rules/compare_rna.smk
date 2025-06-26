@@ -1,6 +1,6 @@
 rule rna_seq:
     input:
-        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_complete.tsv",
         rna_seq="resources/rna_seq/rna_seq.xlsx",
     output:
         table="results/{platform}/{caller}/rna_seq/{group2}.tsv",

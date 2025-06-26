@@ -1,6 +1,6 @@
 rule get_ensembl_genes:
     input:
-        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
     output:
         "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
     conda:
@@ -12,19 +12,6 @@ rule get_ensembl_genes:
         "logs/get_ensembl_genes/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts.log",
     script:
         "../scripts/get_ensembl_genes.R"
-
-
-# We only merge with polars because the join in get_ensembl_genes.R does not work
-rule annotate_chipseeker:
-    input:
-        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
-        genes="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
-    output:
-        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
-    conda:
-        "../envs/python_standard.yaml"
-    script:
-        "../scripts/annotate_chipseeker.py"
 
 
 # rule compose_sample_sheet:

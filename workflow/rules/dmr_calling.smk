@@ -56,12 +56,12 @@ rule call_metilene:
 rule focus_dmrs:
     input:
         ecto="results/{platform}/{caller}/dmr_calls/ectoderm/metilene_output.bed",
-        meso="results/{platform}/{caller}/dmr_calls/endoderm/metilene_output.bed",
-        endo="results/{platform}/{caller}/dmr_calls/mesoderm/metilene_output.bed",
+        meso="results/{platform}/{caller}/dmr_calls/mesoderm/metilene_output.bed",
+        endo="results/{platform}/{caller}/dmr_calls/endoderm/metilene_output.bed",
     output:
         ecto="results/{platform}/{caller}/dmr_calls/ectoderm/metilene_output_focused.bed",
-        meso="results/{platform}/{caller}/dmr_calls/endoderm/metilene_output_focused.bed",
-        endo="results/{platform}/{caller}/dmr_calls/mesoderm/metilene_output_focused.bed",
+        meso="results/{platform}/{caller}/dmr_calls/mesoderm/metilene_output_focused.bed",
+        endo="results/{platform}/{caller}/dmr_calls/endoderm/metilene_output_focused.bed",
     conda:
         "../envs/bedtools.yaml"
     log:
