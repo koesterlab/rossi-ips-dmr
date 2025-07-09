@@ -4,8 +4,19 @@ rule rna_seq:
         rna_seq="resources/rna_seq/rna_seq.xlsx",
     output:
         table="results/{platform}/{caller}/rna_seq/{group2}.tsv",
-        plot=report(
-            "results/{platform}/{caller}/rna_seq/{group2}.html",
+        scatter=report(
+            "results/{platform}/{caller}/rna_seq/{group2}_scatter.html",
+            caption="../report/annotations.rst",
+            htmlindex="index.html",
+            category="RNA Seq Comparison",
+            subcategory=lambda wildcards: f"Scatter: {wildcards.platform} - {wildcards.caller}",
+            labels=lambda wildcards: {
+                "experiment 1": config["ref_sample"],
+                "experiment 2": wildcards.group2,
+            },
+        ),
+        histogram=report(
+            "results/{platform}/{caller}/rna_seq/{group2}_histogram.html",
             caption="../report/annotations.rst",
             htmlindex="index.html",
             category="RNA Seq Comparison",
