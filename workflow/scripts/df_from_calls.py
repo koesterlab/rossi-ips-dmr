@@ -24,54 +24,87 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
 
             if meth_caller == "varlo":
 
-                chrom, position, alternative, info_field, format_field, values = (
-                    parts[0],
-                    int(parts[1]),
-                    parts[4],
-                    parts[7],
-                    parts[8],
-                    parts[9].split(":"),
-                )
 
-                if alternative != "<METH>":
+
+                chrom = parts[0]
+                position = int(parts[1])
+                alt = parts[4]
+                info_field = parts[7]
+                format_field = parts[8]
+
+                if alt != "<METH>":
                     continue
 
+                # Parse sample AF values
                 format_fields = format_field.split(":")
-                dp_index = format_fields.index("DP")
-                af_index = format_fields.index("AF")
+                try:
+                    af_index = format_fields.index("AF")
+                    dp_index = format_fields.index("DP")
+                except ValueError:
+                    continue
 
-                meth_rate = float(values[af_index]) * 100
-                coverage = int(values[dp_index])
+                sample_afs = []
+                sample_dps = []
+                sample_bias = "normal"
+                for sample_fmt in parts[9:]:
+                    values = sample_fmt.split(":")
+                    try:
+                        af = float(values[af_index])
+                        dp = int(values[dp_index])
+                        bias = compute_bias(values)
+                        if bias != "normal":
+                            sample_bias = bias
 
+                        sample_afs.append(af * 100)
+                        sample_dps.append(dp)
+                    except (ValueError, IndexError):
+                        pass
+
+                meth_rate = sum(sample_afs) / len(sample_afs) if sample_afs else 0
+                coverage = sum(sample_dps) / len(sample_dps) if sample_dps else 0
+
+                # Parse INFO fields
                 info_dict = dict(
                     item.split("=", 1)
                     for item in info_field.strip().split(";")
                     if "=" in item
                 )
 
-                # Zugriff auf Werte
-                prob_present = info_dict["PROB_PRESENT"]
-                prob_absent = info_dict["PROB_ABSENT"]
+                alpha = float(snakemake.params["alpha"])
 
-                try:
-                    # TODO: Shoud I inclue PROB_LOW?
-                    prob_present = 10 ** (-float(prob_present) / 10)
-                    prob_absent = 10 ** (-float(prob_absent) / 10)
-                    if (
-                        prob_present < snakemake.params["prob_pres_threshhold"]
-                        and prob_absent < snakemake.params["prob_abs_threshhold"]
+                def phred_to_prob(score):
+                    return 10 ** (-float(score) / 10)
+
+                def is_missing(val):
+                    return val is None or val == "."
+
+                # Determine probability of methylation
+                if is_missing(info_dict.get("PROB_PRESENT")):
+                    if is_missing(info_dict.get("PROB_HIGH")) or is_missing(
+                        info_dict.get("PROB_LOW")
                     ):
+                        print(
+                            f"Missing probability info at {chrom}:{position}",
+                            file=sys.stderr,
+                        )
                         continue
-                except Exception:
+                    prob_present = phred_to_prob(
+                        info_dict["PROB_HIGH"]
+                    ) + phred_to_prob(info_dict["PROB_LOW"])
+                else:
+                    prob_present = phred_to_prob(info_dict["PROB_PRESENT"])
+
+                prob_absent = phred_to_prob(info_dict.get("PROB_ABSENT", 0))
+                prob_artifact = phred_to_prob(info_dict.get("PROB_ARTIFACT", 0))
+
+                if max(prob_present, prob_absent + prob_artifact) < (1 - alpha):
                     print(
-                        f"Prob present not found on chrom {chrom}, position {position}",
+                        f"Low confidence site skipped: {chrom}:{position}",
                         file=sys.stderr,
                     )
                     continue
 
-                bias = compute_bias(values)
-
-                df.append([chrom, position, meth_rate, coverage, bias, prob_present])
+                df.append([chrom, position, meth_rate, coverage, sample_bias])
             elif meth_caller == "modkit":
                 chrom = parts[0].removeprefix("chr")
                 position = int(parts[2])
@@ -109,7 +142,7 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
         f"{axis_name}_methylation",
         f"{axis_name}_coverage",
         f"{axis_name}_bias",
-        f"{axis_name}_prob_present",
+        # f"{axis_name}_prob_present",
     ]
     return pd.DataFrame(df, columns=columns)
 

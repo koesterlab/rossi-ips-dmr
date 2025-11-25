@@ -1,6 +1,7 @@
 meth_caller:
-  pacbio: [varlo]
-  nanopore: [varlo]
+  # pacbio: [varlo]
+  # nanopore: [varlo]
+  platforms_combined: [varlo]
 
 
 
@@ -18,7 +19,9 @@ resources:
 #
 scatter_items: 100
 
-platforms: [pacbio, nanopore]
+# platforms: [pacbio, nanopore]
+platforms: [platforms_combined]
+
 # platforms: []
 # Path of the sample file
 sample_path: "config/sample.tsv"
@@ -29,6 +32,7 @@ ref_sample: "psc"
 # Define threshhold for false positive cutoff
 prob_pres_threshold: 0.95
 prob_abs_threshold: 0.95
+alpha: 0.01
 # Define the minimum percantage  of methylation to be considered as a methylated site
 meth_threshold: 5
 
@@ -40,7 +44,7 @@ enrichment:
     fdr_genes: 0.05
     fdr_go_terms: 0.05
     pathvars:
-      input_file: "results/{platform}/{caller}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
+      input_file: "results/{platform}/{caller}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed_filtered"
       output_file: "results/{platform}/{caller}/enrichment/goatools/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
       # Must contain ns
       plot_file: "results/{{platform}}/{{caller}}/enrichment/goatools/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
@@ -48,7 +52,8 @@ enrichment:
       # Must contain all wildcards from the other files
       log_file_name: "{platform}_{caller}_{group}_{gene_fdr}_{go_term_fdr}"      
       wildcards:
-        platform: '["pacbio", "nanopore"]'
+        # platform: '["pacbio", "nanopore"]'
+        platform: '["platforms_combined"]'
         caller: '["varlo"]'
         group: '["mesoderm", "endoderm", "ectoderm",]'
         gene_fdr: "str(config['enrichment']['goatools']['fdr_genes']).replace('.', '-')"

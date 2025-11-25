@@ -20,7 +20,7 @@ rule rna_seq:
             caption="../report/annotations.rst",
             htmlindex="index.html",
             category="RNA Seq Comparison",
-            subcategory=lambda wildcards: f"Scatter: {wildcards.platform} - {wildcards.caller}",
+            subcategory=lambda wildcards: f"Histogram: {wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
                 "experiment 1": config["ref_sample"],
                 "experiment 2": wildcards.group2,

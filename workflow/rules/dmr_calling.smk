@@ -30,6 +30,8 @@ rule metilene_input:
         group2=lambda wildcards: wildcards.group2,
     conda:
         "../envs/plot.yaml"
+    resources:
+        mem_mb=16000,
     log:
         "logs/metilene_input/{platform}/{caller}/{group2}.log",
     script:

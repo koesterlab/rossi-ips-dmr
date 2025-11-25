@@ -1,7 +1,12 @@
 results/**
 resources/**
+resources/*
+!resources/rna_seq/
+!resources/rna_seq/**
 logs/**
 config/samples.tsv
 .snakemake
 .snakemake/**
 report.zip
+
+results_old/**

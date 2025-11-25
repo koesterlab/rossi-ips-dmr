@@ -38,7 +38,7 @@ rule add_regulatory_elements_header:
         cat {input} >> {output}
         """
 
-
+# Prepare table for better readability with datavzrd
 rule postprocess_regulatory_elements:
     input:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",

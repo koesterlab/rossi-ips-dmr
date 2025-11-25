@@ -3,19 +3,19 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - varlociraptor =8.4
-  - vega-lite-cli =5.16
-  - bcftools =1.19
-  - libclang
-  - rust
-  - pkg-config
-  - make
-  - cmake
-  - gsl
-  - libcblas
-  - openssl
-  - zlib
-  - bzip2
-  - xz
-  - clangdev
-  - blis
+  - varlociraptor =8.9
+  # - vega-lite-cli =5.16
+  # - bcftools =1.19
+  # - libclang
+  # - rust
+  # - pkg-config
+  # - make
+  # - cmake
+  # - gsl
+  # - libcblas
+  # - openssl
+  # - zlib
+  # - bzip2
+  # - xz
+  # - clangdev
+  # - blis

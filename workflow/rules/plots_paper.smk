@@ -1,22 +1,4 @@
-rule df_from_calls:
-    input:
-        undifferentiated="results/{platform}/{caller}/meth_calling/psc/{caller}.vcf",
-        meso="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.vcf",
-        endo="results/{platform}/{caller}/meth_calling/endoderm/{caller}.vcf",
-        ecto="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.vcf",
-        # "results/{platform}/{caller}/meth_calling/{group}/calls.vcf",
-    output:
-        "results/{platform}/{caller}/meth_calling/calls.parquet",
-    conda:
-        "../envs/plot.yaml"
-    log:
-        "logs/df_from_calls/{platform}/{caller}.log"
-    params:
-        meth_caller=lambda wildcards: wildcards.caller,
-        prob_pres_threshhold=config["prob_pres_threshold"],
-        prob_abs_threshhold=config["prob_abs_threshold"],
-    script:
-        "../scripts/df_from_calls.py"
+
 
 rule focus_df_on_diff_methylated_loci:
     input:
@@ -65,6 +47,8 @@ rule scatter_plot:
         meth_caller=lambda wildcards: wildcards.caller
     wildcard_constraints:
         group2="(?!endo_meso).*",
+    resources:
+        mem_mb=16000,
     conda:
         "../envs/plot.yaml"
     script:
@@ -103,6 +87,8 @@ rule scatter_plot_endo_meso:
                 "Type": "endo_meso",
             },
         ),
+    resources:
+        mem_mb=16000,
     params:
         group1="mesoderm",
         group2="endoderm",
@@ -127,6 +113,8 @@ rule pluripotency_score_psc:
                 "Type": "undifferentiated",
             },
         ),
+    resources:
+        mem_mb=16000,
     conda:
         "../envs/plot.yaml"
     script:
@@ -149,5 +137,7 @@ rule pluripotency_score_all:
         ),
     conda:
         "../envs/plot.yaml"
+    resources:
+        mem_mb=16000,
     script:
         "../scripts/pluripotency_score_all_heatmap.py"

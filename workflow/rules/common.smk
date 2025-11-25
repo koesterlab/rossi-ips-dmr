@@ -36,7 +36,7 @@ def all_input(wildcards):
                 "exon",
                 "3_utr",
                 "5_utr",
-                "downstream",
+                # "downstream",
             ]
         ]
     )
@@ -70,7 +70,7 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/rna_seq/{group2}_{plot}"
+            f"results/{platform}/{caller}/rna_seq/{group2}_{plot}.html"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
@@ -95,26 +95,27 @@ def all_input(wildcards):
     #     ]
     # )
 
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #     ]
-    # )
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+        ]
+    )
 
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #         for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-    #     ]
-    # )
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
+        ]
+    )
 
     # wanted_input.extend([
     #         f"results/comp_pb_np/meth_comp_pb_np_{group}.png"
     #         for group in [s for s in samples.keys() ]
     #     ])
+    print(wanted_input)
 
     return wanted_input
