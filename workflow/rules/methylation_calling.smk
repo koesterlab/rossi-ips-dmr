@@ -9,12 +9,12 @@ rule find_candidates:
     output:
         "resources/candidates/candidates.bcf",
     log:
-        "logs/find_candidates.log",
+        "logs/varlociraptor/find_candidates.log",
     conda:
         "../envs/varlociraptor.yaml"
     shell:
         """ 
-        varlociraptor -- methylation-candidates {input.fasta} {output} --motifs CG
+        varlociraptor methylation-candidates {input.fasta} {output} --motifs CG 2> {log}
         """
 
 
@@ -24,25 +24,25 @@ rule split_candidates:
     output:
         scatter.split_candidates("resources/candidates/candidates_{scatteritem}.bcf"),
     log:
-        "logs/split_candidates.log",
+        "logs/varlociraptor/split_candidates.log",
     conda:
         "../envs/rbt.yaml"
     shell:
-        "rbt vcf-split {input} {output}"
+        "rbt vcf-split {input} {output} 2> {log}"
 
 
 # We want to extract only the important reads from the bam file. Since the candidates span more than one chromosome we cant just use the normal samtools view -b
-# rule candidates_to_bed:
-#     input:
-#         "resources/candidates/candidates_{scatteritem}.bcf",
-#     output:
-#         "resources/candidates/candidates_{scatteritem}.bed",
-#     log:
-#         "logs/candidates_to_bed_{scatteritem}.log",
-#     conda:
-#         "../envs/pysam.yaml"
-#     script:
-#         "../scripts/candidates_to_bed.py"
+rule candidates_to_bed:
+    input:
+        "resources/candidates/candidates_{scatteritem}.bcf",
+    output:
+        "resources/candidates/candidates_{scatteritem}.bed",
+    log:
+        "logs/varlociraptor/candidates_to_bed_{scatteritem}.log",
+    conda:
+        "../envs/pysam.yaml"
+    script:
+        "../scripts/candidates_to_bed.py"
 
 
 rule compute_meth_observations:
@@ -58,11 +58,11 @@ rule compute_meth_observations:
         "results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
     conda:
         "../envs/varlociraptor.yaml"
-    params:
-        sequencer=lambda wildcards: samples[wildcards.sample][1],
+    log:
+        "logs/varlociraptor/compute_meth_obs/{platform}_{sample}_{scatteritem}.log",
     shell:
         """ 
-        varlociraptor -- preprocess variants {input.genome} --candidates {input.candidates} --bam {input.alignments} --read-type {params.sequencer} --max-depth 1000 > {output}
+        varlociraptor preprocess variants {input.genome} --candidates {input.candidates} --bam {input.alignments}  --methylation-read-type annotated --max-depth 1000 > {output} 2> {log}
         """
 
 
@@ -114,18 +114,18 @@ rule call_methylation:
     input:
         pb="results/pacbio/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
         np="results/nanopore/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
-        scenario="resources/scenario_common.yaml",
+        scenario="resources/scenarios/scenario_common.yaml",
     output:
         "results/platforms_combined/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     conda:
         "../envs/varlociraptor.yaml"
     log:
-        "logs/compute_meth_together_{sample}_{scatteritem}.log",
+        "logs/varlociraptor/compute_meth_together/{sample}_{scatteritem}.log",
     resources:
         mem_mb=128000,
     shell:
         """ 
-        varlociraptor -- call variants generic --scenario {input.scenario} \
+        varlociraptor call variants generic --scenario {input.scenario} \
             --obs pacbio={input.pb}  nanopore={input.np}   > {output} 2> {log}
         """
 
@@ -158,9 +158,11 @@ rule calls_to_vcf:
     conda:
         "../envs/samtools.yaml"
     threads: 10
+    log:
+        "logs/varlociraptor/calls_to_vcf/{platform}_{sample}_{scatteritem}.log"
     shell:
         """
-        bcftools view --threads {threads} {input} -o {output}
+        bcftools view --threads {threads} {input} -o {output} 2> {log}
         """
 
 
@@ -173,8 +175,10 @@ rule gather_calls:
         "results/{platform}/varlo/meth_calling/{sample}/varlo.vcf",
     conda:
         "../envs/cat.yaml"
+    log:
+        "logs/varlociraptor/gather_calls/{platform}_{sample}.log",
     shell:
-        "cat {input} > {output}"
+        "cat {input} > {output} 2> {log}"
 
 
 rule df_from_calls:
@@ -189,7 +193,7 @@ rule df_from_calls:
     conda:
         "../envs/plot.yaml"
     log:
-        "logs/df_from_calls/{platform}/{caller}.log"
+        "logs/varlociraptor/df_from_calls/{platform}_{caller}.log"
     resources:
         mem_mb=64000,
     params:

@@ -3,9 +3,12 @@
 rule download_metilene:
     output:
         temp("resources/tools/metilene_v02-8.tar.gz"),
+    log:
+        "logs/download_metilene.log",
     shell:
         """
-        wget -O {output} http://www.bioinf.uni-leipzig.de/Software/metilene/metilene_v02-8.tar.gz
+        mkdir -p $(dirname {output})
+        wget -O {output} http://www.bioinf.uni-leipzig.de/Software/metilene/metilene_v02-9.tar.gz 2> {log}
         """
 
 

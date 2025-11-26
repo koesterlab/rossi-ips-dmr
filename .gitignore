@@ -1,6 +1,8 @@
 results/**
 resources/**
 resources/*
+!resources/scenarios/
+!resources/scenarios/**
 !resources/rna_seq/
 !resources/rna_seq/**
 logs/**
