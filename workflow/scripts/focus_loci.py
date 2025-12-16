@@ -1,11 +1,11 @@
 # Define (un)methylated and prob_present as in compute_precision_recall
-# TODO: Compare df_from_calls to this version, improve prob_present (how, talk about scenario, low, high , absent)
+
 import pandas as pd
 import sys
 
 
 # Redirect standard error to snakemake log file
-sys.stderr = open(snakemake.log[0], "w")
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 
 # Set up plotting and display

@@ -19,6 +19,8 @@ rule create_heatmap:
     conda:
         "../envs/plot.yaml"
     log:
-        "logs/heatmap/{platform}/{caller}/{type}.log",
+        "logs/create_heatmap/{platform}_{caller}_{type}.log",
+    resources:
+        mem_mb=16000,
     script:
         "../scripts/heatmap.py"

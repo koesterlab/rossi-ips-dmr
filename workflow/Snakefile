@@ -2,7 +2,7 @@
 # Please follow the best practices:
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
 # in particular regarding the standardized folder structure mentioned there.
-# Lese die sample.tsv-Datei ein und speichere die Daten in einer Liste von Tupeln
+
 from snakemake.utils import min_version
 
 min_version("8.13.0")
@@ -21,9 +21,8 @@ configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
-include: "rules/plots_paper.smk"
+# include: "rules/plots_paper.smk"
 include: "rules/prepare_meth_calling.smk"
-include: "rules/prepare_enrichment.smk"
 include: "rules/modkit.smk"
 include: "rules/pbCpgTools.smk"
 include: "rules/methylation_calling.smk"
@@ -37,12 +36,13 @@ inputflags:
 # declare https://github.com/Addimator/enrichment as a module
 module enrichment:
     snakefile:
-        github(
-            "Addimator/enrichment",
-            path="workflow/Snakefile",
-            # tag="v2.5.4",
-            branch="main",
-        )
+        # github(
+        #     "Addimator/enrichment",
+        #     path="workflow/Snakefile",
+        #     # tag="v2.5.4",
+        #     branch="main",
+        # )
+        "/mnt/workspace/enrichment/workflow/Snakefile"
         # "/homes/aprinz/enrichment/workflow/Snakefile"
     config:
         config

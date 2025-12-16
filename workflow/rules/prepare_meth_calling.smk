@@ -41,9 +41,7 @@ rule genome_index:
     conda:
         "../envs/samtools.yaml"
     shell:
-        """ 
-        samtools faidx {input}
-        """
+        "samtools faidx {input} 2> {log}"
 
 
 rule index_alignment:
@@ -54,10 +52,10 @@ rule index_alignment:
     conda:
         "../envs/samtools.yaml"
     threads: 10
+    log:
+        "logs/index_alignment/{platform}_{sample}.log",
     shell:
-        """
-        samtools index -@ {threads} {input}
-        """
+        "samtools index -@ {threads} {input} 2> {log}"
 
 
 # Problem: The candidates span more than one chromosome... We would have to look at each chromosome indiviually
@@ -68,8 +66,8 @@ rule scatter_aligned_reads:
     output:
         "resources/{platform}/{sample}/alignment_{scatteritem}.bam",
     log:
-        "logs/scatter_aligned_reads_{platform}_{sample}_{scatteritem}.log",
+        "logs/scatter_aligned_reads/{platform}_{sample}_{scatteritem}.log",
     conda:
         "../envs/samtools.yaml"
     shell:
-        "samtools view -b -L {input.candidate} {input.alignment} > {output}"
+        "samtools view -b -L {input.candidate} {input.alignment} > {output} 2> {log}"

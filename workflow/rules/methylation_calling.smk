@@ -38,7 +38,7 @@ rule candidates_to_bed:
     output:
         "resources/candidates/candidates_{scatteritem}.bed",
     log:
-        "logs/varlociraptor/candidates_to_bed_{scatteritem}.log",
+        "logs/varlociraptor/candidates_to_bed/{scatteritem}.log",
     conda:
         "../envs/pysam.yaml"
     script:
@@ -59,7 +59,7 @@ rule compute_meth_observations:
     conda:
         "../envs/varlociraptor.yaml"
     log:
-        "logs/varlociraptor/compute_meth_obs/{platform}_{sample}_{scatteritem}.log",
+        "logs/varlociraptor/compute_meth_observations/{platform}_{sample}_{scatteritem}.log",
     shell:
         """ 
         varlociraptor preprocess variants {input.genome} --candidates {input.candidates} --bam {input.alignments}  --methylation-read-type annotated --max-depth 1000 > {output} 2> {log}

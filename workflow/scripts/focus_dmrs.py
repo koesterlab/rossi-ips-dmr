@@ -1,7 +1,7 @@
 import pybedtools
 import sys
 
-sys.stderr = open(snakemake.log[0], "w")
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 ecto = pybedtools.BedTool(snakemake.input["ecto"])
 endo = pybedtools.BedTool(snakemake.input["endo"])

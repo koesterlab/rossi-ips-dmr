@@ -1,7 +1,9 @@
-library(biomaRt)
-options(biomaRt.cache = FALSE)  # Cache deaktivieren
+log <- file(snakemake@log[[1]], open = "wt")
+sink(log)
+sink(log, type = "message")
 
-# Optional: eigenen temporären Cache-Ordner setzen
+library(biomaRt)
+options(biomaRt.cache = FALSE)
 tmp_cache_dir <- tempfile("biomaRt_cache_")
 dir.create(tmp_cache_dir)
 Sys.setenv(BIOMART_CACHE = tmp_cache_dir)
@@ -10,33 +12,22 @@ library(tidyverse)
 library(cli)
 library(R.utils)
 
-print("Starte Script")
 
-# Cache löschen, ohne Timeout, direkt:
 tryCatch({
   biomaRt::biomartCacheClear()
-  print("Cache gecleared...")
 }, error = function(e) {
   warning("Cache konnte nicht gelöscht werden: ", e$message)
 })
 
-# Input einlesen
-print("Lese Input-Datei ein...")
 data <- tryCatch({
   readr::read_tsv(snakemake@input[[1]], show_col_types = FALSE)
 }, error = function(e) {
   stop(paste("Fehler beim Einlesen der Datei:", e$message))
 })
 
-print(paste("Input erfolgreich eingelesen, Zeilen:", nrow(data)))
-# biomaRt-Verbindung mit Mirror-Fallbacks
 mart <- "useast"
 rounds <- 0
-print("Initialisiere biomaRt-Verbindung...")
-print(snakemake@params[["species"]])
-print("Das waren die species")
 while (class(mart)[[1]] != "Mart") {
-  print(paste("Versuche Mirror:", mart))
   mart <- tryCatch(
     {
       if (mart == "www") rounds <- rounds + 1 
@@ -45,13 +36,11 @@ while (class(mart)[[1]] != "Mart") {
             biomart = "ENSEMBL_MART_ENSEMBL",
             dataset = paste0(snakemake@params[["species"]], "_gene_ensembl"),
             mirror = mart
-            # Achtung: version nicht gleichzeitig mit mirror
           )
         }, timeout = 60, onTimeout = "error")
       
     },
     error = function(e) {
-      print(paste("Fehler bei Mirror", mart, ":", e$message))
       if (rounds >= 3) {
         stop(paste("Alle Ensembl-Mirrors durchlaufen,", rounds, "Runden. Kein Erfolg. Letzter Fehler:", e$message))
       }
@@ -60,7 +49,6 @@ while (class(mart)[[1]] != "Mart") {
         uswest = "asia",
         asia = "www",
         www = {
-          print("Warte 30 Sekunden und beginne neue Runde...")
           Sys.sleep(30)
           "useast"
         }

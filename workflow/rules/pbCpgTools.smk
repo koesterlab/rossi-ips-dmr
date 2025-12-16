@@ -4,7 +4,7 @@ rule pb_CpG_download:
         "resources/ref_tools/pb-CpG-tools/pb-CpG-tools-v2.3.1-x86_64-unknown-linux-gnu/bin/aligned_bam_to_cpg_scores",
         "resources/ref_tools/pb-CpG-tools/pb-CpG-tools-v2.3.1-x86_64-unknown-linux-gnu/models/pileup_calling_model.v1.tflite",
     log:
-        "../logs/pb_CpG/download.log",
+        "../logs/pb_CpG_download.log",
     shell:
         """
         mkdir -p resources/ref_tools/pb-CpG-tools 2> {log}
@@ -29,7 +29,7 @@ rule pb_CpG_compute_methylation:
         ),
     threads: 8
     log:
-        "logs/pb_CpG_tools/{sample}.log",
+        "logs/pb_CpG_compute_methylation/{sample}.log",
     shell:
         "{input.runner} --bam {input.alignment} --output-prefix {params.prefix} --model {input.model} --threads {threads} 2> {log}"
 
@@ -41,5 +41,7 @@ rule pb_CpG_rename_output:
         # "results/pacbio/pb_CpG_tools/{protocol}/result_files/alignments_CpG.combined.bed",
     output:
         "results/pacbio/pb_CpG_tools/meth_calling/{sample}/pb_CpG_tools.vcf",
+    log:
+        "logs/pb_CpG_rename_output/{sample}.log",
     shell:
-        "mv {input} {output}"
+        "mv {input} {output} 2> {log}"

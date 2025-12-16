@@ -2,7 +2,7 @@ import pandas as pd
 import re
 import sys
 
-sys.stderr = open(snakemake.log[0], "w")
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 
 def compute_bias(format_values):

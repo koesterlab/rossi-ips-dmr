@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import altair as alt
 import os
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
 
 def compute_rmse(df, x_axis_name, y_axis_name):
     squared_errors = (
@@ -88,7 +90,6 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
     chart.save(output)
 
 
-# Einstellungen für DataFrames
 alt.data_transformers.enable("vegafusion")
 pd.set_option("display.max_columns", None)
 

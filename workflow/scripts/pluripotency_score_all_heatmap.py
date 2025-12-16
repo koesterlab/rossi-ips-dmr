@@ -1,23 +1,19 @@
 import pandas as pd
 import altair as alt
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
 
 pd.set_option("display.max_columns", None)
 
 
 df = pd.read_parquet(snakemake.input, engine="pyarrow")
 
-print(df)
-# cg21699252 - 2:15938891-15938892 (-1)
-# cg00933813 - 10:35594676-35594677 (-1)
-# cg00661673 - 4:168841140-168841141 (1)
 
-# Die chromosomen-Positionen, nach denen gefiltert werden soll
 psc_position_pairs = {
     ("2", 15938891): "cg21699252",
     ("10", 35594676): "cg00933813",
     ("4", 168841140): "cg00661673",
-    # usw. – ergänze die restlichen Mappings
 }
 endo_position_pairs = {
     ("6", 12886978): "cg20548013",
@@ -67,7 +63,6 @@ df_melted = filtered_df.melt(
     value_name="Methylation",
 )
 
-# Zelltypen schöner benennen
 df_melted["Cell_Type"] = df_melted["Cell_Type"].replace(
     {
         "psc_methylation": "PSC",
@@ -109,13 +104,12 @@ psc_values = df_melted[df_melted["Cell_Type"] == "PSC"][
     ["position", "Methylation"]
 ].set_index("position")["Methylation"]
 
-# Nun für jede Zeile die Differenz berechnen, indem der Methylierungswert von der PSC Position subtrahiert wird
+
 df_melted["Methylation_diff"] = df_melted.apply(
     lambda row: row["Methylation"] - psc_values.get(row["position"], 0), axis=1
 )
 
 
-# Altair Heatmap
 charts = []
 for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
     df = df_melted[df_melted["biomarker"] == biomarker]
@@ -127,7 +121,6 @@ for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
             y=alt.Y(
                 "cg_id:N",
                 title="Genomic Position",
-                # sort=alt.EncodingSortField(field="position", op="count", order="descending"),
             ),
             color=alt.Color(
                 "Methylation_diff:Q", scale=alt.Scale(scheme="redblue", domain=[-1, 1])
@@ -145,64 +138,3 @@ for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
     )
     charts.append(heatmap)
 alt.vconcat(*charts).save(snakemake.output[0], scale_factor=2.0)
-# chart = (
-#     alt.Chart(plot_df)
-#     .mark_point(size=100)
-#     .encode(
-#         x=alt.X("biomarker:N", title="Biomarker"),
-#         y=alt.Y("pluripotency_score:Q", title="Score"),
-#         color=alt.Color(
-#             "line:N",
-#             title="Line",
-#             scale=alt.Scale(
-#                 domain=["PSC", "MESO", "ENDO", "ECTO", "ENDOMESO"],
-#                 range=["black", "blue", "red", "green", "orange"],
-#             ),
-#         ),
-#         tooltip=["pluripotency_score", "type", "line"],
-#     )
-#     .properties(title="Pluripotency Scores by Type and Line", width=600, height=400)
-# )
-# biomarkers = ["PSC", "MESO", "ENDO", "ECTO", "ENDOMESO"]
-# pluripotency_scores = []
-# for biomarker in biomarkers:
-#     biomarker_df = filtered_df[filtered_df["biomarker"] == biomarker]
-#     for methylation_type, methylation_col in [
-#         ("PSC", "psc_methylation"),
-#         ("MESO", "mesoderm_methylation"),
-#         ("ENDO", "endoderm_methylation"),
-#         ("ECTO", "ectoderm_methylation"),
-#         ("ENDOMESO", "endomeso_methylation"),
-#     ]:
-#         pluripotency_scores.append(
-#             {
-#                 "pluripotency_score": biomarker_df[methylation_col].sum() / 100,
-#                 "type": (
-#                     "undifferentiated"
-#                     if methylation_type == "PSC"
-#                     else "differentiated"
-#                 ),
-#                 "line": methylation_type,
-#                 "biomarker": biomarker,
-#             }
-#         )
-# plot_df = pd.DataFrame(pluripotency_scores)
-# chart = (
-#     alt.Chart(plot_df)
-#     .mark_point(size=100)
-#     .encode(
-#         x=alt.X("biomarker:N", title="Biomarker"),
-#         y=alt.Y("pluripotency_score:Q", title="Score"),
-#         color=alt.Color(
-#             "line:N",
-#             title="Line",
-#             scale=alt.Scale(
-#                 domain=["PSC", "MESO", "ENDO", "ECTO", "ENDOMESO"],
-#                 range=["black", "blue", "red", "green", "orange"],
-#             ),
-#         ),
-#         tooltip=["pluripotency_score", "type", "line"],
-#     )
-#     .properties(title="Pluripotency Scores by Type and Line", width=600, height=400)
-# )
-# chart.save(snakemake.output[0], scale_factor=2.0)

@@ -3,7 +3,7 @@ import sys
 import altair as alt
 import numpy as np
 
-sys.stderr = open(snakemake.log[0], "w")
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 germ_layer = snakemake.params["germ_layer"]
 germ_layer = germ_layer.replace("derm", "")
@@ -11,7 +11,7 @@ germ_layer = germ_layer.replace("derm", "")
 genes_df = pd.read_csv(snakemake.input["genes_transcripts"], sep="\t")
 genes_df = genes_df[genes_df["annotation_type"] == "Promoter"]
 
-rna_df = pd.read_excel(snakemake.input["rna_seq"])  # alternativ z. B. "Sheet1"
+rna_df = pd.read_excel(snakemake.input["rna_seq"]) 
 rna_df = rna_df[rna_df["test"] == germ_layer].reset_index(drop=True)
 
 
@@ -33,12 +33,11 @@ rna_df = rna_df.groupby("genes", as_index=False).agg(
     {
         "mean_methylation_difference": "mean",
         "absolute_signed_pi_val": "mean",
-        "transcript_index": "first",  # oder ggf. "min"/"max", je nach Bedarf
-        "ext_gene": "first",  # um eine Spalte für das Gen beizubehalten
-        "logFC": "first",  # oder ggf. "median", je nach Bedarf
-        "PValue": "first",  # oder ggf. "min"/"max", je nach Bedarf
-        "annotation_type": "first",  # um die Annotation beizubehalten
-        # weitere Spalten können je nach Bedarf ergänzt werden
+        "transcript_index": "first", 
+        "ext_gene": "first", 
+        "logFC": "first",
+        "PValue": "first", 
+        "annotation_type": "first",
     }
 )
 
@@ -87,7 +86,7 @@ rna_df[
         "mean_methylation_difference",
         "absolute_signed_pi_val",
     ]
-].fillna(-2).to_csv(
+].fillna(-1).sort_values(by=["absolute_signed_pi_val"], ascending=False).to_csv(
     snakemake.output["table"],
     sep="\t",
     index=False,
@@ -111,11 +110,9 @@ hyper_df = rna_df[is_hyper].copy()
 hypo_df = rna_df[is_hypo].copy()
 
 
-# globales Minimum und Maximum aus gesamten Daten
 min_fc = np.floor(rna_df["logFC"].min())
 max_fc = np.ceil(rna_df["logFC"].max())
 
-# Bin-Definition: 0.1er Schritte, global festgelegt
 bin_settings = alt.Bin(extent=[min_fc, max_fc], step=0.1)
 
 
@@ -126,7 +123,7 @@ def make_hist(df, title, color):
         .encode(
             x=alt.X(
                 "logFC_rounded:Q",
-                bin=bin_settings,  # Globale Bin-Definition
+                bin=bin_settings, 
                 title="log2FC (rounded to 1 decimal)",
             ),
             y=alt.Y("count()", title="Count"),
@@ -147,8 +144,7 @@ hist_hyper = make_hist(hyper_df, "Hypermethylated Genes", "#1f77b4")
 hist_hypo = make_hist(hypo_df, "Hypomethylated Genes", "#ff7f0e")
 hist_none = make_hist(no_dmr_df, "Genes not in DMRs", "#2ca02c")
 
-# Histogramme nebeneinander darstellen
-histograms = (
+barplots = (
     alt.hconcat(hist_hyper, hist_hypo, hist_none)
     .resolve_scale(x="shared", y="shared")
     .properties(
@@ -156,5 +152,4 @@ histograms = (
     )
 )
 
-# Histogramm speichern
-histograms.save(snakemake.output["histogram"])
+barplots.save(snakemake.output["barplot"])

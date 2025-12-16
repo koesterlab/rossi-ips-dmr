@@ -17,10 +17,12 @@ rule unpack_metilene:
         "resources/tools/metilene_v02-8.tar.gz",
     output:
         directory("resources/tools/metilene"),
+    log:
+        "logs/unpack_metilene.log",
     shell:
         """
         mkdir -p {output}
-        tar -xzf {input} -C {output} --strip-components=1
+        tar -xzf {input} -C {output} --strip-components=1 2> {log}
         """
 
 
@@ -34,9 +36,9 @@ rule metilene_input:
     conda:
         "../envs/plot.yaml"
     resources:
-        mem_mb=16000,
+        mem_mb=32000,
     log:
-        "logs/metilene_input/{platform}/{caller}/{group2}.log",
+        "logs/metilene_input/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/metilene_input.py"
 
@@ -52,9 +54,11 @@ rule call_metilene:
     threads: 10
     params:
         base_exp_number=config["ref_sample"],
+    log:
+        "logs/call_metilene/{platform}_{caller}_{group2}.log",
     shell:
         """
-        metilene -t {threads} -c 2 -a {params.base_exp_number} -b {wildcards.group2} {input} > {output}
+        metilene -t {threads} -c 2 -a {params.base_exp_number} -b {wildcards.group2} {input} > {output} 2> {log}
         """
 
 
@@ -70,7 +74,7 @@ rule focus_dmrs:
     conda:
         "../envs/bedtools.yaml"
     log:
-        "logs/focus_dmrs/{platform}/{caller}.log",
+        "logs/focus_dmrs/{platform}_{caller}.log",
     params:
         meth_threshold=config["meth_threshold"],
     script:
@@ -99,10 +103,12 @@ rule plot_dmrs:
         path_prefix=lambda wildcards: f"results/{wildcards.platform}/{wildcards.caller}/dmr_calls/{wildcards.group2}/plots/dmr",
         sample=lambda wildcards: {wildcards.group2.split("-")[0]},
         base_exp_number=config["ref_sample"],
+    log:
+        "logs/plot_dmrs/{platform}_{caller}_{group2}.log",
     shell:
         """
         PARENT_DIR=$(dirname {output.bed})/dmr
         echo {params.base_exp_number}
         echo $PARENT_DIR
-        perl {input.met}/metilene_output.pl -q {input.met_out} -o $PARENT_DIR -a {params.base_exp_number} -b {wildcards.group2}
+        perl {input.met}/metilene_output.pl -q {input.met_out} -o $PARENT_DIR -a {params.base_exp_number} -b {wildcards.group2} 2> {log}
         """

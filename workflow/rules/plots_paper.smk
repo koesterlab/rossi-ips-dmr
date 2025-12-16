@@ -8,7 +8,7 @@ rule focus_df_on_diff_methylated_loci:
     conda:
         "../envs/plot.yaml"
     log:
-        "logs/focus_df_on_diff_methylated_loci/{platform}/{caller}.log"
+        "logs/focus_df_on_diff_methylated_loci/{platform}_{caller}.log"
     params:
         meth_threshold=config["meth_threshold"],
     script:
@@ -22,6 +22,8 @@ rule most_variable_positions:
         "results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     conda:
         "../envs/plot.yaml"
+    log:
+        "logs/most_variable_positions/{platform}_{caller}.log",
     script:
         "../scripts/most_variable.py"
 
@@ -51,6 +53,8 @@ rule scatter_plot:
         mem_mb=16000,
     conda:
         "../envs/plot.yaml"
+    log:
+        "logs/scatter_plot/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/scatter_plot.py"
 
@@ -67,6 +71,8 @@ rule scatter_plot_pb_np:
         # group2="(?!endo_meso).*",
     conda:
         "../envs/plot.yaml"
+    # log:
+    #     "logs/scatter_plot_pb_np/{caller}_{group}.log",
     script:
         "../scripts/scatter_plot_pb_np.py"
 
@@ -95,6 +101,8 @@ rule scatter_plot_endo_meso:
         meth_caller=lambda wildcards: wildcards.caller
     conda:
         "../envs/plot.yaml"
+    log:
+        "logs/scatter_plot_endo_meso/{platform}_{caller}.log",
     script:
         "../scripts/scatter_plot.py"
 
@@ -117,6 +125,8 @@ rule pluripotency_score_psc:
         mem_mb=16000,
     conda:
         "../envs/plot.yaml"
+    log:
+        "logs/pluripotency_score_psc/{platform}_{caller}.log",
     script:
         "../scripts/pluripotency_score_psc.py"
 
@@ -139,5 +149,7 @@ rule pluripotency_score_all:
         "../envs/plot.yaml"
     resources:
         mem_mb=16000,
+    log:
+        "logs/pluripotency_score_all/{platform}_{caller}.log",
     script:
         "../scripts/pluripotency_score_all_heatmap.py"

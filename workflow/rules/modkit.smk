@@ -9,7 +9,7 @@ rule modkit_compute_methylation:
     conda:
         "../envs/modkit.yaml"
     log:
-        "logs/modkit/{caller}/{sample}.log",
+        "logs/modkit_compute_methylation/{caller}_{sample}.log",
     resources:
         mem_mb=16000
     shell:
@@ -26,6 +26,6 @@ rule modkit_rename_output:
     output:
         "results/nanopore/{caller}/meth_calling/{sample}/modkit.vcf",
     log:
-        "logs/modkit/{sample}_{caller}rename.log",
+        "logs/modkit_rename_output/{sample}_{caller}.log",
     shell:
         "mv {input} {output} 2> {log}"

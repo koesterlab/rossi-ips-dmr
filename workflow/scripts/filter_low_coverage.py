@@ -1,3 +1,5 @@
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
 input_vcf = snakemake.input[0]  
 output_vcf = snakemake.output[0]
 

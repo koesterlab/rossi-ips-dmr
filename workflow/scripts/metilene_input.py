@@ -2,7 +2,8 @@ from collections import defaultdict
 import pandas as pd
 import sys
 
-sys.stderr = open(snakemake.log[0], "w")
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
 pd.set_option("display.max_columns", None)
 
 df = pd.read_parquet(snakemake.input[0], engine="pyarrow")

@@ -5,6 +5,9 @@ import altair as alt
 import os
 
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
+
 def compute_rmse(df, cell_type):
     squared_errors = (
         df[f"{cell_type}_methylation_np"] - df[f"{cell_type}_methylation_pb"]
@@ -93,7 +96,6 @@ def plot_meth_vals(df, output, cell_type):
     chart.save(output)
 
 
-# Einstellungen für DataFrames
 alt.data_transformers.enable("vegafusion")
 pd.set_option("display.max_columns", None)
 

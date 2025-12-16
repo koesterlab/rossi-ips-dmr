@@ -6,9 +6,11 @@ rule download_regulatory_elements:
         species_cap=chromosome_conf["species"].capitalize(),
         build=chromosome_conf["build"],
         release=chromosome_conf["release"],
+    log:
+        "logs/download_regulatory_elements.log",
     shell:
         """
-        wget -O {output}.gz https://ftp.ensembl.org/pub/release-{params.release}/regulation/{params.species}/{params.build}/annotation/{params.species_cap}.{params.build}.regulatory_features.v{params.release}.gff3.gz
+        wget -O {output}.gz https://ftp.ensembl.org/pub/release-{params.release}/regulation/{params.species}/{params.build}/annotation/{params.species_cap}.{params.build}.regulatory_features.v{params.release}.gff3.gz 2> {log}
         gzip -d {output}.gz
         """
 
@@ -21,9 +23,11 @@ rule annotate_regulatory_elements:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
     conda:
         "../envs/bedtools.yaml"
+    log:
+        "logs/annotate_regulatory_elements/{platform}_{caller}_{group2}.log",
     shell:
         """
-        bedtools intersect -a {input.metilene} -b {input.gene_annotation} -wa -wb > {output}
+        bedtools intersect -a {input.metilene} -b {input.gene_annotation} -wa -wb > {output} 2> {log}
         """
 
 
@@ -32,10 +36,12 @@ rule add_regulatory_elements_header:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
     output:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_complete.tsv",
+    log:
+        "logs/add_regulatory_elements_header/{platform}_{caller}_{group2}.log",
     shell:
         """
-        echo -e "chr\tstart_dmr\tend_dmr\tq-value\tmean_methylation_difference\tnumber_CpGs\tp(MWU)\tp(2DKS)\tmean_g1\tmean_g2\tseqif\tsource\ttype\tstart_feature\tend_feature\tscore\tstrand\tphase\tattributes" > {output}
-        cat {input} >> {output}
+        echo -e "chr\tstart_dmr\tend_dmr\tq-value\tmean_methylation_difference\tnumber_CpGs\tp(MWU)\tp(2DKS)\tmean_g1\tmean_g2\tseqif\tsource\ttype\tstart_feature\tend_feature\tscore\tstrand\tphase\tattributes" > {output} 2> {log}
+        cat {input} >> {output} 2> {log}
         """
 
 # Prepare table for better readability with datavzrd
@@ -46,6 +52,8 @@ rule postprocess_regulatory_elements:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     conda:
         "../envs/python_standard.yaml"
+    log:
+        "logs/postprocess_regulatory_elements/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/postprocess_regulatory_elements.py"
 
@@ -58,7 +66,7 @@ rule get_gene_elements_annotation:
         build=chromosome_conf["build"],
         release=chromosome_conf["release"],
     log:
-        "logs/get_annotation.log",
+        "logs/get_gene_elements_annotation.log",
     cache: "omit-software"  # save space and time with between workflow caching (see docs)
     wrapper:
         "v3.3.5/bio/reference/ensembl-annotation"
@@ -86,7 +94,7 @@ rule annotate_gene_elements_filtered:
     output:
         chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_filtered.tsv",
     log:
-        "logs/annotate_gene_elements_{platform}_{caller}_{group2}.log",
+        "logs/annotate_gene_elements_filtered/{platform}_{caller}_{group2}.log",
     conda:
         "../envs/chipseeker.yaml"
     script:
@@ -102,22 +110,29 @@ rule annotate_gene_elements_complete:
     output:
         chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
     log:
-        "logs/annotate_gene_elements_{platform}_{caller}_{group2}.log",
+        "logs/annotate_gene_elements_complete/{platform}_{caller}_{group2}.log",
     conda:
         "../envs/chipseeker.yaml"
     script:
         "../scripts/chipseeker.R"
 
 
-rule rename_chipseeker_column:
+
+rule get_ensembl_genes:
     input:
-        "data/input.tsv",
+        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
     output:
-        "data/output.tsv",
-    shell:
-        """
-        awk 'NR==1{{gsub("q_value", "qval")}}1' {input} > {output}
-        """
+        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
+    conda:
+        "../envs/biomart.yaml"
+    params:
+        species=get_bioc_species_name(),
+        version=config["resources"]["ref"]["release"],
+    log:
+        "logs/get_ensembl_genes/{platform}_{caller}_{group2}.log",
+    script:
+        "../scripts/get_ensembl_genes.R"
+
 
 
 # We only merge with polars because the join in get_ensembl_genes.R does not work
@@ -129,6 +144,8 @@ rule annotate_chipseeker:
         "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_{type}.tsv",
     conda:
         "../envs/python_standard.yaml"
+    log:
+        "logs/annotate_chipseeker/{platform}_{caller}_{group2}_{type}.log",
     script:
         "../scripts/annotate_chipseeker.py"
 
@@ -152,5 +169,7 @@ rule datavzrd_annotations:
         ),
     params:
         base_experiment=lambda wildcards: config["ref_sample"],
+    log:
+        "logs/datavzrd_annotations/{platform}_{caller}_{group2}.log",
     wrapper:
         "v3.13.0/utils/datavzrd"

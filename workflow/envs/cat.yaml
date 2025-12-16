@@ -1,4 +1,5 @@
 channels:
   - conda-forge
+  - bioconda
 dependencies:
-  - cat=5.3
+  - cat=6.0

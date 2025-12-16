@@ -2,9 +2,10 @@ import pandas as pd
 import os
 import sys
 import seaborn as sns
+import numpy as np
 
 # We need this to cluster huge data
-sys.stderr = open(snakemake.log[0], "w")
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 sys.setrecursionlimit(100000)
 
@@ -35,16 +36,13 @@ def aggregate_by_gene_region(df):
     )
     return df_grouped[["region", "annotation_type", "mean_methylation_difference"]]
 
-
 input_files = snakemake.input
 output = snakemake.output[0]
 
-# Zelltyp-Namen aus Dateipfaden extrahieren (Ordnernamen)
 sample_names = [
     os.path.basename(os.path.dirname(os.path.dirname(file))) for file in input_files
 ]
 
-# DMR-Daten aggregieren und Spalten umbenennen mit Zelltypnamen
 aggregated_data = []
 for file, sample_name in zip(input_files, sample_names):
     df = pd.read_csv(
@@ -54,18 +52,19 @@ for file, sample_name in zip(input_files, sample_names):
     agg_df = agg_df.rename(columns={"mean_methylation_difference": sample_name})
     aggregated_data.append(agg_df)
 
-# Heatmap-Daten zusammenführen
 heatmap_data = aggregated_data[0]
 for df in aggregated_data[1:]:
     heatmap_data = heatmap_data.merge(df, on=["region", "annotation_type"], how="outer")
 
 heatmap_data = heatmap_data.fillna(0)
 
-# Filter auf annotation_type
 name = os.path.basename(output).replace(".png", "")
 annotation_type = filename_to_name[name]
 df_filtered = heatmap_data[heatmap_data["annotation_type"] == annotation_type]
-df_filtered = df_filtered[sample_names]  # nur relevante Sample-Spalten behalten
+df_filtered = df_filtered[sample_names]
+df_filtered = df_filtered.replace([np.inf, -np.inf], np.nan).dropna()
+    
+print(df_filtered.to_string(), file=sys.stderr)
 
 heatmap = sns.clustermap(
     df_filtered,

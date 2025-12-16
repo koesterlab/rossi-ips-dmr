@@ -1,15 +1,12 @@
 import pandas as pd
 import altair as alt
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 pd.set_option("display.max_columns", None)
 
 df = pd.read_parquet(snakemake.input, engine="pyarrow")
 
-
-# cg21699252 - 2:15938891-15938892 (-1)
-# cg00933813 - 10:35594676-35594677 (-1)
-# cg00661673 - 4:168841140-168841141 (1)
 psc_position_pairs = [("2", 15938891), ("10", 35594676), ("4", 168841140)]
 
 filtered_df = df[
@@ -19,14 +16,10 @@ filtered_df = df[
     )
 ].reset_index(drop=True)
 
-print(filtered_df)
-# Initialisiere das Dictionary für die neuen Daten
 pluripotency_scores = []
 
-# Berechnungen für jede Gruppe (Biomarker)
 
 
-# Erstellen der Zeilen für den aktuellen Biomarker
 for methylation_type, methylation_col in [
     ("PSC", "psc_methylation"),
     ("MESO", "mesoderm_methylation"),
@@ -44,12 +37,10 @@ for methylation_type, methylation_col in [
         }
     )
 
-# Erstellen des neuen DataFrames
 result_df = pd.DataFrame(pluripotency_scores)
 
 plot_df = pd.DataFrame(pluripotency_scores)
 
-# Altair-Plot erstellen
 chart = (
     alt.Chart(plot_df)
     .mark_point(size=100)
@@ -64,7 +55,6 @@ chart = (
                 range=["black", "blue", "red", "green"],
             ),
         ),
-        tooltip=["pluripotency_score", "type", "line"],  # Interaktive Tooltip-Infos
     )
     .properties(title="Pluripotency Scores by Type and Line", width=600, height=400)
 )

@@ -74,7 +74,7 @@ def all_input(wildcards):
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-            for plot in ["scatter", "histogram"]
+            for plot in ["scatter", "barplot"]
         ]
     )
 
@@ -95,22 +95,22 @@ def all_input(wildcards):
     #     ]
     # )
 
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-        ]
-    )
+    # wanted_input.extend(
+    #     [
+    #         f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #     ]
+    # )
 
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-        ]
-    )
+    # wanted_input.extend(
+    #     [
+    #         f"results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #         for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
+    #     ]
+    # )
 
     # wanted_input.extend([
     #         f"results/comp_pb_np/meth_comp_pb_np_{group}.png"

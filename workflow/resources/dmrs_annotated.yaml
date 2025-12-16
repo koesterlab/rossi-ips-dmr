@@ -68,7 +68,7 @@ views:
         
   regulatory_elements:
     dataset: regulatory_elements
-    desc: ?f"Differentially methylated regions (DMRs) between the experiments {params.base_experiment} and {wildcards.group2}. The DMRs were annotated with genomic elements using chipseeker (https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html ).\n
+    desc: ?f"Differentially methylated regions (DMRs) between the experiments {params.base_experiment} and {wildcards.group2}.\n
       The table is structured as follows; \n
       The chr, start_dmr, and end_dmr columns give the exact position of the DMR. The mean_methylation_difference column shows the difference in methylation between the two experiments. The type, gene_name and gene_biotype columns show regulatory elements, while the absolute_signed_pi_val is the absolute value of the signed version of the pi-value score of the mean methylation difference (as proposed by Xiao et al. 2014 https://pubmed.ncbi.nlm.nih.gov/22321699/ ). \n
       The table is sorted in descending order by the absolute values of the signed versions of the pi-value score. Thus, values with small q-value but large methylation difference (and therefore values of importance) appear first."

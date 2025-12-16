@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 df = pd.read_parquet(snakemake.input, engine="pyarrow")
-
 
 methylation_cols = [
     "psc_methylation",
