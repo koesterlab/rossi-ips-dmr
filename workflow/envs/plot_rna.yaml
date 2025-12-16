@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - altair=5.5
+  - altair_saver=0.5
+  - pandas=2.2
+  - numpy = 2.3
+  - openpyxl=3.1

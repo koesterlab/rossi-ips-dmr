@@ -10,9 +10,10 @@ germ_layer = germ_layer.replace("derm", "")
 
 genes_df = pd.read_csv(snakemake.input["genes_transcripts"], sep="\t")
 genes_df = genes_df[genes_df["annotation_type"] == "Promoter"]
+log2FC = f"log2fc_{germ_layer}_avg_combined"
 
-rna_df = pd.read_excel(snakemake.input["rna_seq"]) 
-rna_df = rna_df[rna_df["test"] == germ_layer].reset_index(drop=True)
+rna_df = pd.read_excel(snakemake.input["rna_seq"])
+# rna_df = rna_df[rna_df["test"] == germ_layer].reset_index(drop=True)
 
 
 gene_to_index = (
@@ -33,10 +34,10 @@ rna_df = rna_df.groupby("genes", as_index=False).agg(
     {
         "mean_methylation_difference": "mean",
         "absolute_signed_pi_val": "mean",
-        "transcript_index": "first", 
-        "ext_gene": "first", 
-        "logFC": "first",
-        "PValue": "first", 
+        "transcript_index": "first",
+        "ext_gene": "first",
+        log2FC: "first",
+        # "PValue": "first",
         "annotation_type": "first",
     }
 )
@@ -49,7 +50,7 @@ def plot_scatter(df, title):
         .mark_circle()
         .encode(
             x=alt.X("mean_methylation_difference"),
-            y=alt.Y("logFC"),
+            y=alt.Y(log2FC),
             tooltip=[
                 "genes",
             ],
@@ -79,8 +80,8 @@ chart.save(snakemake.output["scatter"])
 rna_df[
     [
         "genes",
-        "logFC",
-        "PValue",
+        log2FC,
+        # "PValue",
         "transcript_index",
         "annotation_type",
         "mean_methylation_difference",
@@ -96,7 +97,7 @@ rna_df[
 #################
 
 # logFC auf eine Nachkommastelle runden
-rna_df["logFC_rounded"] = rna_df["logFC"].round(1)
+rna_df["logFC_rounded"] = rna_df[log2FC].round(1)
 # Gruppen definieren
 is_hyper = rna_df["mean_methylation_difference"] >= 0
 is_hypo = rna_df["mean_methylation_difference"] < 0
@@ -110,8 +111,8 @@ hyper_df = rna_df[is_hyper].copy()
 hypo_df = rna_df[is_hypo].copy()
 
 
-min_fc = np.floor(rna_df["logFC"].min())
-max_fc = np.ceil(rna_df["logFC"].max())
+min_fc = np.floor(rna_df[log2FC].min())
+max_fc = np.ceil(rna_df[log2FC].max())
 
 bin_settings = alt.Bin(extent=[min_fc, max_fc], step=0.1)
 
@@ -123,7 +124,7 @@ def make_hist(df, title, color):
         .encode(
             x=alt.X(
                 "logFC_rounded:Q",
-                bin=bin_settings, 
+                bin=bin_settings,
                 title="log2FC (rounded to 1 decimal)",
             ),
             y=alt.Y("count()", title="Count"),

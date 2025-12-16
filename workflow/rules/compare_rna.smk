@@ -1,7 +1,21 @@
+rule filter_rna_seq:
+    input:
+        rna_seq="resources/rna_seq/rna_seq.xlsx",
+    output:
+        rna_seq_filtered="resources/rna_seq/rna_seq_filtered_computed.xlsx",
+    conda:
+        "../envs/filter_rna.yaml"
+    log:
+        "logs/filter_rna_seq.log",
+    script:
+        "../scripts/filter_rna_seq.py"
+
+
 rule rna_seq:
     input:
         genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_complete.tsv",
-        rna_seq="resources/rna_seq/rna_seq_filtered.xlsx",
+        # rna_seq="resources/rna_seq/rna_seq_filtered.xlsx",
+        rna_seq="resources/rna_seq/rna_seq_filtered_computed.xlsx",
     output:
         table="results/{platform}/{caller}/rna_seq/{group2}.tsv",
         scatter=report(
@@ -29,7 +43,7 @@ rule rna_seq:
     params:
         germ_layer=lambda wildcards: wildcards.group2,
     conda:
-        "../envs/plot.yaml"
+        "../envs/plot_rna.yaml"
     log:
         "logs/rna_seq/{platform}_{caller}_{group2}.log",
     script:

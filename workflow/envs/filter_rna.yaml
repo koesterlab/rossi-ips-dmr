@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - polars=1.36
+  - fastexcel =0.18
+  - xlsxwriter = 3.2
