@@ -43,38 +43,38 @@ rna_df = rna_df.groupby("genes", as_index=False).agg(
 )
 
 
-def plot_scatter(df, title):
+# def plot_scatter(df, title):
 
-    chart = (
-        alt.Chart(df)
-        .mark_circle()
-        .encode(
-            x=alt.X("mean_methylation_difference"),
-            y=alt.Y(log2FC),
-            tooltip=[
-                "genes",
-            ],
-        )
-        .properties(
-            title=f"{title}",
-        )
-    )
-    return chart
-
-
-chart_hyper = plot_scatter(
-    rna_df[rna_df["mean_methylation_difference"] >= 0], "Hypermethylated"
-)
-chart_hypo = plot_scatter(
-    rna_df[rna_df["mean_methylation_difference"] < 0], "Hypomethylated"
-)
 chart = (
-    alt.hconcat(chart_hyper, chart_hypo)
+    alt.Chart(rna_df)
+    .mark_circle()
+    .encode(
+        x=alt.X("mean_methylation_difference"),
+        y=alt.Y(log2FC),
+        tooltip=[
+            "genes",
+        ],
+    )
     .properties(
         title=f"Comparison of RNA-seq logFC to WGS methylation difference for {germ_layer} sites",
     )
-    .resolve_scale(y="independent")
 )
+# return chart
+
+
+# chart_hyper = plot_scatter(
+#     rna_df[rna_df["mean_methylation_difference"] >= 0], "Hypermethylated"
+# )
+# chart_hypo = plot_scatter(
+#     rna_df[rna_df["mean_methylation_difference"] < 0], "Hypomethylated"
+# )
+# chart = (
+#     alt.hconcat(chart_hyper, chart_hypo)
+#     .properties(
+#         title=f"Comparison of RNA-seq logFC to WGS methylation difference for {germ_layer} sites",
+#     )
+#     .resolve_scale(y="independent")
+# )
 chart.save(snakemake.output["scatter"])
 
 rna_df[
@@ -87,7 +87,7 @@ rna_df[
         "mean_methylation_difference",
         "absolute_signed_pi_val",
     ]
-].fillna(-1).sort_values(by=["absolute_signed_pi_val"], ascending=False).to_csv(
+].fillna(-1).rename(columns={log2FC: "log2FC"}).sort_values(by=["absolute_signed_pi_val"], ascending=False).to_csv(
     snakemake.output["table"],
     sep="\t",
     index=False,
@@ -147,7 +147,7 @@ hist_none = make_hist(no_dmr_df, "Genes not in DMRs", "#2ca02c")
 
 barplots = (
     alt.hconcat(hist_hyper, hist_hypo, hist_none)
-    .resolve_scale(x="shared", y="shared")
+    .resolve_scale(x="independent", y="independent")
     .properties(
         title=f"RNA-seq logFC distribution for {germ_layer} sites",
     )

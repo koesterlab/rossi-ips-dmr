@@ -51,6 +51,18 @@ views:
                 - -1
                 - 0
                 - 1 
+        log2FC:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "#e6550d"
+                - "white"
+                - "#6baed6"
+              domain:
+                - -1
+                - 0
+                - 1 
         annotation_type:
           plot:
             heatmap:
