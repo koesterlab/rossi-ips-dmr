@@ -81,7 +81,7 @@ rule focus_dmrs:
         "../scripts/focus_dmrs.py"
 
 
-rule plot_dmrs:
+rule metilene_plots:
     input:
         met="resources/tools/metilene",
         met_out="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output_focused.bed",
@@ -104,7 +104,7 @@ rule plot_dmrs:
         sample=lambda wildcards: {wildcards.group2.split("-")[0]},
         base_exp_number=config["ref_sample"],
     log:
-        "logs/plot_dmrs/{platform}_{caller}_{group2}.log",
+        "logs/metilene_plots/{platform}_{caller}_{group2}.log",
     shell:
         """
         PARENT_DIR=$(dirname {output.bed})/dmr
@@ -112,3 +112,5 @@ rule plot_dmrs:
         echo $PARENT_DIR
         perl {input.met}/metilene_output.pl -q {input.met_out} -o $PARENT_DIR -a {params.base_exp_number} -b {wildcards.group2} 2> {log}
         """
+
+

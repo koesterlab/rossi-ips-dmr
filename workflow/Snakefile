@@ -19,10 +19,10 @@ configfile: "config/config.yaml"
 
 
 include: "rules/common.smk"
-include: "rules/dmr_heatmap.smk"
 include: "rules/dmr_calling.smk"
 # include: "rules/plots_paper.smk"
 include: "rules/prepare_meth_calling.smk"
+include: "rules/rna_download.smk"
 include: "rules/modkit.smk"
 include: "rules/pbCpgTools.smk"
 include: "rules/methylation_calling.smk"
