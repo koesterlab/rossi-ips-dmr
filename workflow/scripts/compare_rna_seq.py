@@ -87,7 +87,9 @@ rna_df[
         "mean_methylation_difference",
         "absolute_signed_pi_val",
     ]
-].fillna(-1).rename(columns={log2FC: "log2FC"}).sort_values(by=["absolute_signed_pi_val"], ascending=False).to_csv(
+].fillna(-1).rename(columns={log2FC: "log2FC"}).sort_values(
+    by=["absolute_signed_pi_val"], ascending=False
+).to_csv(
     snakemake.output["table"],
     sep="\t",
     index=False,
@@ -96,16 +98,12 @@ rna_df[
 
 #################
 
-# logFC auf eine Nachkommastelle runden
 rna_df["logFC_rounded"] = rna_df[log2FC].round(1)
-# Gruppen definieren
 is_hyper = rna_df["mean_methylation_difference"] >= 0
 is_hypo = rna_df["mean_methylation_difference"] < 0
 no_dmr = rna_df["mean_methylation_difference"].isna()
 
-# Alle Gene mit Promoter-Annotation
 
-# DataFrame für "nicht in DMRs" (indirekt berechnet)
 no_dmr_df = rna_df[no_dmr].copy()
 hyper_df = rna_df[is_hyper].copy()
 hypo_df = rna_df[is_hypo].copy()
@@ -114,7 +112,7 @@ hypo_df = rna_df[is_hypo].copy()
 min_fc = np.floor(rna_df[log2FC].min())
 max_fc = np.ceil(rna_df[log2FC].max())
 
-bin_settings = alt.Bin(extent=[min_fc, max_fc], step=0.1)
+# bin_settings = alt.Bin(extent=[min_fc, max_fc], step=1)
 
 
 def make_hist(df, title, color):
@@ -124,12 +122,12 @@ def make_hist(df, title, color):
         .encode(
             x=alt.X(
                 "logFC_rounded:Q",
-                bin=bin_settings,
-                title="log2FC (rounded to 1 decimal)",
+                # bin=bin_settings,
+                title="log2FC",
             ),
             y=alt.Y("count()", title="Count"),
             tooltip=[
-                alt.Tooltip("logFC_rounded:Q", title="log2FC (rounded to 1 decimal)"),
+                alt.Tooltip("logFC_rounded:Q", title="log2FC"),
                 alt.Tooltip("count()", title="Count"),
             ],
         )
@@ -145,12 +143,16 @@ hist_hyper = make_hist(hyper_df, "Hypermethylated Genes", "#1f77b4")
 hist_hypo = make_hist(hypo_df, "Hypomethylated Genes", "#ff7f0e")
 hist_none = make_hist(no_dmr_df, "Genes not in DMRs", "#2ca02c")
 
-barplots = (
-    alt.hconcat(hist_hyper, hist_hypo, hist_none)
-    .resolve_scale(x="independent", y="independent")
+barplots = alt.hconcat(hist_hyper, hist_hypo).resolve_scale(x="shared", y="shared")
+
+
+final = (
+    alt.vconcat(barplots, hist_none)
+    .resolve_scale(x="shared", y="independent")
     .properties(
         title=f"RNA-seq logFC distribution for {germ_layer} sites",
     )
 )
 
-barplots.save(snakemake.output["barplot"])
+
+final.save(snakemake.output["barplot"])
