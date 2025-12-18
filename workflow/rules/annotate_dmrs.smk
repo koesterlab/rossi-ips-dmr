@@ -44,6 +44,7 @@ rule add_regulatory_elements_header:
         cat {input} >> {output} 2> {log}
         """
 
+
 # Prepare table for better readability with datavzrd
 rule postprocess_regulatory_elements:
     input:
@@ -51,7 +52,7 @@ rule postprocess_regulatory_elements:
     output:
         "results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     conda:
-        "../envs/python_standard.yaml"
+        "../envs/python.yaml"
     log:
         "logs/postprocess_regulatory_elements/{platform}_{caller}_{group2}.log",
     script:
@@ -117,7 +118,6 @@ rule annotate_gene_elements_complete:
         "../scripts/chipseeker.R"
 
 
-
 rule get_ensembl_genes:
     input:
         "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
@@ -134,7 +134,6 @@ rule get_ensembl_genes:
         "../scripts/get_ensembl_genes.R"
 
 
-
 # We only merge with polars because the join in get_ensembl_genes.R does not work
 rule annotate_chipseeker:
     input:
@@ -143,7 +142,7 @@ rule annotate_chipseeker:
     output:
         "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_{type}.tsv",
     conda:
-        "../envs/python_standard.yaml"
+        "../envs/python.yaml"
     log:
         "logs/annotate_chipseeker/{platform}_{caller}_{group2}_{type}.log",
     script:
@@ -176,6 +175,7 @@ rule dmr_heatmap:
         mem_mb=16000,
     script:
         "../scripts/heatmap.py"
+
 
 rule datavzrd_annotations:
     input:

@@ -1,0 +1,7 @@
+name: python
+channels:
+  - conda-forge
+dependencies:
+  - pandas =2.2
+  - numpy =1.26
+  - polars =1.36

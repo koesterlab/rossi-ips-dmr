@@ -4,9 +4,10 @@ resources/*
 !resources/scenarios/
 !resources/scenarios/**
 !resources/rna_seq/
-!resources/rna_seq/**
+!resources/rna_seq/**.xlsx
 logs/**
 config/samples.tsv
+config/units.tsv
 .snakemake
 .snakemake/**
 report.zip

@@ -22,7 +22,7 @@ include: "rules/common.smk"
 include: "rules/dmr_calling.smk"
 # include: "rules/plots_paper.smk"
 include: "rules/prepare_meth_calling.smk"
-include: "rules/rna_download.smk"
+include: "rules/rna_seq.smk"
 include: "rules/modkit.smk"
 include: "rules/pbCpgTools.smk"
 include: "rules/methylation_calling.smk"
@@ -42,14 +42,30 @@ module enrichment:
         #     # tag="v2.5.4",
         #     branch="main",
         # )
-        "/mnt/workspace/enrichment/workflow/Snakefile"
+        "../../enrichment/workflow/Snakefile"
+        # "/mnt/workspace/enrichment/workflow/Snakefile"
         # "/homes/aprinz/enrichment/workflow/Snakefile"
     config:
+        # TODO: Give only enrichment specific config
         config
-
+module kallisto_sleuth:
+    snakefile:
+        github(
+            "snakemake-workflows/rna-seq-kallisto-sleuth",
+            path="workflow/Snakefile",
+            # commit="59b9b6640872fd445d62245bdeccf9e80a97f868",
+            branch="lr-kallisto"
+        )
+        # "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
+        # "/mnt/workspace/enrichment/workflow/Snakefile"
+        # "/homes/aprinz/enrichment/workflow/Snakefile"
+    config:
+        config["kallisto_sleuth"]
 
 # use all rules from https://github.com/Addimator/enrichment
-use rule * from enrichment
+# TODO the rulenames are the same as the ones from kallisto sleuth
+# use rule * from enrichment
+use rule * from kallisto_sleuth
 
 
 rule modified_all:

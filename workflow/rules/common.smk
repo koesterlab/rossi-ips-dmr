@@ -116,6 +116,5 @@ def all_input(wildcards):
     #         f"results/comp_pb_np/meth_comp_pb_np_{group}.png"
     #         for group in [s for s in samples.keys() ]
     #     ])
-    print(wanted_input)
 
     return wanted_input
