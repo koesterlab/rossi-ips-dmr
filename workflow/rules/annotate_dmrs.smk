@@ -150,6 +150,33 @@ rule annotate_chipseeker:
         "../scripts/annotate_chipseeker.py"
 
 
+rule dmr_heatmap:
+    input:
+        expand(
+            "results/{{platform}}/{{caller}}/dmr_calls/{sample}/genes_transcripts/chipseeker_filtered.tsv",
+            sample=[
+                sample for sample in samples.keys() if sample != config["ref_sample"]
+            ],
+        ),
+    output:
+        report(
+            "results/{platform}/{caller}/dmr_calls/heatmaps/{type}.png",
+            caption="../report/heatmap.rst",
+            category="DMR plots",
+            subcategory=lambda wildcards: f"Heatmaps: {wildcards.platform} - {wildcards.caller}",
+            labels=lambda wildcards: {
+                "genetic element": wildcards.type,
+            },
+        ),
+    conda:
+        "../envs/plot.yaml"
+    log:
+        "logs/dmr_heatmap/{platform}_{caller}_{type}.log",
+    resources:
+        mem_mb=16000,
+    script:
+        "../scripts/heatmap.py"
+
 rule datavzrd_annotations:
     input:
         config=workflow.source_path("../resources/dmrs_annotated.yaml"),

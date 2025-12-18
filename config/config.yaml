@@ -3,7 +3,24 @@ meth_caller:
   # nanopore: [varlo]
   platforms_combined: [varlo]
 
-
+rna_accessions: [
+  "SRR29898424",
+  "SRR29898425",
+  "SRR29898426",
+  "SRR29898427",
+  "SRR29898428",
+  "SRR29898429",
+  "SRR29898430",
+  "SRR29898431",
+  "SRR29898432",
+  "SRR29898433",
+  "SRR29898434",
+  "SRR29898435",
+  "SRR29898436",
+  "SRR29898437",
+  "SRR29898438",
+  "SRR29898439",
+]
 
 resources:
   ref:
