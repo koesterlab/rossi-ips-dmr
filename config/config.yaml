@@ -230,19 +230,19 @@ kallisto_sleuth:
       # base_level you specify below. If you choose a name like `a_vs_b`, you
       # should set `base_level: b` below. This way, the model name in the final
       # snakemake report will be easily interpretable.
-      treated_vs_untreated:
+      condition:
         # full model:
         # Specify the full model with all columns of interest from your sample
         # sheet, including those for batch effects (which you also specify
         # below in the reduced model). This uses the R formula syntax:
         # https://stat.ethz.ch/R-manual/R-devel/library/stats/html/formula.html
-        full: ~condition + batch_effect
+        full: ~condition
         # reduced model:
         # Specify a model of only batch effect columns from the sample sheet.
         # If you don't know about any batch effects, specify `~1` here, to model
         # only the intercept. Batch effects cannot have levels that are only
         # represented in one treatment group / condition.
-        reduced: ~batch_effect
+        reduced: ~1
         # Effect size estimates are calculated as so-called beta-values by `sleuth`.
         # For binary comparisons (your variable of interest has two factor
         # levels), they resemble a log2 fold change. To know which variable of
@@ -252,7 +252,7 @@ kallisto_sleuth:
         # base level of the primary variable (this should be one of the entries
         # in the primary_variable sample sheet column and will be considered as
         # denominator in the fold change/effect size estimation).
-        base_level: untreated
+        base_level: psc
     # significance levels to use for volcano, ma- and qq-plots
     sig-level:
       volcano-plot: 0.05
@@ -301,7 +301,7 @@ kallisto_sleuth:
       fdr_genes: 0.05
       # threshold on FDR corrected p-value from GOEA, whether to consider a GO
       # term as significantly enriched in differentially expressed genes (alpha)
-      fdr_go_terms: 0.05
+      fdr_go_terms: 0.50
     fgsea:
       # gene set enrichment analysis (GSEA)
       # If `activate: true`, the workflow will perform GSEA with fgsea:
@@ -351,15 +351,15 @@ kallisto_sleuth:
     # Define here the comparisons under interest
     comparisons:
       # Define any name for comparison. You can add as many comparisons as you want
-      treated_vs_untreated_against_other_model:
+      condition_against_other_model:
         items:
           # Define the two underlying models for the comparison. The models must
           # be defined under `diffexp: models:` above and items must be of the
           # form <arbitrary label for plot-axis>: <existing diffexp model from config>
-          treated_vs_untreated: treated_vs_untreated
+          condition: condition
           Y: model_Y
         # Define label for datavzrd report
-        label: treated_vs_untreated compared to other_model
+        label: condition compared to other_model
 
   report:
     # [deprecated] (will be removed in the next major release)

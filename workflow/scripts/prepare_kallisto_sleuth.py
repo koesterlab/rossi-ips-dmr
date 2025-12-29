@@ -7,14 +7,14 @@ unit_rows = []
 for fastq in snakemake.input.fastqs:
     sample_name = fastq.split("/")[-1].split(".")[0]
     cell_type = snakemake.params.types[sample_name]
-    sample_rows.append({"sample": sample_name, "condition": cell_type})
+    sample_rows.append({"sample": f"{cell_type}_{sample_name[-2:]}", "condition": cell_type, "batch_effect": "NA"})
 
     unit_rows.append(
         {
-            "sample": sample_name,
+            "sample": f"{cell_type}_{sample_name[-2:]}",
             "unit": 1,
-            "fragment_len_mean": "?",
-            "fragment_len_sd": "?",
+            "fragment_len_mean": "NA",
+            "fragment_len_sd": "NA",
             "fq1": fastq,
             "fq2": "NA",
             "bam_single": "NA",
