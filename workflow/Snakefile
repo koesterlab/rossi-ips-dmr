@@ -20,6 +20,7 @@ configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 include: "rules/dmr_calling.smk"
+include: "rules/methreg.smk"
 # include: "rules/plots_paper.smk"
 include: "rules/prepare_meth_calling.smk"
 include: "rules/rna_seq.smk"
@@ -50,13 +51,13 @@ module enrichment:
         config
 module kallisto_sleuth:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            # commit="59b9b6640872fd445d62245bdeccf9e80a97f868",
-            branch="lr-kallisto"
-        )
-        # "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     # commit="59b9b6640872fd445d62245bdeccf9e80a97f868",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
         # "/mnt/workspace/enrichment/workflow/Snakefile"
         # "/homes/aprinz/enrichment/workflow/Snakefile"
     config:
