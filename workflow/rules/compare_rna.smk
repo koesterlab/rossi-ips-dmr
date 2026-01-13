@@ -74,6 +74,7 @@ rule rna_seq_annotations:
     wrapper:
         "v3.13.0/utils/datavzrd"
 
+
 rule compare_diffexp_jochen_dmrs:
     input:
         rna_seq="resources/rna_seq/rna_seq_filtered.xlsx",
@@ -81,17 +82,32 @@ rule compare_diffexp_jochen_dmrs:
         diffexp="results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv",
     output:
         # report(
-        "results/{platform}/{caller}/rna_seq_comp/{group2}/jochen_diffexp_vs_dmrs.html",
+        comparison="results/{platform}/{caller}/rna_seq_comp/{group2}/jochen_diffexp_vs_dmrs.xlsx",
+        top_genes="results/{platform}/{caller}/rna_seq_comp/{group2}/top_genes.csv",
         #     caption="../report/rna_seq.rst",
         #     category="DiffExp-Methylation Comparison",
         #     subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller} - {wildcards.group2}",
         # ),
     params:
         germ_layer=lambda wildcards: wildcards.group2,
-        top_n_genes=10
+        top_n_genes=10,
     conda:
-        "../envs/python.yaml"
+        "../envs/plot_rna.yaml"
     log:
         "logs/compare_diffexp_jochen_dmrs/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/compare_diffexp_jochen_dmrs.py"
+
+
+rule top_genes:
+    input:
+        expand(
+            "results/{{platform}}/{{caller}}/rna_seq_comp/{group2}/top_genes.csv",
+            group2=["ectoderm", "mesoderm", "endoderm"],
+        ),
+    output:
+        "results/{platform}/{caller}/rna_seq_comp/top_genes.csv",
+    shell:
+        """
+        cat {input} | sort | uniq > {output}
+        """
