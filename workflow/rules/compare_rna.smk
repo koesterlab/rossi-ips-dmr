@@ -73,3 +73,25 @@ rule rna_seq_annotations:
         "logs/rna_seq_annotations/{platform}_{caller}_{group2}.log",
     wrapper:
         "v3.13.0/utils/datavzrd"
+
+rule compare_diffexp_jochen_dmrs:
+    input:
+        rna_seq="resources/rna_seq/rna_seq_filtered.xlsx",
+        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
+        diffexp="results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv",
+    output:
+        # report(
+        "results/{platform}/{caller}/rna_seq_comp/{group2}/jochen_diffexp_vs_dmrs.html",
+        #     caption="../report/rna_seq.rst",
+        #     category="DiffExp-Methylation Comparison",
+        #     subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller} - {wildcards.group2}",
+        # ),
+    params:
+        germ_layer=lambda wildcards: wildcards.group2,
+        top_n_genes=10
+    conda:
+        "../envs/python.yaml"
+    log:
+        "logs/compare_diffexp_jochen_dmrs/{platform}_{caller}_{group2}.log",
+    script:
+        "../scripts/compare_diffexp_jochen_dmrs.py"
