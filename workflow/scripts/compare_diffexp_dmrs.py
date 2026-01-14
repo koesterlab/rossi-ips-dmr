@@ -5,16 +5,25 @@ pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(30)
 
 
+filename_to_name = {
+    "distal_intergenic": "Distal Intergenic",
+    "promoter": "Promoter",
+    "intron": "Intron",
+    "exon": "Exon",
+    "3_utr": "3' UTR",
+    "5_utr": "5' UTR",
+    "downstream": "Downstream",
+}
+annotation_type = filename_to_name.get(snakemake.params.get("annotation_type", None))
+
+
 def read_dmrs(path: str, layer: str) -> pl.DataFrame:
-    return (
-        pl.read_csv(
-            path,
-            separator="\t",
-            schema_overrides={"chr": pl.Utf8},
-        )
-        .filter(pl.col("annotation_type") == "Promoter")
-        .with_columns(pl.lit(layer).alias("germ_layer"))
-    )
+    return pl.read_csv(
+        path,
+        separator="\t",
+        schema_overrides={"chr": pl.Utf8},
+        null_values="NA",
+    ).with_columns(pl.lit(layer).alias("germ_layer"))
 
 
 diffexp = snakemake.input.diffexp
@@ -23,7 +32,7 @@ endoderm = snakemake.input.endoderm
 mesoderm = snakemake.input.mesoderm
 
 
-diffexp_df = pl.read_csv(diffexp, separator="\t").rename(
+diffexp_df = pl.read_csv(diffexp, separator="\t", null_values="NA").rename(
     {
         "qval": "qval_diffexp",
     }
@@ -32,7 +41,6 @@ diffexp_df = pl.read_csv(diffexp, separator="\t").rename(
 ectoderm_df = read_dmrs(ectoderm, "ectoderm")
 endoderm_df = read_dmrs(endoderm, "endoderm")
 mesoderm_df = read_dmrs(mesoderm, "mesoderm")
-
 dmrs_df = (
     pl.concat(
         [
@@ -49,16 +57,15 @@ dmrs_df = (
     )
 )
 
-
 common_df = diffexp_df.join(
     dmrs_df,
-    left_on="ext_gene",
-    right_on="ext_gene",
+    on="ext_gene",
     how="inner",
 )
-
-common_df = common_df.with_columns(
-    (1 - pl.col("qval_diffexp") * pl.col("qval_dmr")).alias("qval_combined")
+common_df = common_df.filter(pl.col("annotation_type") == annotation_type).with_columns(
+    (pl.max_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr"))).alias(
+        "qval_combined"
+    )
 )
 common_df = common_df.with_columns(
     pl.when(pl.col("germ_layer") == "ectoderm")
@@ -70,17 +77,32 @@ common_df = common_df.with_columns(
     .otherwise(None)
     .alias("diffexp")
 )
-print(common_df.head())
 
-layer_select = alt.selection_point(fields=["germ_layer"], bind="legend")
+layer_select = alt.selection_point(
+    fields=["germ_layer"], bind="legend", name="Germ Layer"
+)
+color = alt.condition(
+    layer_select,
+    alt.Color(
+        "germ_layer:N",
+        title="Germ Layer",
+        scale=alt.Scale(scheme="category10"),
+    ),
+    alt.value("lightgray"),
+)
 
 
 chart = (
     alt.Chart(common_df.to_pandas())
-    .mark_point()
+    .mark_point(filled=True)
     .encode(
         x="diffexp:Q",
         y="mean_methylation_difference:Q",
+        size=alt.Size(
+            "qval_combined:Q",
+            title="max(qval1, qval2)",
+            scale=alt.Scale(range=[30, 1]),
+        ),
         tooltip=[
             "germ_layer",
             "ens_gene",
@@ -90,23 +112,14 @@ chart = (
             "qval_diffexp",
             "qval_dmr",
         ],
-        color=alt.Color(
-            "germ_layer:N",
-            title="Germ Layer",
-            scale=alt.Scale(scheme="category10"),
-        ),
-        opacity=alt.condition(
-            layer_select,
-            alt.Opacity(
-                "qval_combined:Q",
-                scale=alt.Scale(domain=[0.8, 1]),
-                title="1 − combined q-value",
-            ),
-            alt.OpacityValue(0.05),
+        color=color,
+        opacity=alt.Opacity(
+            "qval_combined:Q",
+            scale=alt.Scale(range=[1, 0.1]),
+            title="max(qval1, qval2)",
         ),
     )
     .add_params(layer_select)
 )
-
 
 chart.save(snakemake.output[0])
