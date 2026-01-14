@@ -48,6 +48,17 @@ def all_input(wildcards):
             for caller in config["meth_caller"].get(platform, [])
         ]
     )
+
+
+    # wanted_input.extend(
+    #     [
+    #         f"results/platforms_combined/varlo/methreg/methreg_results.parquet"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #     ]
+    # )
+
+
     wanted_input.extend(
         [
             f"results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf"
