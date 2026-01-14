@@ -33,21 +33,23 @@ rule prepare_kallisto_sleuth:
 # Compare the differential expression results with the DMR associated genes
 rule compare_diffexp:
     input:
-        diffexp="results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv",
+        diffexp="results/tables/diffexp/condition.genes-representative.diffexp.tsv",
         # diffexp="results/tables/diffexp/condition.genes-aggregated.diffexp.tsv",
-        endoderm="results/{platform}/{caller}/dmr_calls/endoderm/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
-        mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
-        ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
+        endoderm="results/{platform}/{caller}/dmr_calls/endoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
     output:
         report(
-            "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs.html",
+            "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.html",
             caption="../report/rna_seq.rst",
             category="DiffExp-Methylation Comparison",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
         ),
     conda:
         "../envs/python.yaml"
+    params:
+        annotation_type=lambda wildcards: wildcards.annotation_type,
     log:
-        "logs/compare_diffexp/{platform}_{caller}.log",
+        "logs/compare_diffexp/{platform}_{caller}_{annotation_type}.log",
     script:
         "../scripts/compare_diffexp_dmrs.py"

@@ -26,10 +26,10 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/dmr_calls/heatmaps/{type}.png"
+            f"results/{platform}/{caller}/dmr_calls/heatmaps/{annotation}.png"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
-            for type in [
+            for annotation in [
                 "distal_intergenic",
                 "promoter",
                 "intron",
@@ -37,6 +37,23 @@ def all_input(wildcards):
                 "3_utr",
                 "5_utr",
                 # "downstream",
+            ]
+        ]
+    )
+
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.png"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for annotation in [
+                "distal_intergenic",
+                "promoter",
+                "intron",
+                "exon",
+                "3_utr",
+                "5_utr",
+                "downstream",
             ]
         ]
     )
