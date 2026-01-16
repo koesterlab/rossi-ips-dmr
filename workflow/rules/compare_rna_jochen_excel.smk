@@ -106,8 +106,11 @@ rule top_genes:
             group2=["ectoderm", "mesoderm", "endoderm"],
         ),
     output:
-        "results/{platform}/{caller}/rna_seq_comp/top_genes.csv",
+        "results/{platform}/{caller}/rna_seq_comp/top_genes.tsv",
     shell:
-        """
-        cat {input} | sort | uniq > {output}
+        r"""
+        # Alle CSVs zeilenweise zusammenführen, Header jeder Datei entfernen
+        tail -n +2 {input} \
+        | paste -sd "\t" \
+        > {output}
         """

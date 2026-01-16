@@ -27,7 +27,7 @@ include: "rules/rna_seq.smk"
 include: "rules/modkit.smk"
 include: "rules/pbCpgTools.smk"
 include: "rules/methylation_calling.smk"
-include: "rules/compare_rna.smk"
+include: "rules/compare_rna_jochen_excel.smk"
 include: "rules/annotate_dmrs.smk"
 
 inputflags:

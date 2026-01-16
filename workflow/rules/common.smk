@@ -43,7 +43,7 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.png"
+            f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.html"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for annotation in [
@@ -58,13 +58,6 @@ def all_input(wildcards):
         ]
     )
 
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs.html"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-        ]
-    )
     wanted_input.extend(
         [
             f"results/{platform}/{caller}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf"
