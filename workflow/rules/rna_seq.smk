@@ -59,7 +59,7 @@ rule compare_diffexp:
 rule diffexp_dmr_datavzrd:
     input:
         config=workflow.source_path("../resources/diffexp_vs_dmrs.yaml"),
-        comp="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_promoter.tsv",
+        comp="results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_promoter.tsv",
     output:
         report(
             directory(
@@ -101,3 +101,32 @@ rule compute_tfs:
         "logs/compare_diffexp/{platform}_{caller}_{layer}.log",
     script:
         "../scripts/compute_tfs_target_genes.R"
+
+
+# Compare the differential expression results with the DMR associated genes
+rule compare_diffexp_with_tfs:
+    input:
+        diffexp="results/tables/diffexp/condition.genes-representative.diffexp.tsv",
+        # diffexp="results/tables/diffexp/condition.genes-aggregated.diffexp.tsv",
+        endoderm="results/{platform}/{caller}/dmr_calls/endoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        ectoderm_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/ectoderm_significant_tfs.tsv",
+        mesoderm_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/mesoderm_significant_tfs.tsv",
+        endoderm_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/endoderm_significant_tfs.tsv",
+    output:
+        report(
+            "results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation_type}.html",
+            caption="../report/rna_seq.rst",
+            category="DiffExp-Methylation Comparison",
+            subcategory=lambda wildcards: f"{wildcards.annotation_type} - scatter tfs",
+        ),
+        "results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation_type}.tsv",
+    conda:
+        "../envs/python.yaml"
+    params:
+        annotation_type=lambda wildcards: wildcards.annotation_type,
+    log:
+        "logs/compare_diffexp/{platform}_{caller}_{annotation_type}.log",
+    script:
+        "../scripts/compare_diffexp_dmrs_with_tfs.py"

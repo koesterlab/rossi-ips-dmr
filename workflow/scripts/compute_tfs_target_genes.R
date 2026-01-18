@@ -84,12 +84,16 @@ target_genes_by_significant_tfs <- function(minsize, max_p_value, min_contributi
     .mor = 'mor',
     minsize = minsize
   )
+  contrast_acts_df <- as.data.frame(contrast_acts)
+  readr::write_tsv(contrast_acts_df, "unsigtfs.tsv")
 
   # Filter significant TFs
   sig_TFs <- contrast_acts %>%
     filter(p_value < max_p_value) %>%
     pull(source)
 
+  sig_TFs_df <- data.frame(TF = sig_TFs)
+  readr::write_tsv(sig_TFs_df, "sigtfs.tsv")
   # Get target genes of significant TFs
   tf_targets <- net %>%
     filter(source %in% sig_TFs) %>%
@@ -109,8 +113,12 @@ target_genes_by_significant_tfs <- function(minsize, max_p_value, min_contributi
         TRUE ~ "neutral"
       )
     ) %>%
-    arrange(source, desc(abs(contribution)))
-
+    arrange(source, desc(abs(contribution))) %>%
+    filter(
+      P.Value < max_p_value,
+      abs(contribution) > min_contribution
+    )
+  readr::write_tsv(tf_gene_table, "tftargets.tsv")
   # Summarise TFs per target gene
   gene_tf_summary <- tf_gene_table %>%
     group_by(target) %>%
@@ -146,7 +154,7 @@ net <- decoupleR::get_collectri(organism = 'human',
 
 # Compute TF target genes contributions by effect size alone without using the ulm of decoupleR
 
-min_contribution = snakemake@params[["min_contribution"]] # Minimum signed_pi_value to consider a TF-target gene interaction
+min_contribution = snakemake@params[["min_contribution"]] # Minimum igned_pi_value to consider a TF-target gene interaction
 gene_tf_summary <- target_genes_by_effect(max_p_value = max_p_value, min_contribution = min_contribution)
 write_csv(gene_tf_summary, snakemake@output[[1]])
 
