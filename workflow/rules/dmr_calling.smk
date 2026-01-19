@@ -34,7 +34,7 @@ rule metilene_input:
     params:
         group2=lambda wildcards: wildcards.group2,
     conda:
-        "../envs/plot.yaml"
+        "../envs/python.yaml"
     resources:
         mem_mb=32000,
     log:
@@ -58,7 +58,7 @@ rule call_metilene:
         "logs/call_metilene/{platform}_{caller}_{group2}.log",
     shell:
         """
-        metilene -t {threads} -c 2 -a {params.base_exp_number} -b {wildcards.group2} {input} > {output} 2> {log}
+        metilene -d 0.01 -t {threads} -c 2 -a {wildcards.group2} -b {params.base_exp_number} {input} > {output} 2> {log}
         """
 
 
