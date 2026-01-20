@@ -1,0 +1,1 @@
+To prioritize the most extreme cases toward the top-left or bottom-right, we sort values by the product of the DMR and differential expression scores. This ensures that strong effects in both dimensions are ranked highest.

@@ -149,19 +149,19 @@ common_df = (
         )
     )
     .sort("methylation_diff_x_diffexp", descending=False)
-    # .select(
-    #     [
-    #         "ext_gene",
-    #         "ens_gene",
-    #         "germ_layer",
-    #         "qval_diffexp",
-    #         "qval_dmr",
-    #         "diffexp",
-    #         "diffexp_se",
-    #         "mean_methylation_difference",
-    #         "methylation_diff_x_diffexp",
-    #     ]
-    # )
+    .select(
+        [
+            "ext_gene",
+            "ens_gene",
+            "germ_layer",
+            "qval_diffexp",
+            "qval_dmr",
+            "diffexp",
+            "diffexp_se",
+            "mean_methylation_difference",
+            "methylation_diff_x_diffexp",
+        ]
+    )
 )
 
 

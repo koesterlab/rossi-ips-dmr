@@ -24,26 +24,45 @@ def get_bioc_species_name():
 def all_input(wildcards):
     wanted_input = []
 
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/dmr_calls/heatmaps/{annotation}.png"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for annotation in [
-                "distal_intergenic",
-                "promoter",
-                "intron",
-                "exon",
-                "3_utr",
-                "5_utr",
-                # "downstream",
-            ]
-        ]
-    )
+    # wanted_input.extend(
+    #     [
+    #         f"results/{platform}/{caller}/dmr_calls/heatmaps/{annotation}.png"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #         for annotation in [
+    #             "distal_intergenic",
+    #             "promoter",
+    #             "intron",
+    #             "exon",
+    #             "3_utr",
+    #             "5_utr",
+    #             # "downstream",
+    #         ]
+    #     ]
+    # )
+
+
+
+    # wanted_input.extend(
+    #     [
+    #         f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.{file_type}"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #         for annotation in [
+    #             "distal_intergenic",
+    #             "promoter",
+    #             "intron",
+    #             "exon",
+    #             "3_utr",
+    #             "5_utr",
+    #             "downstream",
+    #         ]
+    #         for file_type in ["html", "tsv"]
+    #     ]
+    # )
 
     wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.html"
+        [f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}_table"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for annotation in [
@@ -57,6 +76,23 @@ def all_input(wildcards):
             ]
         ]
     )
+
+    wanted_input.extend(
+        [f"results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation}_table"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for annotation in [
+                "distal_intergenic",
+                "promoter",
+                "intron",
+                "exon",
+                "3_utr",
+                "5_utr",
+                "downstream",
+            ]
+        ]
+    )
+
 
     # wanted_input.extend(
     #     [
@@ -74,6 +110,13 @@ def all_input(wildcards):
     #         for caller in config["meth_caller"].get(platform, [])
     #     ]
     # )
+
+    wanted_input.extend(
+        [
+            f"results/platforms_combined/varlo/rna_seq_comp/tfs/{layer}_significant_tfs.tsv"
+            for layer in ["ectoderm", "mesoderm", "endoderm"]
+        ]
+    )
 
 
     wanted_input.extend(
