@@ -1,0 +1,12 @@
+name: pyjaspar
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - pandas =2.2
+  - numpy =1.26
+  - polars =1.36
+  - altair=5.5
+  - pyarrow=14.0
+  - pyjaspar=4.0
+  - pybiomart=0.2

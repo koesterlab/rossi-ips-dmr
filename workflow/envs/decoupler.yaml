@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bioconductor-decoupler
+  - r-base
+  - r-tidyverse = 2.0
+  - r-pheatmap
+  - r-ggrepel =0.9
+  - bioconductor-omnipathr 

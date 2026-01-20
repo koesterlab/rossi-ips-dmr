@@ -2,7 +2,7 @@ import polars as pl
 import altair as alt
 
 pl.Config.set_tbl_rows(10)
-pl.Config.set_tbl_cols(30)
+pl.Config.set_tbl_cols(300)
 
 
 filename_to_name = {
@@ -61,7 +61,12 @@ common_df = diffexp_df.join(
     dmrs_df,
     on="ext_gene",
     how="inner",
+).filter(
+    pl.col("mean_methylation_difference").is_not_null()
+    & pl.col("qval_diffexp").is_not_null()
+    & pl.col("qval_dmr").is_not_null()
 )
+
 common_df = common_df.filter(pl.col("annotation_type") == annotation_type).with_columns(
     (pl.max_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr"))).alias(
         "qval_combined"
@@ -76,7 +81,17 @@ common_df = common_df.with_columns(
     .then(pl.col("b_conditionmesoderm"))
     .otherwise(None)
     .alias("diffexp")
+).with_columns(
+    pl.when(pl.col("germ_layer") == "ectoderm")
+    .then(pl.col("b_conditionectoderm_se"))
+    .when(pl.col("germ_layer") == "endoderm")
+    .then(pl.col("b_conditionendoderm_se"))
+    .when(pl.col("germ_layer") == "mesoderm")
+    .then(pl.col("b_conditionmesoderm_se"))
+    .otherwise(None)
+    .alias("diffexp_se")
 )
+common_df = common_df.filter(pl.col("diffexp").is_not_null())
 
 layer_select = alt.selection_point(
     fields=["germ_layer"], bind="legend", name="Germ Layer"
@@ -104,8 +119,7 @@ chart = (
             scale=alt.Scale(range=[30, 1]),
         ),
         tooltip=[
-            "germ_layer",
-            "ens_gene",
+            "ext_gene",
             "diffexp",
             "mean_methylation_difference",
             "qval_combined",
@@ -123,3 +137,34 @@ chart = (
 )
 
 chart.save(snakemake.output[0])
+
+print(common_df.filter(pl.col("ext_gene") == "POU5F1"))
+
+# Create table
+common_df = (
+    common_df.filter(pl.col("qval_combined") <= 0.5)
+    .with_columns(
+        (pl.col("mean_methylation_difference") * pl.col("diffexp")).alias(
+            "methylation_diff_x_diffexp"
+        )
+    )
+    .sort("methylation_diff_x_diffexp", descending=False)
+    # .select(
+    #     [
+    #         "ext_gene",
+    #         "ens_gene",
+    #         "germ_layer",
+    #         "qval_diffexp",
+    #         "qval_dmr",
+    #         "diffexp",
+    #         "diffexp_se",
+    #         "mean_methylation_difference",
+    #         "methylation_diff_x_diffexp",
+    #     ]
+    # )
+)
+
+
+print(common_df)
+
+common_df.write_csv(snakemake.output[1], separator="\t")
