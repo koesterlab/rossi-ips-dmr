@@ -53,45 +53,81 @@ alpha: 0.01
 # Define the minimum percantage  of methylation to be considered as a methylated site
 meth_threshold: 5
 
-# Not used right now
+
 enrichment:
   goatools:
-    # tool is only run if set to `true`
-    activate: true
+    # gene ontolog enrichment analysis (GOEA)
+    # If `activate: true`, this will perform GOEA with goatools:
+    # https://github.com/tanghaibao/goatools/blob/main/doc/md/README_find_enrichment.md
+    activate: false
+    # threshold on `qval` from sleuth, whether to consider a gene as
+    # significantly  differentially expressed
     fdr_genes: 0.05
+    # threshold on FDR corrected p-value from GOEA, whether to consider a GO
+    # term as significantly enriched in differentially expressed genes (alpha)
     fdr_go_terms: 0.05
-    pathvars:
-      input_file: "results/{platform}/{caller}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed_filtered"
-      output_file: "results/{platform}/{caller}/enrichment/goatools/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
-      # Must contain ns
-      plot_file: "results/{{platform}}/{{caller}}/enrichment/goatools/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
-      datavzrd_file: "results/{platform}/{caller}/enrichment/goatools/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
-      # Must contain all wildcards from the other files
-      log_file_name: "{platform}_{caller}_{group}_{gene_fdr}_{go_term_fdr}"      
-      wildcards:
-        # platform: '["pacbio", "nanopore"]'
-        platform: '["platforms_combined"]'
-        caller: '["varlo"]'
-        group: '["mesoderm", "endoderm", "ectoderm",]'
-        gene_fdr: "str(config['enrichment']['goatools']['fdr_genes']).replace('.', '-')"
-        go_term_fdr: "str(config['enrichment']['goatools']['fdr_go_terms']).replace('.', '-')"
-        ns: '["BP", "CC", "MF"]'
   fgsea:
-    gene_sets_file: "resources/gene_sets/dummy.gmt"
-    # tool is only run if set to `true`
-    activate: False
-    # if activated, you need to provide a GMT file with gene sets of interest
+    # gene set enrichment analysis (GSEA)
+    # If `activate: true`, the workflow will perform GSEA with fgsea:
+    # https://bioconductor.org/packages/release/bioc/vignettes/fgsea/inst/doc/fgsea-tutorial.html
+    # Make sure you curate a GMT gene sets file and provide it below.
+    activate: false
+    # If activated, you need to provide a GMT file with gene sets of interest.
+    # A GMT file can contain multiple gene sets. So if you want to test for
+    # enrichment in multiple sets of gene sets, please merge your gene sets
+    # into one GMT file and provide this here.
+    # Don't forget to document your gene set sources and to cite them upon
+    # publication. One commonly used source for GMT files is MSigDB:
+    # https://www.gsea-msigdb.org/gsea/msigdb
+    gene_sets_file: "config/gene_sets/c2.all.v2025.1.Hs.symbols.gmt"
+    # threshold on FDR corrected p-value from GSEA, whether to consider a gene
+    # set as significantly enriched in differentially expressed genes
     fdr_gene_set: 0.05
+    # minimum achievable p-value  (equivalent to the reciprocal of the number of permutations, see fgsea docs)
     eps: 1.0e-50
-    pathvars:
-      # sleuth_sample: "results/sleuth/{group}.samples.tsv"
-      input_file: "results/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
-      output_file: "results/enrichment/fgsea/{group}/tables/{group}"
-      plot_file: "results/enrichment/fgsea/{group}/plots/{group}"
-      log_file_name: "{group}"
-      wildcards:
-        # group: 'read_sample_tsv(config["sample_path"])'
-        group: '["mesoderm", "endoderm", "ectoderm",]'
+
+
+# Not used right now
+# enrichment:
+#   goatools:
+#     # tool is only run if set to `true`
+#     activate: true
+#     fdr_genes: 0.05
+#     fdr_go_terms: 0.05
+#     pathvars:
+#       input_file: "results/{platform}/{caller}/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed_filtered"
+#       output_file: "results/{platform}/{caller}/enrichment/goatools/{group}/genes_transcripts/go_term_enrichment.gene_fdr_{gene_fdr}.go_term_fdr_{go_term_fdr}"
+#       # Must contain ns
+#       plot_file: "results/{{platform}}/{{caller}}/enrichment/goatools/{{group}}/plots/go_term_enrichment_{ns}.gene_fdr_{{gene_fdr}}.go_term_fdr_{{go_term_fdr}}"
+#       datavzrd_file: "results/{platform}/{caller}/enrichment/goatools/{group}/datavzrd/go_enrichment-{gene_fdr}.go_term_fdr_{go_term_fdr}"
+#       # Must contain all wildcards from the other files
+#       log_file_name: "{platform}_{caller}_{group}_{gene_fdr}_{go_term_fdr}"      
+#       wildcards:
+#         # platform: '["pacbio", "nanopore"]'
+#         platform: '["platforms_combined"]'
+#         caller: '["varlo"]'
+#         group: '["mesoderm", "endoderm", "ectoderm",]'
+#         gene_fdr: "str(config['enrichment']['goatools']['fdr_genes']).replace('.', '-')"
+#         go_term_fdr: "str(config['enrichment']['goatools']['fdr_go_terms']).replace('.', '-')"
+#         ns: '["BP", "CC", "MF"]'
+  # fgsea:
+  #   gene_sets_file: "resources/gene_sets/dummy.gmt"
+  #   # tool is only run if set to `true`
+  #   activate: False
+  #   # if activated, you need to provide a GMT file with gene sets of interest
+  #   fdr_gene_set: 0.05
+  #   eps: 1.0e-50
+  #   pathvars:
+  #     # sleuth_sample: "results/sleuth/{group}.samples.tsv"
+  #     input_file: "results/dmr_calls/{group}/genes_transcripts/chipseeker_postprocessed"
+  #     output_file: "results/enrichment/fgsea/{group}/tables/{group}"
+  #     plot_file: "results/enrichment/fgsea/{group}/plots/{group}"
+  #     log_file_name: "{group}"
+  #     wildcards:
+  #       # group: 'read_sample_tsv(config["sample_path"])'
+  #       group: '["mesoderm", "endoderm", "ectoderm",]'
+
+
 
   effect_col:
     dynamic: false
