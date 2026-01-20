@@ -35,6 +35,7 @@ mesoderm = snakemake.input.mesoderm
 diffexp_df = pl.read_csv(diffexp, separator="\t", null_values="NA").rename(
     {
         "qval": "qval_diffexp",
+        "pval": "pval_diffexp",
     }
 )
 
@@ -53,6 +54,7 @@ dmrs_df = (
     .rename(
         {
             "qval": "qval_dmr",
+            "pval": "pval_dmr",
         }
     )
 )
@@ -65,11 +67,17 @@ common_df = diffexp_df.join(
     pl.col("mean_methylation_difference").is_not_null()
     & pl.col("qval_diffexp").is_not_null()
     & pl.col("qval_dmr").is_not_null()
+    & pl.col("pval_diffexp").is_not_null()
+    & pl.col("pval_dmr").is_not_null()
 )
 
 common_df = common_df.filter(pl.col("annotation_type") == annotation_type).with_columns(
     (pl.max_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr"))).alias(
         "qval_combined"
+    )
+).with_columns(
+    (pl.max_horizontal(pl.col("pval_diffexp"), pl.col("pval_dmr"))).alias(
+        "pval_combined"
     )
 )
 common_df = common_df.with_columns(
@@ -140,6 +148,8 @@ chart.save(snakemake.output[0])
 
 print(common_df.filter(pl.col("ext_gene") == "POU5F1"))
 
+print(common_df.columns)
+
 # Create table
 common_df = (
     common_df.filter(pl.col("qval_combined") <= 0.5)
@@ -156,6 +166,8 @@ common_df = (
             "germ_layer",
             "qval_diffexp",
             "qval_dmr",
+            "pval_dmr",
+            "pval_diffexp",
             "diffexp",
             "diffexp_se",
             "mean_methylation_difference",

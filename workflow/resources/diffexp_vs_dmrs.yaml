@@ -88,3 +88,7 @@ views:
           link-to-url: 
             geneontology: 
               url: https://useast.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g={ens_gene}
+        pval_diffexp:
+          display-mode: hidden
+        pval_dmr:
+          display-mode: hidden

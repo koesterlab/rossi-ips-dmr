@@ -60,6 +60,7 @@ def all_input(wildcards):
     #         for file_type in ["html", "tsv"]
     #     ]
     # )
+    wanted_input.append("results/platforms_combined/varlo/rna_seq_comp/gene_set")
 
     wanted_input.extend(
         [f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}_table"
@@ -77,21 +78,21 @@ def all_input(wildcards):
         ]
     )
 
-    wanted_input.extend(
-        [f"results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation}_table"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for annotation in [
-                "distal_intergenic",
-                "promoter",
-                "intron",
-                "exon",
-                "3_utr",
-                "5_utr",
-                "downstream",
-            ]
-        ]
-    )
+    # wanted_input.extend(
+    #     [f"results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation}_table"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #         for annotation in [
+    #             "distal_intergenic",
+    #             "promoter",
+    #             "intron",
+    #             "exon",
+    #             "3_utr",
+    #             "5_utr",
+    #             "downstream",
+    #         ]
+    #     ]
+    # )
 
 
     # wanted_input.extend(
@@ -111,12 +112,12 @@ def all_input(wildcards):
     #     ]
     # )
 
-    wanted_input.extend(
-        [
-            f"results/platforms_combined/varlo/rna_seq_comp/tfs/{layer}_significant_tfs.tsv"
-            for layer in ["ectoderm", "mesoderm", "endoderm"]
-        ]
-    )
+    # wanted_input.extend(
+    #     [
+    #         f"results/platforms_combined/varlo/rna_seq_comp/tfs/{layer}_significant_tfs.tsv"
+    #         for layer in ["ectoderm", "mesoderm", "endoderm"]
+    #     ]
+    # )
 
 
     wanted_input.extend(

@@ -20,10 +20,17 @@ diffexp <- read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]) %>%
                   mutate(
                     ext_gene = str_to_upper(ext_gene),
                     qval = pmax(qval_diffexp, qval_dmr, na.rm = TRUE),
-                    ranked_meth_diffexp = if_else(
-                        mean_methylation_difference > 0,
-                        mean_methylation_difference * diffexp * -1,
-                        mean_methylation_difference * diffexp
+                    pval = pmax(pval_diffexp, pval_dmr, na.rm = TRUE),
+                    ranked_meth_diffexp = case_when(
+                        sign(mean_methylation_difference) == sign(diffexp) &
+                        mean_methylation_difference != 0 &
+                        diffexp != 0
+                        ~ mean_methylation_difference * diffexp * 0.5,
+
+                        sign(mean_methylation_difference) >= 0
+                        ~ mean_methylation_difference * diffexp * -1,
+
+                        TRUE ~ 0
                     )
                    ) %>%
                     # resolve multiple occurences of the same ext_gene, usually
@@ -36,8 +43,8 @@ diffexp <- read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]) %>%
                     filter( pval == min(pval, na.rm = TRUE) ) %>%
                     # for the case of min(qval) == 1 and min(pval) == 1, we
                     # need something else to select a unique entry per gene
-                    filter( mean_obs == max(mean_obs, na.rm = TRUE) ) %>%
-                    mutate(target_id = str_c(target_id, collapse=",")) %>%
+                    # filter( mean_obs == max(mean_obs, na.rm = TRUE) ) %>%
+                    # mutate(target_id = str_c(target_id, collapse=",")) %>%
                     mutate(ens_gene = str_c(ens_gene, collapse=",")) %>%
                   distinct()
 

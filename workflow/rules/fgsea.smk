@@ -28,7 +28,7 @@ bioc_species_pkg = get_bioc_species_pkg()
 enrichment_env = render_enrichment_env()
 
 
-rule fgsea_dmr_v_diffexp:
+rule fgsea_dmr_vs_diffexp:
     input:
         # samples="results/sleuth/{model}.samples.tsv",
         # diffexp="results/tables/diffexp/{model}.genes-representative.diffexp.tsv",
