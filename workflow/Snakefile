@@ -29,6 +29,7 @@ include: "rules/pbCpgTools.smk"
 include: "rules/methylation_calling.smk"
 include: "rules/compare_rna_jochen_excel.smk"
 include: "rules/annotate_dmrs.smk"
+include: "rules/fgsea.smk"
 
 inputflags:
     access.sequential
