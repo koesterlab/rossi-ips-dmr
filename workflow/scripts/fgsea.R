@@ -21,17 +21,11 @@ diffexp <- read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]) %>%
                     ext_gene = str_to_upper(ext_gene),
                     qval = pmax(qval_diffexp, qval_dmr, na.rm = TRUE),
                     pval = pmax(pval_diffexp, pval_dmr, na.rm = TRUE),
-                    ranked_meth_diffexp = case_when(
-                        sign(mean_methylation_difference) == sign(diffexp) &
-                        mean_methylation_difference != 0 &
-                        diffexp != 0
-                        ~ mean_methylation_difference * diffexp * 0.5,
-
-                        sign(mean_methylation_difference) >= 0
-                        ~ mean_methylation_difference * diffexp * -1,
-
-                        TRUE ~ 0
-                    )
+                    # ranked_meth_diffexp = case_when(
+                    #     sign(mean_methylation_difference) == sign(diffexp) ~ mean_methylation_difference * diffexp * 0.5,
+                    #     sign(mean_methylation_difference) >= 0 ~ mean_methylation_difference * diffexp * -1,
+                    #     TRUE ~ mean_methylation_difference * diffexp
+                    # )                          
                    ) %>%
                     # resolve multiple occurences of the same ext_gene, usually
                   # meaning that several ENSEMBLE genes map to the same gene
@@ -48,6 +42,12 @@ diffexp <- read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]) %>%
                     mutate(ens_gene = str_c(ens_gene, collapse=",")) %>%
                   distinct()
 
+
+
+diffexp %>%
+  arrange(ranked_meth_diffexp) %>%   # sortiert nach der Spalte
+  write.csv("diffexp.csv", row.names = FALSE)
+
 # signed_pi <- get_prefix_col("signed_pi_value", colnames(diffexp))
 signed_pi = "ranked_meth_diffexp"
 
@@ -63,11 +63,10 @@ rank_ties <- enframe(ranked_genes) %>%
 write_tsv(rank_ties, snakemake@output[["rank_ties"]])
 
 # print(gene_sets)
-print(ranked_genes)
 
 fgsea_res <- fgsea(pathways = gene_sets,
                     stats = ranked_genes,
-                    minSize=10,
+                    minSize=5,
                     maxSize=700,
                     nproc=snakemake@threads,
                     eps=snakemake@params[["eps"]]
@@ -121,7 +120,15 @@ if ( (fgsea_res %>% count() %>% pull(n)) == 0 ) {
                         ),
                         .after = last_col()
                     )
+    annotated <- annotated %>%
+      mutate(
+        GO_term = str_extract(pathway, "GO:\\d+"),
+        pathway = str_remove(pathway, "\\s*\\(GO:\\d+\\)")
+      ) %>%
+      relocate(GO_term, .after = pathway) %>%
+      arrange(pval)
 
+    print(annotated)
     # write out fgsea results for all gene sets
     write_tsv(annotated, file = snakemake@output[["enrichment"]])
 
@@ -134,7 +141,8 @@ if ( (fgsea_res %>% count() %>% pull(n)) == 0 ) {
 }
 
 # select significant pathways
-top_pathways <- fgsea_res %>% arrange(padj) %>% head(n=1000) %>% filter(padj <= snakemake@params[["gene_set_fdr"]]) %>% arrange(-NES) %>% pull(pathway)
+top_pathways <- fgsea_res %>% arrange(padj) %>% head(n=100) %>% filter(padj <= snakemake@params[["gene_set_fdr"]]) %>% arrange(-NES) %>% pull(pathway)
+# top_pathways <- fgsea_res %>% arrange(padj) %>% arrange(-NES) %>% pull(pathway)
 selected_gene_sets <- gene_sets[top_pathways]
 
 height = .7 * (length(selected_gene_sets) + 2)

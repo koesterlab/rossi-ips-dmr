@@ -12,6 +12,7 @@ def get_bioc_species_pkg():
     species_letters = get_bioc_species_name()[0:2].capitalize()
     return "org.{species}.eg.db".format(species=species_letters)
 
+
 def render_enrichment_env():
     species_pkg = f"bioconductor-{get_bioc_species_pkg()}"
     with open(workflow.source_path("../envs/enrichment.yaml")) as f:
@@ -32,44 +33,42 @@ rule fgsea_dmr_vs_diffexp:
     input:
         # samples="results/sleuth/{model}.samples.tsv",
         # diffexp="results/tables/diffexp/{model}.genes-representative.diffexp.tsv",
-        diffexp_vs_dmrs_promoter="results/platforms_combined/varlo/rna_seq_comp/diffexp_vs_dmrs_promoter.tsv",
+        diffexp_vs_dmrs_promoter="results/platforms_combined/varlo/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
         gene_sets=config["enrichment"]["fgsea"]["gene_sets_file"],
         common_src=workflow.source_path("../scripts/common.R"),
     output:
         enrichment=report(
-            "results/platforms_combined/varlo/rna_seq_comp/all-gene-sets.tsv",
+            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
             # caption="../report/fgsea-table-all.rst",
             category="DiffExp-Methylation Comparison",
             subcategory=f"Gene Set Enrichment Analysis",
-            
+
         ),
         rank_ties=report(
-            "results/platforms_combined/varlo/rna_seq_comp/rank-ties.tsv",
+            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-rank-ties.tsv",
             # caption="../report/fgsea-rank-ties.rst",
             category="DiffExp-Methylation Comparison",
             subcategory=f"Gene Set Enrichment Analysis",
-            
+
         ),
         significant=report(
-            "results/platforms_combined/varlo/rna_seq_comp/sig-gene-sets.tsv",
+            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-sig-gene-sets.tsv",
             # caption="../report/fgsea-table-significant.rst",
             category="DiffExp-Methylation Comparison",
             subcategory=f"Gene Set Enrichment Analysis",
-            
+
         ),
         plot=report(
-            "results/platforms_combined/varlo/rna_seq_comp/table-plot.pdf",
+            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-table-plot.pdf",
             # caption="../report/fgsea-table-plot.rst",
             category="DiffExp-Methylation Comparison",
             subcategory=f"Gene Set Enrichment Analysis",
-            
         ),
         plot_collapsed=report(
-            "results/platforms_combined/varlo/rna_seq_comp/collapsed_pathways.table-plot.pdf",
+            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-collapsed_pathways.table-plot.pdf",
             # caption="../report/fgsea-collapsed-table-plot.rst",
             category="DiffExp-Methylation Comparison",
             subcategory=f"Gene Set Enrichment Analysis",
-            
         ),
     params:
         bioc_species_pkg=bioc_species_pkg,
@@ -115,19 +114,19 @@ rule fgsea_dmr_vs_diffexp:
 rule fgsea_datavzrd:
     input:
         config=workflow.source_path("../resources/fgsea.yaml"),
-        comp="results/platforms_combined/varlo/rna_seq_comp/all-gene-sets.tsv",
+        comp="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
     output:
         report(
-            directory(
-                "results/{platform}/{caller}/rna_seq_comp/gene_set"
-            ),
+            directory("results/{platform}/{caller}/rna_seq_comp/{annotation_type}_gene_set"),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-Methylation Comparison",
-            subcategory="Gene Set Enrichment Analysis - table",
+            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
+            labels=lambda wildcards: {
+                "type": "pathways no transcription factors",
+            },
         ),
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}.log",
     wrapper:
         "v3.13.0/utils/datavzrd"
-

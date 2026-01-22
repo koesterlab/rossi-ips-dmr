@@ -11,26 +11,18 @@ default-view: diffexp_vs_dmrs
 views:
   diffexp_vs_dmrs:
     dataset: diffexp_vs_dmrs
-    desc: ?f"Gene set enrichment on genes differentially expressed and associated to DMRs"
+    desc: |
+      Gene set enrichment analysis was performed using fgsea on genes that are both differentially expressed and associated with differentially methylated regions (DMRs). fgsea requires a ranked list of genes, which we constructed by combining expression and methylation information. Specifically, genes were ranked using the product of the mean methylation difference and the l2fc from the differential expression analysis. 
+      Because we were primarily interested in genes showing concordant regulation—namely hypermethylation with downregulation and hypomethylation with upregulation—genes displaying the opposite pattern were down-weighted by multiplying their ranking score by a factor of 0.5. Finally, ranks were sign-adjusted so that hypomethylated genes received negative values, ensuring a consistent ordering of genes for the enrichment analysis.
     render-table:
       columns:
-
-        pathway:
-          link-to-url: 
-            geneontology: 
-              url: https://www.gsea-msigdb.org/gsea/msigdb/cards/{pathway}.html
         pval:
           plot:
             heatmap:
               scale: linear
               range:
                 - "#a1d99b"
-                - "white"
                 - "#fdae6b"
-              domain:
-                - 0
-                - 0.05
-                - 2
         padj:
           plot:
             heatmap:
@@ -43,10 +35,16 @@ views:
           plot:
             heatmap:
               scale: linear
+              range:
+                - "#a1d99b"
+                - "#fdae6b"
         ES:
           plot:
             heatmap:
               scale: linear
+              range:
+                - "#a1d99b"
+                - "#fdae6b"
         NES:
           plot:
             heatmap:
@@ -55,3 +53,7 @@ views:
           plot:
             heatmap:
               scale: linear
+        GO_term:
+          link-to-url:
+            geneontology:
+              url: https://www.ebi.ac.uk/QuickGO/GTerm?id={GO_term}

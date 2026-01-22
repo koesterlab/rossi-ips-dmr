@@ -79,10 +79,10 @@ enrichment:
     # Don't forget to document your gene set sources and to cite them upon
     # publication. One commonly used source for GMT files is MSigDB:
     # https://www.gsea-msigdb.org/gsea/msigdb
-    gene_sets_file: "config/gene_sets/c2.all.v2025.1.Hs.symbols.gmt"
+    gene_sets_file: "config/gene_sets/GO_Molecular_Function_2025.gmt"
     # threshold on FDR corrected p-value from GSEA, whether to consider a gene
     # set as significantly enriched in differentially expressed genes
-    fdr_gene_set: 0.05
+    fdr_gene_set: 1.0
     # minimum achievable p-value  (equivalent to the reciprocal of the number of permutations, see fgsea docs)
     eps: 1.0e-50
 

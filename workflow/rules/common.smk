@@ -41,8 +41,6 @@ def all_input(wildcards):
     #     ]
     # )
 
-
-
     # wanted_input.extend(
     #     [
     #         f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.{file_type}"
@@ -60,13 +58,15 @@ def all_input(wildcards):
     #         for file_type in ["html", "tsv"]
     #     ]
     # )
-    wanted_input.append("results/platforms_combined/varlo/rna_seq_comp/gene_set")
+    # wanted_input.append("results/platforms_combined/varlo/rna_seq_comp/gene_set")
 
     wanted_input.extend(
-        [f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}_table"
+        [
+            f"results/{platform}/{caller}/rna_seq_comp/{annotation_type}_diffexp_vs_dmrs_{tf}_tfs"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
-            for annotation in [
+            for tf in ["no", "with"]
+            for annotation_type in [
                 "distal_intergenic",
                 "promoter",
                 "intron",
@@ -94,7 +94,6 @@ def all_input(wildcards):
     #     ]
     # )
 
-
     # wanted_input.extend(
     #     [
     #         f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs.html"
@@ -102,7 +101,6 @@ def all_input(wildcards):
     #         for caller in config["meth_caller"].get(platform, [])
     #     ]
     # )
-
 
     # wanted_input.extend(
     #     [
@@ -118,7 +116,6 @@ def all_input(wildcards):
     #         for layer in ["ectoderm", "mesoderm", "endoderm"]
     #     ]
     # )
-
 
     wanted_input.extend(
         [
@@ -156,6 +153,25 @@ def all_input(wildcards):
             for plot in ["scatter", "barplot"]
         ]
     )
+
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/rna_seq_comp/{annotation_type}_gene_set","
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for annotation_type in [
+                "distal_intergenic",
+                "promoter",
+                "intron",
+                "exon",
+                "3_utr",
+                "5_utr",
+                "downstream",
+            ]
+        ]
+    )
+           
+
 
     # wanted_input.extend(
     #     [
