@@ -60,14 +60,65 @@ rule compare_diffexp:
         "../scripts/compare_diffexp_dmrs.py"
 
 
-rule diffexp_dmr_datavzrd:
+rule get_tfs_from_collectri:
+    output:
+        "resources/rna_seq/tf_list/collectri_tf_list.tsv",
+    conda:
+        "../envs/decoupler.yaml"
+    log:
+        "logs/get_tfs_from_collectri.log",
+    script:
+        "../scripts/get_tfs_from_collectri.R"
+
+
+rule scatter_tfs:
     input:
-        config=workflow.source_path("../resources/diffexp_vs_dmrs.yaml"),
+        tf_list="resources/rna_seq/tf_list/collectri_tf_list.tsv",
         comp="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
+    output:
+        # report(
+        #     "results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tfs_only.html",
+        #     caption="../report/rna_seq.rst",
+        #     category="DiffExp-Methylation Comparison",
+        #     subcategory="scatter plots TFs",
+        #     labels=lambda wildcards: {
+        #         "type": "only transcription factors",
+        #         "annotation type": wildcards.annotation_type,
+        #     },
+        # ),
+        # # "results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation_type}_tfs.tsv",
+        # report(
+        #     "results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.html",
+        #     caption="../report/rna_seq.rst",
+        #     category="DiffExp-Methylation Comparison",
+        #     subcategory="scatter plots TFs",
+        #     labels=lambda wildcards: {
+        #         "type": "only transcription factors",
+        #         "annotation type": wildcards.annotation_type,
+        #     },
+        # ),
+        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_focus_tfs.tsv",
+        comp_tf_adj="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.tsv",
+    conda:
+        "../envs/python.yaml"
+    params:
+        annotation_type=lambda wildcards: wildcards.annotation_type,
+    log:
+        "logs/compare_diffexp/{platform}_{caller}_{annotation_type}_tfs.log",
+    script:
+        "../scripts/compare_diffexp_dmrs_only_tfs.py"
+
+
+rule datavzrd_plot_genes:
+    input:
+        config=workflow.source_path("../resources/plot_genes.yaml"),
+        no_tfs="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
+        with_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.tsv",
+        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_focus_tfs.tsv",
     output:
         report(
             directory(
-                "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}_table"
+                "results/{platform}/{caller}/rna_seq_comp/gene_plots_{annotation_type}_table"
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
@@ -81,7 +132,7 @@ rule diffexp_dmr_datavzrd:
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
     wrapper:
-        "v3.13.0/utils/datavzrd"
+        "v9.0.0/utils/datavzrd"
 
 
 # # Compare the differential expression results with the DMR associated genes
@@ -109,8 +160,6 @@ rule diffexp_dmr_datavzrd:
 #         "logs/compare_diffexp/{platform}_{caller}_{layer}.log",
 #     script:
 #         "../scripts/compute_tfs_target_genes.R"
-
-
 # # Compare the differential expression results with the DMR associated genes
 # rule compare_diffexp_with_tfs:
 #     input:
@@ -142,8 +191,6 @@ rule diffexp_dmr_datavzrd:
 #         "logs/compare_diffexp/{platform}_{caller}_{annotation_type}.log",
 #     script:
 #         "../scripts/compare_diffexp_dmrs_with_tfs.py"
-
-
 # rule diffexp_dmr_datavzrd_with_tfs:
 #     input:
 #         config=workflow.source_path("../resources/diffexp_vs_dmrs.yaml"),

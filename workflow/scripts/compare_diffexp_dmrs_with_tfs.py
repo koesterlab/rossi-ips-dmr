@@ -255,8 +255,8 @@ chart.save(snakemake.output[0])
 
 # --- Optional: export table ---
 common_df = (
-    common_df.filter(pl.col("qval_combined") <= 0.5)
-    .with_columns(
+    # common_df.filter(pl.col("qval_combined") <= 0.5)
+    common_df.with_columns(
         (pl.col("meth_difference_per_gene") * pl.col("diffexp")).alias(
             "dmr_sum_x_diffexp"
         )

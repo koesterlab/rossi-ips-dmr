@@ -71,13 +71,17 @@ common_df = diffexp_df.join(
     & pl.col("pval_dmr").is_not_null()
 )
 
-common_df = common_df.filter(pl.col("annotation_type") == annotation_type).with_columns(
-    (pl.max_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr"))).alias(
-        "qval_combined"
+common_df = (
+    common_df.filter(pl.col("annotation_type") == annotation_type)
+    .with_columns(
+        (pl.max_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr"))).alias(
+            "qval_combined"
+        )
     )
-).with_columns(
-    (pl.max_horizontal(pl.col("pval_diffexp"), pl.col("pval_dmr"))).alias(
-        "pval_combined"
+    .with_columns(
+        (pl.max_horizontal(pl.col("pval_diffexp"), pl.col("pval_dmr"))).alias(
+            "pval_combined"
+        )
     )
 )
 common_df = common_df.with_columns(
@@ -101,6 +105,13 @@ common_df = common_df.with_columns(
 )
 common_df = common_df.filter(pl.col("diffexp").is_not_null())
 
+
+common_df = common_df.group_by(
+    [c for c in common_df.columns if c not in ["ens_gene", "target_id"]]
+).agg(pl.col("ens_gene").first().alias("ens_gene"))
+
+common_df.write_csv("test.txt", separator="\t")
+
 layer_select = alt.selection_point(
     fields=["germ_layer"], bind="legend", name="Germ Layer"
 )
@@ -114,6 +125,7 @@ color = alt.condition(
     alt.value("lightgray"),
 )
 
+# common_df = common_df.filter(pl.col("qval_combined") <= 0.5)
 
 chart = (
     alt.Chart(common_df.to_pandas())
@@ -146,17 +158,25 @@ chart = (
 
 chart.save(snakemake.output[0])
 
-print(common_df.filter(pl.col("ext_gene") == "POU5F1"))
-
-print(common_df.columns)
 
 # Create table
 common_df = (
-    common_df.filter(pl.col("qval_combined") <= 0.5)
+    common_df
+    # common_df.filter(pl.col("qval_combined") <= 0.5)
     .with_columns(
         (pl.col("mean_methylation_difference") * pl.col("diffexp")).alias(
             "methylation_diff_x_diffexp"
         )
+    )
+    .with_columns(
+        pl.when(
+            (pl.col("mean_methylation_difference").sign() == pl.col("diffexp").sign())
+        )
+        .then(pl.col("methylation_diff_x_diffexp") * 0.5)
+        .when(pl.col("mean_methylation_difference").sign() >= 0)
+        .then(pl.col("methylation_diff_x_diffexp") * -1)
+        .otherwise(pl.col("methylation_diff_x_diffexp"))
+        .alias("ranked_meth_diffexp")
     )
     .sort("methylation_diff_x_diffexp", descending=False)
     .select(
@@ -166,17 +186,19 @@ common_df = (
             "germ_layer",
             "qval_diffexp",
             "qval_dmr",
+            "qval_combined",
             "pval_dmr",
             "pval_diffexp",
             "diffexp",
             "diffexp_se",
             "mean_methylation_difference",
             "methylation_diff_x_diffexp",
+            "ranked_meth_diffexp",
         ]
     )
+    .with_row_count("row_id")
 )
-
-
 print(common_df)
+
 
 common_df.write_csv(snakemake.output[1], separator="\t")
