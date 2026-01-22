@@ -19,7 +19,12 @@ views:
 
   diffexp_vs_dmrs_table_with_tfs:
     dataset: data_with_tfs
-    desc: ?f"Table with DMR values and DiffExp per gene and germ layer. The column ext gene shows all investigated genes. If a gene is influenced by transcription factors the column 'is tf target' will be true. You can find the  according transcription factors in the column tfs. To adjust the DMR of a gene by its transcription factors we sum over all DMRs of the single transcription factors. Sometimes for one gene we find multiple DMRs, in this case we build the mean over all DMRs for this transcription factor. Right now we do not change the qvals and pvals of a gene influenced by transcription factors."
+    desc: |
+      ?f"This table contains DMR statistics and differential expression results per gene and germ layer. The column ext_gene lists all genes included in the analysis. To identify transcription factor (TF)–target relationships, we used CollecTRI (https://academic.oup.com/nar/article/51/20/10934/7318114), which provides a curated set of transcription factors and their target genes.
+
+      If a gene is regulated by one or more transcription factors, the column is_tf_target is set to TRUE, and the corresponding transcription factors are listed in the tfs column. To account for the influence of transcription factors on DNA methylation, we adjust the gene-level DMR by aggregating the DMRs of its associated transcription factors. Specifically, when multiple DMRs are present for a given transcription factor, their mean is calculated first; the resulting values are then summed across all transcription factors regulating the gene.
+
+      At present, the gene-level p-values and q-values are not adjusted for transcription factor influence"
     render-table:
       columns:
         row_id:
@@ -112,7 +117,11 @@ views:
   diffexp_vs_dmrs_plot_with_tfs:
     dataset: data_with_tfs
     desc: |
-      ?f"Scatter plot with DMR values and DiffExp per gene and germ_layer. To adjust the DMR of a gene by its transcription factors we sum over all DMRs of the single transcription factors. Sometimes for one gene we find multiple DMRs, in this case we build the mean over all DMRs for this transcription factor. Right now we do not change the qvals and pvals of a gene influenced by transcription factors. We show 'qval combined' (the maximum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers. Furthermore you can click on a data point to see its details in a table."
+      ?f"This scatter plot shows DMR values and differential expression results per gene and germ layer. To identify transcription factor–target relationships, we used CollecTRI (https://academic.oup.com/nar/article/51/20/10934/7318114), which provides a curated set of transcription factors (TFs) and their target genes. To account for TF regulation, the DMR value of a gene is adjusted by aggregating the DMRs of its associated TFs. When multiple DMRs are present for a single TF, their mean is calculated first, and these values are then summed across all TFs regulating the gene. 
+
+      At present, p-values and q-values are not modified for genes influenced by TFs. The displayed point opacity reflects the combined q-value, defined as the maximum of the q-values from the DMR and differential expression analyses of the target gene.
+
+      The germ layer legend can be used to filter the plot by specific germ layers. Clicking on an individual data point reveals detailed information for the corresponding gene in an accompanying table."
     render-plot:
       spec: |
         {
@@ -163,7 +172,9 @@ views:
 
   tfs_only:
     dataset: data_focus_tfs
-    desc: ?f"Scatter plot with DMR values and DiffExp per transcription factor and germ_layer. We show only transcription factors with target genes included in our analysis. We show 'qval combined' (the maximum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers."
+    desc: | 
+      ?f"Scatter plot with DMR values and DiffExp per transcription factor and germ_layer. We show only transcription factors with target genes included in our analysis. We show 'qval combined' (the maximum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers.
+      Point opacity represents the combined q-value, defined as the maximum of the q-values from the DMR and differential expression analyses; lower opacity therefore indicates weaker statistical support. The germ layer legend can be used to interactively filter the plot to specific germ layers."
     render-plot:
       spec: |
         {
