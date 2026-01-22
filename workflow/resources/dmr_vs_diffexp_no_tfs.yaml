@@ -1,0 +1,153 @@
+__use_yte__: true
+
+
+name: Diffexp vs DMRs
+datasets:
+  data_no_tfs:
+    path: ?input.table
+    separator: "\t"
+    links:
+      data_no_tfs:
+        column: row_id
+        table-row: diffexp_vs_dmrs_table_no_tfs/row_id
+default-view: diffexp_vs_dmrs_plot_no_tfs
+views:
+
+
+
+  diffexp_vs_dmrs_table_no_tfs:
+    dataset: data_no_tfs
+    desc: ?f"Table with DMR values and DiffExp per gene and germ_layer. Sometimes a gene appears multiple times because there are multiple differentially methylated region within that gene. 'qval combined' is the maximum of the qvalues of the DMR and DiffExp analysis. To prioritize the most extreme cases toward the top-left or bottom-right, we sort values by the product of the DMR and differential expression scores. This ensures that strong effects in both dimensions are ranked highest."
+    render-table:
+      columns:
+        row_id:
+          display-mode: hidden
+        qval_diffexp:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "#a1d99b"
+                - "white"
+                - "#fdae6b"
+              domain:
+                - 0
+                - 0.05
+                - 0.5
+        qval_dmr:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "#a1d99b"
+                - "white"
+                - "#fdae6b"
+              domain:
+                - 0
+                - 0.05
+                - 0.5
+        mean_methylation_difference:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "#e6550d"
+                - "white"
+                - "#6baed6"
+              domain:
+                - -1
+                - 0
+                - 1 
+        diffexp:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "#e6550d"
+                - "white"
+                - "#6baed6"
+              domain:
+                - -5
+                - 0
+                - 5
+        diffexp_se:
+          plot:
+            heatmap:
+              scale: linear
+              range:
+                - "white"
+                - "#6baed6"
+              domain:
+                - 0
+                - 2
+        germ_layer:
+          plot:
+            heatmap:
+              scale: ordinal
+              color-scheme: category10
+        ext_gene:
+          display-mode: normal
+          link-to-url: 
+            geneontology: 
+              url: https://www.genecards.org/cgi-bin/carddisp.pl?gene={ext_gene}
+        
+        ens_gene:
+          display-mode: normal
+          link-to-url: 
+            geneontology: 
+              url: https://useast.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g={ens_gene}
+        pval_diffexp:
+          display-mode: hidden
+        pval_dmr:
+          display-mode: hidden
+
+
+
+  diffexp_vs_dmrs_plot_no_tfs:
+    dataset: data_no_tfs
+    desc: ?f"Scatter plot with DMR values and DiffExp per gene and germ_layer. Sometimes a gene appears multiple times because there are multiple differentially methylated region within that gene. We show 'qval combined' (the maximum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers. Furthermore you can click on a data point to see its details in a table."
+    render-plot:
+      spec: |
+        {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "config": {"view": {"continuousWidth": 500, "continuousHeight": 500}},
+          "mark": {"type": "point", "filled": true},
+          "encoding": {
+            "color": {
+              "condition": {
+                "param": "Germ Layer",
+                "field": "germ_layer",
+                "scale": {"scheme": "category10"},
+                "title": "Germ Layer",
+                "type": "nominal"
+              },
+              "value": "lightgray"
+            },
+            "opacity": {
+              "field": "qval_combined",
+              "scale": {"range": [1, 0.1]},
+              "title": "max(qval1, qval2)",
+              "type": "quantitative"
+            },
+            "size": {
+              "field": "qval_combined",
+              "scale": {"range": [30, 1]},
+              "title": "max(qval1, qval2)",
+              "type": "quantitative"
+            },
+            "tooltip": [
+              {"field": "ext_gene", "type": "nominal"},
+              {"field": "ranked_meth_diffexp", "type": "quantitative"},
+            ],
+            "x": {"field": "diffexp", "type": "quantitative"},
+            "y": {"field": "mean_methylation_difference", "type": "quantitative"},
+            "href": {"field": "data_no_tfs"},
+          },
+          "params": [
+            {
+              "name": "Germ Layer",
+              "select": {"type": "point", "fields": ["germ_layer"]},
+              "bind": "legend"
+            }
+          ],          
+        }

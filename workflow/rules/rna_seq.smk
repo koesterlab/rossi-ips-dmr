@@ -39,16 +39,16 @@ rule compare_diffexp:
         mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
         ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
     output:
-        report(
-            "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.html",
-            caption="../report/rna_seq.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory="scatter plots",
-            labels=lambda wildcards: {
-                "type": "no transcription factors",
-                "annotation type": wildcards.annotation_type,
-            },
-        ),
+        # report(
+        #     "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.html",
+        #     caption="../report/rna_seq.rst",
+        #     category="DiffExp-Methylation Comparison",
+        #     subcategory="scatter plots",
+        #     labels=lambda wildcards: {
+        #         "type": "no transcription factors",
+        #         "annotation type": wildcards.annotation_type,
+        #     },
+        # ),
         "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
     conda:
         "../envs/python.yaml"
@@ -109,24 +109,45 @@ rule scatter_tfs:
         "../scripts/compare_diffexp_dmrs_only_tfs.py"
 
 
-rule datavzrd_plot_genes:
+rule datavzrd_dmr_vs_diffexp_no_tfs:
     input:
-        config=workflow.source_path("../resources/plot_genes.yaml"),
-        no_tfs="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
-        with_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.tsv",
+        config=workflow.source_path("../resources/dmr_vs_diffexp_no_tfs.yaml"),
+        table="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
+    output:
+        report(
+            directory(
+                "results/{platform}/{caller}/rna_seq_comp/{annotation_type}_diffexp_vs_dmrs_no_tfs"
+            ),
+            caption="../report/diffexp_vs_dmrs.rst",
+            htmlindex="index.html",
+            category="DiffExp-DMRs Comparison",
+            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
+            labels=lambda wildcards: {
+                "type": "no transcription factors",
+            },
+        ),
+    log:
+        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
+    wrapper:
+        "v9.0.0/utils/datavzrd"
+
+
+rule datavzrd_dmr_vs_diffexp_with_tfs:
+    input:
+        config=workflow.source_path("../resources/dmr_vs_diffexp_with_tfs.yaml"),
+        complete="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.tsv",
         focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_focus_tfs.tsv",
     output:
         report(
             directory(
-                "results/{platform}/{caller}/rna_seq_comp/gene_plots_{annotation_type}_table"
+                "results/{platform}/{caller}/rna_seq_comp/{annotation_type}_diffexp_vs_dmrs_with_tfs"
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-Methylation Comparison",
-            subcategory="tables",
+            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
-                "type": "no transcription factors",
-                "annotation type": wildcards.annotation_type,
+                "type": "with transcription factors",
             },
         ),
     log:

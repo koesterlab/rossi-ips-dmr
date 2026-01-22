@@ -107,56 +107,56 @@ common_df = common_df.filter(pl.col("diffexp").is_not_null())
 
 
 common_df = common_df.group_by(
-    [c for c in common_df.columns if c not in ["ens_gene", "target_id"]]
+    [c for c in common_df.columns if c not in ["ens_gene", "target_id", "mane"]]
 ).agg(pl.col("ens_gene").first().alias("ens_gene"))
 
-common_df.write_csv("test.txt", separator="\t")
+# common_df.write_csv("test.txt", separator="\t")
 
-layer_select = alt.selection_point(
-    fields=["germ_layer"], bind="legend", name="Germ Layer"
-)
-color = alt.condition(
-    layer_select,
-    alt.Color(
-        "germ_layer:N",
-        title="Germ Layer",
-        scale=alt.Scale(scheme="category10"),
-    ),
-    alt.value("lightgray"),
-)
+# layer_select = alt.selection_point(
+#     fields=["germ_layer"], bind="legend", name="Germ Layer"
+# )
+# color = alt.condition(
+#     layer_select,
+#     alt.Color(
+#         "germ_layer:N",
+#         title="Germ Layer",
+#         scale=alt.Scale(scheme="category10"),
+#     ),
+#     alt.value("lightgray"),
+# )
 
-# common_df = common_df.filter(pl.col("qval_combined") <= 0.5)
+# # common_df = common_df.filter(pl.col("qval_combined") <= 0.5)
 
-chart = (
-    alt.Chart(common_df.to_pandas())
-    .mark_point(filled=True)
-    .encode(
-        x="diffexp:Q",
-        y="mean_methylation_difference:Q",
-        size=alt.Size(
-            "qval_combined:Q",
-            title="max(qval1, qval2)",
-            scale=alt.Scale(range=[30, 1]),
-        ),
-        tooltip=[
-            "ext_gene",
-            "diffexp",
-            "mean_methylation_difference",
-            "qval_combined",
-            "qval_diffexp",
-            "qval_dmr",
-        ],
-        color=color,
-        opacity=alt.Opacity(
-            "qval_combined:Q",
-            scale=alt.Scale(range=[1, 0.1]),
-            title="max(qval1, qval2)",
-        ),
-    )
-    .add_params(layer_select)
-)
+# chart = (
+#     alt.Chart(common_df.to_pandas())
+#     .mark_point(filled=True)
+#     .encode(
+#         x="diffexp:Q",
+#         y="mean_methylation_difference:Q",
+#         size=alt.Size(
+#             "qval_combined:Q",
+#             title="max(qval1, qval2)",
+#             scale=alt.Scale(range=[30, 1]),
+#         ),
+#         tooltip=[
+#             "ext_gene",
+#             "diffexp",
+#             "mean_methylation_difference",
+#             "qval_combined",
+#             "qval_diffexp",
+#             "qval_dmr",
+#         ],
+#         color=color,
+#         opacity=alt.Opacity(
+#             "qval_combined:Q",
+#             scale=alt.Scale(range=[1, 0.1]),
+#             title="max(qval1, qval2)",
+#         ),
+#     )
+#     .add_params(layer_select)
+# )
 
-chart.save(snakemake.output[0])
+# chart.save(snakemake.output[0])
 
 
 # Create table
