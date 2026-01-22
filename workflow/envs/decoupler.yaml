@@ -8,3 +8,4 @@ dependencies:
   - r-pheatmap
   - r-ggrepel =0.9
   - bioconductor-omnipathr 
+  - decoupler-py

@@ -121,49 +121,50 @@ sum(triplet.promoter$target %in% rownames(gene_exp_df_se))
 sum(triplet.promoter$regionID %in% rownames(meth_se))
 print("TEST TRIPLET DATASET")
 
-# nur Triplets behalten, deren Target-Gene in der Expression-Matrix sind
-triplet.filtered <- triplet.promoter[triplet.promoter$target %in% rownames(gene_exp_df_se), ]
-
-# prüfen
-nrow(triplet.filtered)
 
 
 
+library(dplyr)
 
-# 1. Extrahiere die Matrix, falls es ein SummarizedExperiment ist
-meth_matrix <- if(is(meth_se, "SummarizedExperiment")) assay(meth_se) else meth_se
+# 1. Identifiziere Regionen, die bei deinem Threshold zu wenig Samples haben
+# Bei 4 Samples und 0.25 Threshold bleibt nur 1 Sample pro Gruppe -> Absturz.
+# Wir filtern Regionen raus, die nicht mindestens 2 unterschiedliche Werte in den Extremen haben.
 
-# 2. Berechne den Anteil der NAs pro Region (Zeile)
-na_per_region <- rowMeans(is.na(meth_matrix))
+valid_regions <- apply(assay(meth_se), 1, function(x) {
+  x <- x[!is.na(x)]
+  if(length(unique(x)) < 2) return(FALSE) # Keine Variation
+  
+  # Simuliere die Gruppenbildung
+  low_cut <- quantile(x, 0.25, na.rm = TRUE)
+  high_cut <- quantile(x, 0.75, na.rm = TRUE)
+  
+  n_low <- sum(x <= low_cut)
+  n_high <- sum(x >= high_cut)
+  
+  # Wilcoxon braucht n > 1 pro Gruppe
+  return(n_low > 1 && n_high > 1)
+})
 
-# 3. Zusammenfassung der NA-Situation
-print("Zusammenfassung der NA-Anteile pro Region:")
-summary(na_per_region)
+# 2. Filter die Namen der validen Regionen
+keep_region_ids <- names(valid_regions)[valid_regions]
 
-# 4. Wie viele Regionen sind komplett leer oder fast leer?
-n_total <- length(na_per_region)
-n_all_na <- sum(na_per_region == 1)
-n_high_na <- sum(na_per_region > 0.5)
+# 3. Triplets filtern
+triplet.filtered <- triplet.promoter %>% 
+  filter(regionID %in% keep_region_ids)
+tail(triplet.filtered)
+tail(triplet.promoter)
+cat(paste0("Regionen vorher: ", nrow(meth_se), "\n"))
+cat(paste0("Regionen nach Filter: ", length(keep_region_ids), "\n"))
+cat(paste0("Triplets nach Filter: ", nrow(triplet.filtered), "\n"))
 
-cat(paste0("\nGesamtanzahl Regionen: ", n_total, "\n"))
-cat(paste0("Regionen mit 100% NAs: ", n_all_na, " (", round(n_all_na/n_total*100, 2), "%)\n"))
-cat(paste0("Regionen mit > 50% NAs: ", n_high_na, " (", round(n_high_na/n_total*100, 2), "%)\n"))
 
-# 5. Visualisierung (Histogramm der NA-Verteilung)
-hist(na_per_region, breaks = 50, main = "Verteilung der NAs pro Region",
-     xlab = "Anteil NAs", ylab = "Anzahl Regionen", col = "skyblue")
 
-# 6. Checke spezifisch die problematische Region aus deinem Fehler
-# Fehler-Region war: chr1:30635-30636
-error_region <- "chr1:30635-30636"
-if(error_region %in% rownames(meth_matrix)) {
-    na_val <- sum(is.na(meth_matrix[error_region, ]))
-    total_val <- ncol(meth_matrix)
-    cat(paste0("\nCheck für Problem-Region '", error_region, "':\n"))
-    cat(paste0("NAs: ", na_val, " von ", total_val, " Proben (", round(na_val/total_val*100, 2), "%)\n"))
-} else {
-    print(paste("Region", error_region, "nicht in der Matrix gefunden."))
-}
+
+
+
+
+
+
 
 
 
@@ -177,7 +178,7 @@ if(error_region %in% rownames(meth_matrix)) {
 
 # 4.2.1 Analysis using model with methylation by TF interaction
 results.interaction.model <- interaction_model(
-    triplet = triplet.promoter, 
+    triplet = triplet.filtered, 
     dnam = meth_se,
     exp = gene_exp_df_se,
     dnam.group.threshold = 0.5,

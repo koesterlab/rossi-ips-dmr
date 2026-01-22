@@ -117,7 +117,7 @@ rule fgsea_datavzrd:
         comp="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
     output:
         report(
-            directory("results/{platform}/{caller}/rna_seq_comp/{annotation_type}_gene_set"),
+            directory("results/{platform}/{caller}/rna_seq_comp/gene_set_{annotation_type}"),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-Methylation Comparison",

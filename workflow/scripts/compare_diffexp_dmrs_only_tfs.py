@@ -57,7 +57,8 @@ comparison_df = pl.read_csv(snakemake.input.comp, separator="\t", null_values="N
 # Transcription factors with target genes
 tf_df = pl.read_csv(snakemake.input.tf_list, separator=",", null_values="NA")
 
-
+print(tf_df)
+print(comparison_df)
 ###################### Plot only transcription factors #####################
 
 # The merge ext_gene and source to get all transcription factors of our analysis. We get a new target column, but not all targets are in the comparison df, therefore not every tf has an incfluence. This table gets quite big since every tf can have multiple targets and everz target becomes a new row.
@@ -85,7 +86,6 @@ tf_df = tf_df.group_by("tfs", "germ_layer", "target").agg(
     pl.col("qval_dmr").max(),
     pl.col("pval_dmr").max(),
 )
-print(tf_df)
 
 # Compute the sum of mean methylation differences of all influencing tfs per target gene and germ layer
 tf_effects_per_target = tf_df.group_by("target", "germ_layer").agg(
@@ -95,7 +95,6 @@ tf_effects_per_target = tf_df.group_by("target", "germ_layer").agg(
     pl.col("tfs").unique().sort().str.join(","),
 )
 
-print(tf_df)
 
 # Merge comparison df with TF target info
 comparison_with_tf = comparison_df.join(
@@ -113,9 +112,6 @@ comparison_with_tf = comparison_with_tf.with_columns(
 ).with_columns(
     pl.col("tf_sum_mean_methylation_difference").is_not_null().alias("is_tf_target")
 )
-
-print(comparison_with_tf.filter(pl.col("ext_gene") == "POU5F1"))
-# print(comparison_with_tf.)
 
 
 ###################### Prepare for datavzrd #####################

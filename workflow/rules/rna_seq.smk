@@ -68,7 +68,7 @@ rule get_tfs_from_collectri:
     log:
         "logs/get_tfs_from_collectri.log",
     script:
-        "../scripts/get_tfs_from_collectri.R"
+        "../scripts/get_tfs_from_collectri.py"
 
 
 rule scatter_tfs:
@@ -97,8 +97,8 @@ rule scatter_tfs:
         #         "annotation type": wildcards.annotation_type,
         #     },
         # ),
-        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_focus_tfs.tsv",
-        comp_tf_adj="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.tsv",
+        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/focus_tfs_{annotation_type}.tsv",
+        comp_tf_adj="results/{platform}/{caller}/rna_seq_comp/tfs/tf_adjusted_{annotation_type}.tsv",
     conda:
         "../envs/python.yaml"
     params:
@@ -116,7 +116,7 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
     output:
         report(
             directory(
-                "results/{platform}/{caller}/rna_seq_comp/{annotation_type}_diffexp_vs_dmrs_no_tfs"
+                "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_no_tfs_{annotation_type}"
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
@@ -135,12 +135,12 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
 rule datavzrd_dmr_vs_diffexp_with_tfs:
     input:
         config=workflow.source_path("../resources/dmr_vs_diffexp_with_tfs.yaml"),
-        complete="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_tf_adjusted.tsv",
-        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/{annotation_type}_focus_tfs.tsv",
+        complete="results/{platform}/{caller}/rna_seq_comp/tfs/tf_adjusted_{annotation_type}.tsv",
+        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/focus_tfs_{annotation_type}.tsv",
     output:
         report(
             directory(
-                "results/{platform}/{caller}/rna_seq_comp/{annotation_type}_diffexp_vs_dmrs_with_tfs"
+                "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_with_tfs_{annotation_type}"
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",

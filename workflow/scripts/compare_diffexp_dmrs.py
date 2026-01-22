@@ -2,7 +2,7 @@ import polars as pl
 import altair as alt
 
 pl.Config.set_tbl_rows(10)
-pl.Config.set_tbl_cols(300)
+pl.Config.set_tbl_cols(30)
 
 
 filename_to_name = {
@@ -58,7 +58,8 @@ dmrs_df = (
         }
     )
 )
-
+print(diffexp_df)
+print(dmrs_df)
 common_df = diffexp_df.join(
     dmrs_df,
     on="ext_gene",
@@ -70,7 +71,8 @@ common_df = diffexp_df.join(
     & pl.col("pval_diffexp").is_not_null()
     & pl.col("pval_dmr").is_not_null()
 )
-
+print(annotation_type)
+print(common_df.select(pl.col("annotation_type").unique()))
 common_df = (
     common_df.filter(pl.col("annotation_type") == annotation_type)
     .with_columns(
@@ -84,6 +86,7 @@ common_df = (
         )
     )
 )
+print(common_df)
 common_df = common_df.with_columns(
     pl.when(pl.col("germ_layer") == "ectoderm")
     .then(pl.col("b_conditionectoderm"))
@@ -198,7 +201,6 @@ common_df = (
     )
     .with_row_count("row_id")
 )
-print(common_df)
 
 
-common_df.write_csv(snakemake.output[1], separator="\t")
+common_df.write_csv(snakemake.output[0], separator="\t")
