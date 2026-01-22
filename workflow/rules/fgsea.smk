@@ -79,7 +79,7 @@ rule fgsea_dmr_vs_diffexp:
     conda:
         enrichment_env
     log:
-        "logs/tables/fgsea/gene-set-enrichment.log",
+        "logs/tables/fgsea/{annotation_type}-gene-set-enrichment.log",
     threads: 25
     script:
         "../scripts/fgsea.R"
@@ -127,6 +127,6 @@ rule fgsea_datavzrd:
             },
         ),
     log:
-        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}.log",
+        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
     wrapper:
         "v3.13.0/utils/datavzrd"

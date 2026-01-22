@@ -156,7 +156,7 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/rna_seq_comp/{annotation_type}_gene_set","
+            f"results/{platform}/{caller}/rna_seq_comp/{annotation_type}_gene_set"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for annotation_type in [
@@ -170,8 +170,6 @@ def all_input(wildcards):
             ]
         ]
     )
-           
-
 
     # wanted_input.extend(
     #     [
