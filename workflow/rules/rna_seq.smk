@@ -144,7 +144,7 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
-            category="DiffExp-Methylation Comparison",
+            category="DiffExp-DMRs Comparison",
             subcategory=lambda wildcards: f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
                 "type": "with transcription factors",

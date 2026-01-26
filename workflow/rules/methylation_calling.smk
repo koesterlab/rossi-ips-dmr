@@ -169,29 +169,47 @@ rule calls_to_vcf:
 rule gather_calls:
     input:
         gather.split_candidates(
-            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.vcf"
+            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.bcf"
         ),
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/varlo.vcf",
+        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
     conda:
-        "../envs/cat.yaml"
+        "../envs/samtools.yaml"
     log:
         "logs/varlociraptor/gather_calls/{platform}_{sample}.log",
     shell:
-        "cat {input} > {output} 2> {log}"
+        """
+        bcftools concat  {input} -o {output} 2> {log}
+        """
 
+
+rule index_varlo_bcf:
+    input:
+        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf"
+    output:
+        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf.csi"
+    conda:
+        "../envs/samtools.yaml"
+    shell:
+        """
+        bcftools index -c {input}
+        """
 
 rule df_from_calls:
     input:
-        undifferentiated="results/{platform}/{caller}/meth_calling/psc/{caller}.vcf",
-        meso="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.vcf",
-        endo="results/{platform}/{caller}/meth_calling/endoderm/{caller}.vcf",
-        ecto="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.vcf",
+        undifferentiated="results/{platform}/{caller}/meth_calling/psc/{caller}.bcf",
+        undifferentiated_index="results/{platform}/{caller}/meth_calling/psc/{caller}.bcf.csi",
+        meso="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.bcf",
+        meso_index="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.bcf.csi",
+        endo="results/{platform}/{caller}/meth_calling/endoderm/{caller}.bcf",
+        endo_index="results/{platform}/{caller}/meth_calling/endoderm/{caller}.bcf.csi",
+        ecto="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.bcf",
+        ecto_index="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.bcf.csi",
         # "results/{platform}/{caller}/meth_calling/{group}/calls.vcf",
     output:
         "results/{platform}/{caller}/meth_calling/calls.parquet",
     conda:
-        "../envs/plot.yaml"
+        "../envs/pysam.yaml"
     log:
         "logs/varlociraptor/df_from_calls/{platform}_{caller}.log"
     resources:
