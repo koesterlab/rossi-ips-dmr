@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import altair as alt
 import os
 
@@ -19,16 +18,16 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
     rmse = compute_rmse(df, x_axis_name, y_axis_name)
 
     if snakemake.params["meth_caller"] == "varlo":
-        df[f"prob_present_{x_axis_name}_thresh"] = np.where(
-            df[f"{x_axis_name}_prob_present"] >= 0.95, 1, 0
+        df[f"prob_identified_{x_axis_name}_thresh"] = np.where(
+            df[f"{x_axis_name}_prob_identified"] >= 0.95, 1, 0
         )
-        df[f"prob_present_{y_axis_name}_thresh"] = np.where(
-            df[f"{y_axis_name}_prob_present"] >= 0.95, 1, 0
+        df[f"prob_identified_{y_axis_name}_thresh"] = np.where(
+            df[f"{y_axis_name}_prob_identified"] >= 0.95, 1, 0
         )
-        # 0 if both are significant, 1 if only x is significant, 2 if only y is significant, 3 if neither
+        # 0 if both are unsignificant, 1 if only x is significant, 2 if only y is significant, 3 if both
         df["prob_present"] = (
-            df[f"prob_present_{x_axis_name}_thresh"]
-            + 2 * df[f"prob_present_{y_axis_name}_thresh"]
+            df[f"prob_identified_{x_axis_name}_thresh"]
+            + 2 * df[f"prob_identified_{y_axis_name}_thresh"]
         )
         df = df[df["prob_present"] != 0]
 
@@ -99,8 +98,10 @@ df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow")
 print(df, file=sys.stderr)
 x_axis = snakemake.params["group2"]
 y_axis = snakemake.params["group1"]
+df = df[df[f"{x_axis}_prob_identified"] >= 0.95]
+df = df[df[f"{y_axis}_prob_identified"] >= 0.95]
 
-df = df[(df[f"{x_axis}_coverage"] > 50) & (df[f"{y_axis}_coverage"] > 50)]
+# df = df[(df[f"{x_axis}_coverage"] > 50) & (df[f"{y_axis}_coverage"] > 50)]
 print(df, file=sys.stderr)
 
 
