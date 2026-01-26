@@ -37,39 +37,11 @@ rule fgsea_dmr_vs_diffexp:
         gene_sets=config["enrichment"]["fgsea"]["gene_sets_file"],
         common_src=workflow.source_path("../scripts/common.R"),
     output:
-        enrichment=report(
-            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
-            # caption="../report/fgsea-table-all.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory=f"Gene Set Enrichment Analysis",
-
-        ),
-        rank_ties=report(
-            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-rank-ties.tsv",
-            # caption="../report/fgsea-rank-ties.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory=f"Gene Set Enrichment Analysis",
-
-        ),
-        significant=report(
-            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-sig-gene-sets.tsv",
-            # caption="../report/fgsea-table-significant.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory=f"Gene Set Enrichment Analysis",
-
-        ),
-        plot=report(
-            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-table-plot.pdf",
-            # caption="../report/fgsea-table-plot.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory=f"Gene Set Enrichment Analysis",
-        ),
-        plot_collapsed=report(
-            "results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-collapsed_pathways.table-plot.pdf",
-            # caption="../report/fgsea-collapsed-table-plot.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory=f"Gene Set Enrichment Analysis",
-        ),
+        enrichment="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
+        rank_ties="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-rank-ties.tsv",
+        significant="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-sig-gene-sets.tsv",
+        plot="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-table-plot.pdf",
+        plot_collapsed="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-collapsed_pathways.table-plot.pdf",
     params:
         bioc_species_pkg=bioc_species_pkg,
         # model=get_model,
@@ -120,7 +92,7 @@ rule fgsea_datavzrd:
             directory("results/{platform}/{caller}/rna_seq_comp/gene_set_{annotation_type}"),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
-            category="DiffExp-Methylation Comparison",
+            category="DiffExp-DMRs Comparison",
             subcategory=lambda wildcards: f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
                 "type": "pathways no transcription factors",

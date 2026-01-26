@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import sys
+import pysam
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
@@ -15,134 +16,102 @@ def compute_bias(format_values):
 
 def read_tool_file(file_path, axis_name, meth_caller="varlo"):
     df = []
-    with open(file_path, "r") as tool_file:
 
-        for line in tool_file:
-            if line.startswith("#") or line.startswith("track"):
+    if meth_caller == "varlo":
+        vcf = pysam.VariantFile(file_path)
+
+        for record in vcf:
+            chrom = record.chrom
+            position = record.pos
+            alt = record.alts[0] if record.alts else None
+
+            if alt != "<METH>":
                 continue
-            parts = line.strip().split("\t")
 
-            if meth_caller == "varlo":
+            sample_afs = []
+            sample_dps = []
+            sample_bias = "normal"
 
-
-
-                chrom = parts[0]
-                position = int(parts[1])
-                alt = parts[4]
-                info_field = parts[7]
-                format_field = parts[8]
-
-                if alt != "<METH>":
-                    continue
-
-                # Parse sample AF values
-                format_fields = format_field.split(":")
+            for sample in record.samples.values():
                 try:
-                    af_index = format_fields.index("AF")
-                    dp_index = format_fields.index("DP")
-                except ValueError:
-                    continue
+                    af = float(sample.get("AF", [0])[0])
+                    dp = int(sample.get("DP", 0))
+                    bias = compute_bias([v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in sample.values()])
+                    if bias != "normal":
+                        sample_bias = bias
+                    sample_afs.append(af * 100)
+                    sample_dps.append(dp)
+                except Exception:
+                    pass
 
-                sample_afs = []
-                sample_dps = []
-                sample_bias = "normal"
-                for sample_fmt in parts[9:]:
-                    values = sample_fmt.split(":")
-                    try:
-                        af = float(values[af_index])
-                        dp = int(values[dp_index])
-                        bias = compute_bias(values)
-                        if bias != "normal":
-                            sample_bias = bias
+            meth_rate = sum(sample_afs) / len(sample_afs) if sample_afs else 0
+            coverage = sum(sample_dps) / len(sample_dps) if sample_dps else 0
 
-                        sample_afs.append(af * 100)
-                        sample_dps.append(dp)
-                    except (ValueError, IndexError):
-                        pass
+            info = record.info
+            alpha = float(snakemake.params["alpha"])
 
-                meth_rate = sum(sample_afs) / len(sample_afs) if sample_afs else 0
-                coverage = sum(sample_dps) / len(sample_dps) if sample_dps else 0
+            def phred_to_prob(score):
+                return 10 ** (-float(score) / 10)
 
-                # Parse INFO fields
-                info_dict = dict(
-                    item.split("=", 1)
-                    for item in info_field.strip().split(";")
-                    if "=" in item
-                )
-
-                alpha = float(snakemake.params["alpha"])
-
-                def phred_to_prob(score):
-                    return 10 ** (-float(score) / 10)
-
-                def is_missing(val):
-                    return val is None or val == "."
-
-                # Determine probability of methylation
-                if is_missing(info_dict.get("PROB_PRESENT")):
-                    if is_missing(info_dict.get("PROB_HIGH")) or is_missing(
-                        info_dict.get("PROB_LOW")
-                    ):
-                        print(
-                            f"Missing probability info at {chrom}:{position}",
-                            file=sys.stderr,
-                        )
-                        continue
-                    prob_present = phred_to_prob(
-                        info_dict["PROB_HIGH"]
-                    ) + phred_to_prob(info_dict["PROB_LOW"])
+            if "PROB_PRESENT" in info:
+                if isinstance(info["PROB_PRESENT"][0], float):
+                    prob_present = phred_to_prob(info["PROB_PRESENT"][0])
                 else:
-                    prob_present = phred_to_prob(info_dict["PROB_PRESENT"])
-
-                prob_absent = phred_to_prob(info_dict.get("PROB_ABSENT", 0))
-                prob_artifact = phred_to_prob(info_dict.get("PROB_ARTIFACT", 0))
-
-                if max(prob_present, prob_absent + prob_artifact) < (1 - alpha):
-                    print(
-                        f"Low confidence site skipped: {chrom}:{position}",
-                        file=sys.stderr,
-                    )
+                    # print(f"Missing probability info at {chrom}:{position}", file=sys.stderr)   
                     continue
+            else:
+                # print(f"Missing probability info at {chrom}:{position}", file=sys.stderr)
+                continue
 
-                df.append([chrom, position, meth_rate, coverage, sample_bias])
-            elif meth_caller == "modkit":
-                chrom = parts[0].removeprefix("chr")
-                position = int(parts[2])
-                details = parts[9].split()
-                coverage = int(details[0])
-                meth_rate = float(details[1])
-                df.append(
-                    [
-                        chrom,
-                        position,
-                        meth_rate,
-                        coverage,
-                        "normal",
-                        0,
-                    ]
-                )
-            elif meth_caller == "pb_CpG_tools":
-                chrom = parts[0]
-                position = int(parts[2])
-                meth_rate = float(parts[3])
-                coverage = int(parts[5])
-                df.append(
-                    [
-                        chrom,
-                        position,
-                        meth_rate,
-                        coverage,
-                        "normal",
-                        0,
-                    ]
-                )
+            prob_absent = phred_to_prob(info["PROB_ABSENT"][0])
+            prob_artifact = phred_to_prob(info["PROB_ARTIFACT"][0])
+            prob_identified = max(prob_present, prob_absent + prob_artifact)
+
+            if prob_identified < (1 - alpha):
+                continue
+
+            df.append(
+                [chrom, position, meth_rate, coverage, sample_bias, prob_identified]
+            )
+
+    elif meth_caller == "modkit":
+        chrom = parts[0].removeprefix("chr")
+        position = int(parts[2])
+        details = parts[9].split()
+        coverage = int(details[0])
+        meth_rate = float(details[1])
+        df.append(
+            [
+                chrom,
+                position,
+                meth_rate,
+                coverage,
+                "normal",
+                0,
+            ]
+        )
+    elif meth_caller == "pb_CpG_tools":
+        chrom = parts[0]
+        position = int(parts[2])
+        meth_rate = float(parts[3])
+        coverage = int(parts[5])
+        df.append(
+            [
+                chrom,
+                position,
+                meth_rate,
+                coverage,
+                "normal",
+                0,
+            ]
+        )
     columns = [
         "chromosome",
         "position",
         f"{axis_name}_methylation",
         f"{axis_name}_coverage",
         f"{axis_name}_bias",
-        # f"{axis_name}_prob_present",
+        f"{axis_name}_prob_identified",
     ]
     return pd.DataFrame(df, columns=columns)
 
@@ -173,14 +142,15 @@ meso_file = snakemake.input["meso"]
 endo_file = snakemake.input["endo"]
 ecto_file = snakemake.input["ecto"]
 
+print("Starting to read files")
 undiff_df = read_tool_file(undiff_file, "psc", meth_caller)
-print("Finished going through undiff", file=sys.stderr)
+print("Finished going through undiff")
 meso_df = read_tool_file(meso_file, "mesoderm", meth_caller)
-print("Finished going through meso", file=sys.stderr)
+print("Finished going through meso")
 endo_df = read_tool_file(endo_file, "endoderm", meth_caller)
-print("Finished going through endo", file=sys.stderr)
+print("Finished going through endo")
 ecto_df = read_tool_file(ecto_file, "ectoderm", meth_caller)
-print("Finished going through ecto", file=sys.stderr)
+print("Finished going through ecto")
 
 
 df = merge_dfs(undiff_df, meso_df, endo_df, ecto_df)
