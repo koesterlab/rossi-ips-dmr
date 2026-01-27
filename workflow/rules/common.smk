@@ -173,7 +173,7 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/plots_paper/{group2}/scatter_plot.html"
+            f"results/{platform}/{caller}/plots_paper/{group2}/scatter_plot.png"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
@@ -182,7 +182,7 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.html"
+            f"results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
         ]

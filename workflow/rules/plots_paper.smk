@@ -25,14 +25,16 @@
 #     script:
 #         "../scripts/most_variable.py"
 
-
+ruleorder:
+    scatter_plot_endo_meso > scatter_plot
+    
 rule scatter_plot:
     input:
         calls="results/{platform}/{caller}/meth_calling/calls.parquet",
         # most_variable_positions="results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/{caller}/plots_paper/{group2}/scatter_plot.html",
+            "results/{platform}/{caller}/plots_paper/{group2}/scatter_plot.png",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
@@ -82,7 +84,7 @@ rule scatter_plot_endo_meso:
         # most_variable_positions="results/{platform}/{caller}/meth_calling/most_variable_positions.parquet",
     output:
         report(
-            "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.html",
+            "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",

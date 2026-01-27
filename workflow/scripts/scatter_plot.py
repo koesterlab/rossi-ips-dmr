@@ -70,13 +70,13 @@ def plot_meth_vals(df, output, x_axis_name, y_axis_name):
                     range=df["color"].unique().tolist(),
                 ),
             ),
-            tooltip=[
-                "chromosome",
-                "position",
-                f"{x_axis_name}_methylation",
-                f"{y_axis_name}_methylation",
-                "category",
-            ],
+            # tooltip=[
+            #     "chromosome",
+            #     "position",
+            #     f"{x_axis_name}_methylation",
+            #     f"{y_axis_name}_methylation",
+            #     "category",
+            # ],
         )
         .properties(
             title=f"{x_axis_name} vs. {y_axis_name} — RMSE: {rmse:.2f}, N: {len(df)}",
@@ -93,14 +93,22 @@ alt.data_transformers.enable("vegafusion")
 pd.set_option("display.max_columns", None)
 
 
-df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow")
 
-print(df, file=sys.stderr)
 x_axis = snakemake.params["group2"]
 y_axis = snakemake.params["group1"]
-df = df[df[f"{x_axis}_prob_identified"] >= 0.95]
-df = df[df[f"{y_axis}_prob_identified"] >= 0.95]
 
+use_cols = [
+    "chromosome",
+    "position",
+    f"{x_axis}_methylation",
+    f"{y_axis}_methylation",
+    f"{x_axis}_prob_identified",
+    f"{y_axis}_prob_identified",
+    # f"{x_axis}_coverage",
+    # f"{y_axis}_coverage",
+]
+
+df = pd.read_parquet(snakemake.input["calls"], engine="pyarrow", columns=use_cols)
 # df = df[(df[f"{x_axis}_coverage"] > 50) & (df[f"{y_axis}_coverage"] > 50)]
 print(df, file=sys.stderr)
 
@@ -121,5 +129,8 @@ print(df, file=sys.stderr)
 #     how="inner",
 # )
 
+# Downsample to 100k points max
+df_sample = df.sample(min(len(df), 100_000), random_state=42)
+plot_meth_vals(df_sample, snakemake.output[0], x_axis, y_axis)
 
-plot_meth_vals(df, snakemake.output[0], x_axis, y_axis)
+# plot_meth_vals(df, snakemake.output[0], x_axis, y_axis)
