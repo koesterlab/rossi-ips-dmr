@@ -154,8 +154,8 @@ views:
               {"field": "ext_gene", "type": "nominal"},
               {"field": "ranked_meth_diffexp", "type": "quantitative"},
             ],
-            "x": {"field": "diffexp", "type": "quantitative"},
-            "y": {"field": "mean_methylation_difference_tf_adjusted", "type": "quantitative"},
+            "x": {"field": "diffexp", "scale": {"domain": [-5, 5]}, "type": "quantitative"},
+            "y": {"field": "mean_methylation_difference", "scale": {"domain": [-1, 1]}, "type": "quantitative"},
             "href": {"field": "data_with_tfs"},
           },
           "params": [
@@ -163,8 +163,19 @@ views:
               "name": "Germ Layer",
               "select": {"type": "point", "fields": ["germ_layer"]},
               "bind": "legend"
-            }
-          ],          
+            },
+                        {
+              "name": "qval_max",
+              "bind": {
+                "input": "range",
+                "max": 1,
+                "min": 0,
+                "name": "max qval: ",
+                "step": 0.01
+              },
+              "value": 0.5
+          ],
+          "transform": [{"filter": "(datum.qval_combined <= qval_max)"}],   
         }
 
 
