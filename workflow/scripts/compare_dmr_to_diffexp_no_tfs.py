@@ -58,8 +58,8 @@ dmrs_df = (
         }
     )
 )
-print(diffexp_df)
-print(dmrs_df)
+
+
 common_df = diffexp_df.join(
     dmrs_df,
     on="ext_gene",
@@ -71,8 +71,8 @@ common_df = diffexp_df.join(
     & pl.col("pval_diffexp").is_not_null()
     & pl.col("pval_dmr").is_not_null()
 )
-print(annotation_type)
-print(common_df.select(pl.col("annotation_type").unique()))
+
+
 common_df = (
     common_df.filter(pl.col("annotation_type") == annotation_type)
     .with_columns(
@@ -86,7 +86,8 @@ common_df = (
         )
     )
 )
-print(common_df)
+
+
 common_df = common_df.with_columns(
     pl.when(pl.col("germ_layer") == "ectoderm")
     .then(pl.col("b_conditionectoderm"))
@@ -113,53 +114,74 @@ common_df = common_df.group_by(
     [c for c in common_df.columns if c not in ["ens_gene", "target_id", "mane"]]
 ).agg(pl.col("ens_gene").first().alias("ens_gene"))
 
-# common_df.write_csv("test.txt", separator="\t")
 
-# layer_select = alt.selection_point(
-#     fields=["germ_layer"], bind="legend", name="Germ Layer"
-# )
-# color = alt.condition(
-#     layer_select,
-#     alt.Color(
-#         "germ_layer:N",
-#         title="Germ Layer",
-#         scale=alt.Scale(scheme="category10"),
-#     ),
-#     alt.value("lightgray"),
-# )
+x_domain = [
+    common_df["diffexp"].min(),
+    common_df["diffexp"].max(),
+]
 
-# # common_df = common_df.filter(pl.col("qval_combined") <= 0.5)
+y_domain = [
+    common_df["mean_methylation_difference"].min(),
+    common_df["mean_methylation_difference"].max(),
+]
 
-# chart = (
-#     alt.Chart(common_df.to_pandas())
-#     .mark_point(filled=True)
-#     .encode(
-#         x="diffexp:Q",
-#         y="mean_methylation_difference:Q",
-#         size=alt.Size(
-#             "qval_combined:Q",
-#             title="max(qval1, qval2)",
-#             scale=alt.Scale(range=[30, 1]),
-#         ),
-#         tooltip=[
-#             "ext_gene",
-#             "diffexp",
-#             "mean_methylation_difference",
-#             "qval_combined",
-#             "qval_diffexp",
-#             "qval_dmr",
-#         ],
-#         color=color,
-#         opacity=alt.Opacity(
-#             "qval_combined:Q",
-#             scale=alt.Scale(range=[1, 0.1]),
-#             title="max(qval1, qval2)",
-#         ),
-#     )
-#     .add_params(layer_select)
-# )
 
-# chart.save(snakemake.output[0])
+layer_select = alt.selection_point(
+    fields=["germ_layer"], bind="legend", name="Germ Layer"
+)
+
+# Slider-Parameter für qval
+qval_slider = alt.param(
+    name="qval_max",
+    value=0.5,  # Startwert
+    bind=alt.binding_range(min=0, max=1, step=0.01, name="max qval: "),
+)
+
+
+color = alt.condition(
+    layer_select,
+    alt.Color(
+        "germ_layer:N",
+        title="Germ Layer",
+        scale=alt.Scale(scheme="category10"),
+    ),
+    alt.value("lightgray"),
+)
+
+# common_df = common_df.filter(pl.col("qval_combined") <= 0.5)
+
+chart = (
+    alt.Chart(common_df.to_pandas())
+    .transform_filter(alt.datum.qval_combined <= qval_slider)
+    .mark_point(filled=True)
+    .encode(
+        x=alt.X("diffexp:Q", scale=alt.Scale(domain=x_domain)),
+        y=alt.Y("mean_methylation_difference:Q", scale=alt.Scale(domain=y_domain)),
+        size=alt.Size(
+            "qval_combined:Q",
+            title="max(qval1, qval2)",
+            scale=alt.Scale(range=[30, 1]),
+        ),
+        tooltip=[
+            "ext_gene",
+            "diffexp",
+            "mean_methylation_difference",
+            "qval_combined",
+            "qval_diffexp",
+            "qval_dmr",
+        ],
+        color=color,
+        opacity=alt.Opacity(
+            "qval_combined:Q",
+            scale=alt.Scale(range=[1, 0.1]),
+            title="max(qval1, qval2)",
+        ),
+    )
+    .add_params(layer_select, qval_slider)
+)
+
+
+chart.save(snakemake.output[1])
 
 
 # Create table

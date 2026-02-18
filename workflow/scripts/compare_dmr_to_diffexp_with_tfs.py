@@ -1,7 +1,7 @@
 import polars as pl
 import altair as alt
 
-pl.Config.set_tbl_rows(20)
+pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(300)
 
 
@@ -33,7 +33,7 @@ def plot(df, effect_col, gene_col, output_path):
             tooltip=[
                 f"{gene_col}",
                 "diffexp",
-                "mean_methylation_difference",
+                # "mean_methylation_difference",
                 "qval_combined",
                 "qval_diffexp",
                 "qval_dmr",
@@ -57,8 +57,6 @@ comparison_df = pl.read_csv(snakemake.input.comp, separator="\t", null_values="N
 # Transcription factors with target genes
 tf_df = pl.read_csv(snakemake.input.tf_list, separator=",", null_values="NA")
 
-print(tf_df)
-print(comparison_df)
 ###################### Plot only transcription factors #####################
 
 # The merge ext_gene and source to get all transcription factors of our analysis. We get a new target column, but not all targets are in the comparison df, therefore not every tf has an incfluence. This table gets quite big since every tf can have multiple targets and everz target becomes a new row.
@@ -76,22 +74,22 @@ tf_df = tf_df.filter(pl.col("target").is_in(ext_genes))
 # plot(tf_df, "mean_methylation_difference", "tfs", snakemake.output[0])
 tf_df.write_csv(snakemake.output["focus_tfs"], separator="\t")
 
+print(tf_df.filter(pl.col("tfs") == "YY1").filter(pl.col("germ_layer") == "endoderm"))
 
-##################### Plot all genes with adjusted methylation difference by tfs #####################
 
-# TODO: Should I sum over all DMRs? There are sometimes multiple DMRs per gene. What should I do with the qvals?
 # We often have multiple DMRs per transcription factor. To sum over all DMRs influencing a target gene, we first need to aggregate the DMRs per tf
-tf_df = tf_df.group_by("tfs", "germ_layer", "target").agg(
+tf_df = tf_df.group_by("tfs", "germ_layer", "target", "weight").agg(
     pl.col("mean_methylation_difference").mean(),
     pl.col("qval_dmr").max(),
     pl.col("pval_dmr").max(),
 )
 
+
 # Compute the sum of mean methylation differences of all influencing tfs per target gene and germ layer
 tf_effects_per_target = tf_df.group_by("target", "germ_layer").agg(
-    pl.col("mean_methylation_difference")
-    .sum()
-    .alias("tf_sum_mean_methylation_difference"),
+    (pl.col("weight") * pl.col("mean_methylation_difference"))
+    # (pl.col("mean_methylation_difference"))
+    .sum().alias("tf_sum_mean_methylation_difference"),
     pl.col("tfs").unique().sort().str.join(","),
 )
 
@@ -116,9 +114,7 @@ comparison_with_tf = comparison_with_tf.with_columns(
 
 ###################### Prepare for datavzrd #####################
 comparison_with_tf = (
-    comparison_with_tf
-    # comparison_with_tf.filter(pl.col("qval_combined") <= 0.5)
-    .with_columns(
+    comparison_with_tf.with_columns(
         (pl.col("mean_methylation_difference_tf_adjusted") * pl.col("diffexp")).alias(
             "methylation_diff_x_diffexp"
         )
@@ -161,10 +157,14 @@ comparison_with_tf = (
     .with_row_count("row_id")
 )
 
-# plot(
-#     comparison_with_tf,
-#     "mean_methylation_difference_tf_adjusted",
-#     "ext_gene",
-#     snakemake.output[1],
-# )
+plot(
+    comparison_with_tf,
+    "mean_methylation_difference_tf_adjusted",
+    "ext_gene",
+    snakemake.output["plot"],
+)
+# Are there any inf or NA values in the qval_combined column?
+comparison_with_tf = comparison_with_tf.with_columns(
+    pl.col("qval_combined").fill_null(1.0).fill_nan(1.0)
+)
 comparison_with_tf.write_csv(snakemake.output["comp_tf_adj"], separator="\t")

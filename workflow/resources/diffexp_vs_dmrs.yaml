@@ -11,7 +11,7 @@ default-view: diffexp_vs_dmrs
 views:
   diffexp_vs_dmrs:
     dataset: diffexp_vs_dmrs
-    desc: ?f"To prioritize the most extreme cases toward the top-left or bottom-right, we sort values by the product of the DMR and differential expression scores. This ensures that strong effects in both dimensions are ranked highest."
+    desc: "To prioritize the most extreme cases toward the top-left or bottom-right, we sort values by the product of the DMR and differential expression scores. This ensures that strong effects in both dimensions are ranked highest."
     render-table:
       columns:
         qval_diffexp:
