@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - datavzrd =2.63.3
+  - yte =1.9

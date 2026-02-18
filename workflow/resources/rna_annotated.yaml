@@ -18,19 +18,6 @@ views:
       The table is sorted in descending order by the absolute values of the signed versions of the pi-value score. Thus, values with small q-value but large methylation difference (and therefore values of importance) appear first."
     render-table:
       columns:
-        # PValue:
-        #   label: pval_rna
-          # plot:
-          #   heatmap:
-          #     scale: linear
-          #     range:
-          #       - "#a1d99b"
-          #       - "white"
-          #       - "#fdae6b"
-          #     domain:
-          #       - 0
-          #       - 0.05
-          #       - 0.25
         transcript_index:
           plot:
             heatmap:

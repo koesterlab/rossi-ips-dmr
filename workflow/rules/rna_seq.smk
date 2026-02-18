@@ -89,6 +89,7 @@ rule compare_dmr_to_diffexp_with_tfs:
         "../scripts/compare_dmr_to_diffexp_with_tfs.py"
 
 
+# We can't use the datavzrd wrapper since we need the latest datvzrd version.
 rule datavzrd_dmr_vs_diffexp_no_tfs:
     input:
         config=workflow.source_path("../resources/dmr_vs_diffexp_no_tfs.yaml"),
@@ -108,8 +109,10 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
         ),
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
+    conda:
+        "../envs/datavzrd.yaml"
     wrapper:
-        "v9.0.0/utils/datavzrd"
+        "v9.1.0/utils/datavzrd"
 
 
 rule datavzrd_dmr_vs_diffexp_with_tfs:
@@ -133,4 +136,4 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
     wrapper:
-        "v9.0.0/utils/datavzrd"
+        "v9.1.0/utils/datavzrd"
