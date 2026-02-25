@@ -184,26 +184,80 @@ chart = (
 chart.save(snakemake.output[1])
 
 
+diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = common_df.select(
+    pl.col("diffexp").min().alias("x_min"),
+    pl.col("diffexp").max().alias("x_max"),
+    pl.col("mean_methylation_difference").min().alias("y_min"),
+    pl.col("mean_methylation_difference").max().alias("y_max"),
+).row(0)
+
+(
+    diffexp_min,
+    diffexp_max,
+) = -max(
+    abs(diffexp_min), abs(diffexp_max)
+), max(abs(diffexp_min), abs(diffexp_max))
+(meth_diff_min, meth_diff_max) = (
+    -max(abs(meth_diff_min), abs(meth_diff_max)),
+    max(abs(meth_diff_min), abs(meth_diff_max)),
+)
+meth_diff_max_scaled, meth_diff_min_scaled = (
+    meth_diff_max * diffexp_max,
+    meth_diff_min * diffexp_max,
+)
+
+max_dist = ((diffexp_max) ** 2 + meth_diff_max_scaled**2) ** 0.5
+print(
+    f"diffexp_min: {diffexp_min}, diffexp_max: {diffexp_max},  meth_min: {meth_diff_min}, meth_max: {meth_diff_max}, scaled_max: {meth_diff_max_scaled}, max_dist: {max_dist}"
+)
+
 # Create table
 common_df = (
     common_df
     # common_df.filter(pl.col("qval_combined") <= 0.5)
+    # .with_columns(
+    #     (pl.col("mean_methylation_difference") * pl.col("diffexp")).alias(
+    #         "methylation_diff_x_diffexp"
+    #     )
+    # )
     .with_columns(
-        (pl.col("mean_methylation_difference") * pl.col("diffexp")).alias(
-            "methylation_diff_x_diffexp"
+        (pl.col("mean_methylation_difference") * diffexp_max).alias(
+            "mean_methylation_difference_scaled"
         )
     )
     .with_columns(
-        pl.when(
-            (pl.col("mean_methylation_difference").sign() == pl.col("diffexp").sign())
-        )
-        .then(pl.col("methylation_diff_x_diffexp") * 0.5)
-        .when(pl.col("mean_methylation_difference").sign() >= 0)
-        .then(pl.col("methylation_diff_x_diffexp") * -1)
-        .otherwise(pl.col("methylation_diff_x_diffexp"))
+        (
+            (
+                (pl.col("diffexp") - diffexp_min) ** 2
+                + (pl.col("mean_methylation_difference_scaled") - meth_diff_max_scaled)
+                ** 2
+            ).sqrt()
+        ).alias("dist_top_left"),
+        (
+            (
+                (pl.col("diffexp") - diffexp_max) ** 2
+                + (pl.col("mean_methylation_difference_scaled") - meth_diff_min_scaled)
+                ** 2
+            ).sqrt()
+        ).alias("dist_bottom_right"),
+    )
+    .with_columns(
+        pl.when(pl.col("dist_top_left") < pl.col("dist_bottom_right"))
+        .then(max_dist - pl.col("dist_top_left"))
+        .otherwise(-max_dist + pl.col("dist_bottom_right"))
         .alias("ranked_meth_diffexp")
     )
-    .sort("methylation_diff_x_diffexp", descending=False)
+    # .with_columns(
+    #     pl.when(
+    #         (pl.col("mean_methylation_difference").sign() == pl.col("diffexp").sign())
+    #     )
+    #     .then(pl.col("methylation_diff_x_diffexp") * 0.5)
+    #     .when(pl.col("mean_methylation_difference").sign() >= 0)
+    #     .then(pl.col("methylation_diff_x_diffexp") * -1)
+    #     .otherwise(pl.col("methylation_diff_x_diffexp"))
+    #     .alias("ranked_meth_diffexp")
+    # )
+    .sort(pl.col("ranked_meth_diffexp").abs(), descending=False)
     .select(
         [
             "ext_gene",
@@ -217,12 +271,12 @@ common_df = (
             "diffexp",
             "diffexp_se",
             "mean_methylation_difference",
-            "methylation_diff_x_diffexp",
+            # "methylation_diff_x_diffexp",
             "ranked_meth_diffexp",
         ]
     )
     .with_row_count("row_id")
 )
 
-
+print(common_df.head(6))
 common_df.write_csv(snakemake.output[0], separator="\t")

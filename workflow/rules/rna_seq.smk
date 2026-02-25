@@ -112,7 +112,8 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
     conda:
         "../envs/datavzrd.yaml"
     wrapper:
-        "v9.1.0/utils/datavzrd"
+        "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
+        # "v9.1.0/utils/datavzrd"
 
 
 rule datavzrd_dmr_vs_diffexp_with_tfs:
@@ -136,4 +137,5 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
     wrapper:
-        "v9.1.0/utils/datavzrd"
+        "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
+        # "v9.1.0/utils/datavzrd"
