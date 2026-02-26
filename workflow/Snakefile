@@ -36,26 +36,25 @@ inputflags:
 
 
 # declare https://github.com/Addimator/enrichment as a module
-module enrichment:
-    snakefile:
-        # github(
-        #     "Addimator/enrichment",
-        #     path="workflow/Snakefile",
-        #     # tag="v2.5.4",
-        #     branch="main",
-        # )
-        "../../enrichment/workflow/Snakefile"
-        # "/mnt/workspace/enrichment/workflow/Snakefile"
-        # "/homes/aprinz/enrichment/workflow/Snakefile"
-    config:
-        # TODO: Give only enrichment specific config
-        config
+# module enrichment:
+#     snakefile:
+#         # github(
+#         #     "Addimator/enrichment",
+#         #     path="workflow/Snakefile",
+#         #     # tag="v2.5.4",
+#         #     branch="main",
+#         # )
+#         "../../enrichment/workflow/Snakefile"
+#         # "/mnt/workspace/enrichment/workflow/Snakefile"
+#         # "/homes/aprinz/enrichment/workflow/Snakefile"
+#     config:
+#         # TODO: Give only enrichment specific config
+#         config
 module kallisto_sleuth:
     snakefile:
         # github(
         #     "snakemake-workflows/rna-seq-kallisto-sleuth",
         #     path="workflow/Snakefile",
-        #     # commit="59b9b6640872fd445d62245bdeccf9e80a97f868",
         #     branch="lr-kallisto"
         # )
         "../../rna-seq-kallisto-sleuth/workflow/Snakefile"

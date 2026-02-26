@@ -1,6 +1,8 @@
 import polars as pl
 import altair as alt
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
 pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(30)
 
@@ -183,7 +185,6 @@ chart = (
 
 chart.save(snakemake.output[1])
 
-
 diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = common_df.select(
     pl.col("diffexp").min().alias("x_min"),
     pl.col("diffexp").max().alias("x_max"),
@@ -257,7 +258,7 @@ common_df = (
     #     .otherwise(pl.col("methylation_diff_x_diffexp"))
     #     .alias("ranked_meth_diffexp")
     # )
-    .sort(pl.col("ranked_meth_diffexp").abs(), descending=False)
+    .sort(pl.col("ranked_meth_diffexp").abs(), descending=True)
     .select(
         [
             "ext_gene",

@@ -40,16 +40,7 @@ rule compare_dmr_to_diffexp_no_tfs:
         ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
     output:
         "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
-        report(
-            "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.html",
-            caption="../report/rna_seq.rst",
-            category="DiffExp-Methylation Comparison",
-            subcategory="scatter plots",
-            labels=lambda wildcards: {
-                "type": "no transcription factors",
-                "annotation type": wildcards.annotation_type,
-            },
-        ),
+        "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.html",
     conda:
         "../envs/python.yaml"
     params:
@@ -119,8 +110,8 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
 rule datavzrd_dmr_vs_diffexp_with_tfs:
     input:
         config=workflow.source_path("../resources/dmr_vs_diffexp_with_tfs.yaml"),
-        complete="results/{platform}/{caller}/rna_seq_comp/tfs/tf_adjusted_{annotation_type}.tsv",
-        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/focus_tfs_{annotation_type}.tsv",
+        complete="results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation_type}.tsv",
+        focus_tfs="results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_tfs_only_{annotation_type}.tsv",
     output:
         report(
             directory(

@@ -21,7 +21,6 @@ views:
     render-table:
       columns:
         qval:
-          label: q-value
           spell:
             url: v1.5.1/stats/p-value
             with:

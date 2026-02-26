@@ -199,4 +199,4 @@ rule datavzrd_annotations:
     log:
         "logs/datavzrd_annotations/{platform}_{caller}_{group2}.log",
     wrapper:
-        "v3.13.0/utils/datavzrd"
+        "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"

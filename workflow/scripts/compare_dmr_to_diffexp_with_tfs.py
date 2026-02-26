@@ -111,28 +111,61 @@ comparison_with_tf = comparison_with_tf.with_columns(
     pl.col("tf_sum_mean_methylation_difference").is_not_null().alias("is_tf_target")
 )
 
+diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = comparison_with_tf.select(
+    pl.col("diffexp").min().alias("x_min"),
+    pl.col("diffexp").max().alias("x_max"),
+    pl.col("mean_methylation_difference_tf_adjusted").min().alias("y_min"),
+    pl.col("mean_methylation_difference_tf_adjusted").max().alias("y_max"),
+).row(0)
+(
+    diffexp_min,
+    diffexp_max,
+) = -max(
+    abs(diffexp_min), abs(diffexp_max)
+), max(abs(diffexp_min), abs(diffexp_max))
+(meth_diff_min, meth_diff_max) = (
+    -max(abs(meth_diff_min), abs(meth_diff_max)),
+    max(abs(meth_diff_min), abs(meth_diff_max)),
+)
+meth_diff_max_scaled, meth_diff_min_scaled = (
+    meth_diff_max * diffexp_max,
+    meth_diff_min * diffexp_max,
+)
+
+max_dist = ((diffexp_max) ** 2 + meth_diff_max_scaled**2) ** 0.5
+
 
 ###################### Prepare for datavzrd #####################
-comparison_with_tf = (
-    comparison_with_tf.with_columns(
-        (pl.col("mean_methylation_difference_tf_adjusted") * pl.col("diffexp")).alias(
-            "methylation_diff_x_diffexp"
+comparison_with_tf = (comparison_with_tf
+    .with_columns(
+        (pl.col("mean_methylation_difference_tf_adjusted") * diffexp_max).alias(
+            "mean_methylation_difference_scaled"
         )
     )
     .with_columns(
-        pl.when(
+        (
             (
-                pl.col("mean_methylation_difference_tf_adjusted").sign()
-                == pl.col("diffexp").sign()
-            )
-        )
-        .then(pl.col("methylation_diff_x_diffexp") * 0.5)
-        .when(pl.col("mean_methylation_difference_tf_adjusted").sign() >= 0)
-        .then(pl.col("methylation_diff_x_diffexp") * -1)
-        .otherwise(pl.col("methylation_diff_x_diffexp"))
+                (pl.col("diffexp") - diffexp_min) ** 2
+                + (pl.col("mean_methylation_difference_scaled") - meth_diff_max_scaled)
+                ** 2
+            ).sqrt()
+        ).alias("dist_top_left"),
+        (
+            (
+                (pl.col("diffexp") - diffexp_max) ** 2
+                + (pl.col("mean_methylation_difference_scaled") - meth_diff_min_scaled)
+                ** 2
+            ).sqrt()
+        ).alias("dist_bottom_right"),
+    )
+    .with_columns(
+        pl.when(pl.col("dist_top_left") < pl.col("dist_bottom_right"))
+        .then(max_dist - pl.col("dist_top_left"))
+        .otherwise(-max_dist + pl.col("dist_bottom_right"))
         .alias("ranked_meth_diffexp")
     )
-    .sort("methylation_diff_x_diffexp", descending=False)
+    .sort(pl.col("ranked_meth_diffexp").abs(), descending=True)
+    # .sort("methylation_diff_x_diffexp", descending=False)
     .select(
         [
             "ext_gene",
@@ -149,7 +182,7 @@ comparison_with_tf = (
             "mean_methylation_difference_tf_adjusted",
             "tfs",
             "is_tf_target",
-            "methylation_diff_x_diffexp",
+            # "methylation_diff_x_diffexp",
             "ranked_meth_diffexp",
         ]
     )

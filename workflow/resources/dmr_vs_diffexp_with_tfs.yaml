@@ -54,6 +54,11 @@ views:
             url: v1.5.1/stats/p-value
             with:
               significance_threshold: 0.05
+        qval_combined:
+          spell:
+            url: v1.5.1/stats/p-value
+            with:
+              significance_threshold: 0.05
         mean_methylation_difference_tf_adjusted:
           plot:
             heatmap:
@@ -108,6 +113,10 @@ views:
           display-mode: hidden
         pval_dmr:
           display-mode: hidden
+        ranked_meth_diffexp:
+          plot:
+            heatmap:
+              scale: linear
 
 
   diffexp_vs_dmrs_plot_with_tfs:
