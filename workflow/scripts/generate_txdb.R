@@ -13,5 +13,4 @@ saveDb(txdb, snakemake@output[["txdb"]])
 gtf <- import(annotation_gtf, "gtf", colnames=c("transcript_id", "transcript_name"))
 txnames <- gtf$transcript_name
 names(txnames) <- gtf$transcript_id
-
 saveRDS(txnames, snakemake@output[["txnames"]])

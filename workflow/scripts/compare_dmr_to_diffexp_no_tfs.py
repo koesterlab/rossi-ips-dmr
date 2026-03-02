@@ -208,9 +208,6 @@ meth_diff_max_scaled, meth_diff_min_scaled = (
 )
 
 max_dist = ((diffexp_max) ** 2 + meth_diff_max_scaled**2) ** 0.5
-print(
-    f"diffexp_min: {diffexp_min}, diffexp_max: {diffexp_max},  meth_min: {meth_diff_min}, meth_max: {meth_diff_max}, scaled_max: {meth_diff_max_scaled}, max_dist: {max_dist}"
-)
 
 # Create table
 common_df = (

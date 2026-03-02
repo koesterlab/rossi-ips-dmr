@@ -16,13 +16,13 @@ library(R.utils)
 tryCatch({
   biomaRt::biomartCacheClear()
 }, error = function(e) {
-  warning("Cache konnte nicht gelöscht werden: ", e$message)
+  warning("Cache could not be deleted: ", e$message)
 })
 
 data <- tryCatch({
   readr::read_tsv(snakemake@input[[1]], show_col_types = FALSE)
 }, error = function(e) {
-  stop(paste("Fehler beim Einlesen der Datei:", e$message))
+  stop(paste("Error reading input file:", e$message))
 })
 
 mart <- "useast"
@@ -42,7 +42,7 @@ while (class(mart)[[1]] != "Mart") {
     },
     error = function(e) {
       if (rounds >= 3) {
-        stop(paste("Alle Ensembl-Mirrors durchlaufen,", rounds, "Runden. Kein Erfolg. Letzter Fehler:", e$message))
+        stop(paste("All Ensembl mirrors tried,", rounds, "rounds. No success. Last error:", e$message))
       }
       mart <- switch(mart,
         useast = "uswest",
@@ -57,30 +57,30 @@ while (class(mart)[[1]] != "Mart") {
   )
 }
 
-print("Verbindung zu Ensembl erfolgreich.")
+print("Connection to Ensembl successful.")
 
 # Geninformationen abfragen
-print("Frage Geninformationen ab...")
+print("Querying gene information...")
 show(mart)
 gene_info <- tryCatch({
   withTimeout({
     getBM(
       attributes = c("ensembl_transcript_id", "ensembl_gene_id", "external_gene_name"),
       filters = "ensembl_transcript_id",
-      values = data$transcriptId,
+      values = unique(data$transcriptId),
       mart = mart
     )
   }, timeout = 3600, onTimeout = "error")
 
 }, error = function(e) {
-  stop(paste("Fehler bei getBM():", e$message))
+  stop(paste("Error in getBM():", e$message))
 })
 
-print(paste("getBM() erfolgreich, Zeilen:", nrow(gene_info)))
+print(paste("getBM() successful, rows:", nrow(gene_info)))
 
 # Schreibe Ergebnis
-print("Schreibe Ausgabe-Datei...")
+print("Writing output file...")
 write.table(gene_info, file = snakemake@output[[1]], sep = "\t", row.names = FALSE, quote = FALSE)
 
-print("Script abgeschlossen.")
+print("Script completed.")
 

@@ -13,7 +13,7 @@ rule filter_rna_seq:
 
 rule rna_seq:
     input:
-        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
         # rna_seq="resources/rna_seq/rna_seq_filtered.xlsx",
         rna_seq="resources/rna_seq/rna_seq_filtered_computed.xlsx",
     output:
@@ -78,7 +78,7 @@ rule rna_seq_annotations:
 rule compare_diffexp_jochen_dmrs:
     input:
         rna_seq="resources/rna_seq/rna_seq_filtered.xlsx",
-        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
+        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
         diffexp="results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv",
     output:
         # report(

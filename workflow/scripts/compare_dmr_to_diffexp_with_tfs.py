@@ -67,14 +67,11 @@ tf_df = comparison_df.join(
     how="inner",
 ).rename({"ext_gene": "tfs"})
 
-
 # Keep only rows where the target gene is in the comparison df. This way we lose all targets not included in the diffexp/dmr analysis.
 ext_genes = comparison_df.select(pl.col("ext_gene").unique()).to_series().to_list()
 tf_df = tf_df.filter(pl.col("target").is_in(ext_genes))
 # plot(tf_df, "mean_methylation_difference", "tfs", snakemake.output[0])
-tf_df.write_csv(snakemake.output["focus_tfs"], separator="\t")
 
-print(tf_df.filter(pl.col("tfs") == "YY1").filter(pl.col("germ_layer") == "endoderm"))
 
 
 # We often have multiple DMRs per transcription factor. To sum over all DMRs influencing a target gene, we first need to aggregate the DMRs per tf
@@ -83,6 +80,8 @@ tf_df = tf_df.group_by("tfs", "germ_layer", "target", "weight").agg(
     pl.col("qval_dmr").max(),
     pl.col("pval_dmr").max(),
 )
+tf_df.write_csv(snakemake.output["focus_tfs"], separator="\t")
+
 
 
 # Compute the sum of mean methylation differences of all influencing tfs per target gene and germ layer
@@ -101,6 +100,7 @@ comparison_with_tf = comparison_df.join(
     right_on=["target", "germ_layer"],
     how="left",
 )
+
 # Choose the sum if the target is influenced by tfs, otherwise keep the original mean methylation difference
 comparison_with_tf = comparison_with_tf.with_columns(
     pl.when(pl.col("tf_sum_mean_methylation_difference").is_not_null())

@@ -34,14 +34,6 @@ if "gene_name" in df.columns and "gene_biotype" in df.columns:
     )
     df = df[columns]
 
-df = df[~df["type"].isin(["chromosome", "exon"])]
-
-
-
-if "Parent" in df.columns:
-    df["Parent"] = df["Parent"].str.replace("gene:", "", regex=True)
-
-df = df[df["q-value"] <= 0.25]
 
 df["absolute_signed_pi_val"] = abs(
     -np.log10(df["p(MWU)"]) * df["mean_methylation_difference"]

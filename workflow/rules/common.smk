@@ -78,6 +78,26 @@ def all_input(wildcards):
         ]
     )
 
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/rna_seq_comp/{germ_layer}-gene_set_{annotation_type}-{func}"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for germ_layer in ["endoderm", "mesoderm", "ectoderm", "all"]
+
+            for annotation_type in [
+                # "distal_intergenic",
+                "promoter",
+                # "intron",
+                # "exon",
+                # "3_utr",
+                # "5_utr",
+                # "downstream",
+            ]
+            for func in ["mf", "bp", "cc", "go"]
+        ]
+    )
+
     # wanted_input.extend(
     #     [f"results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation}_table"
     #         for platform in config["meth_caller"].keys()

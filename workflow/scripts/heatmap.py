@@ -22,10 +22,10 @@ filename_to_name = {
 
 # Group df by gene regions
 def aggregate_by_gene_region(df):
-    # For every gene region take the maximum of methylation differences
+    # For every gene region take the mean of methylation differences
     df_grouped = (
         df.groupby(["transcriptId", "annotation"])["mean_methylation_difference"]
-        .max()
+        .mean()
         .reset_index()
     )
     df_grouped["annotation_type"] = df_grouped["annotation"].str.replace(

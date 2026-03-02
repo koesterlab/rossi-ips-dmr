@@ -1,3 +1,6 @@
+
+############################################ Annotate regulatory elements ############################################
+
 rule download_regulatory_elements:
     output:
         "resources/ref/regulatory_elements.gff3",
@@ -58,7 +61,9 @@ rule postprocess_regulatory_elements:
     script:
         "../scripts/postprocess_regulatory_elements.py"
 
+############################################### Annotate gene elements ############################################
 
+# Gene elemtents are e.g. promoters, exons, introns, etc.
 rule get_gene_elements_annotation:
     output:
         "resources/ref/annotation.gtf.gz",
@@ -73,54 +78,38 @@ rule get_gene_elements_annotation:
         "v3.3.5/bio/reference/ensembl-annotation"
 
 
-rule generate_txdb:
+rule generate_txdb_from_gene_elements:
     input:
         "resources/ref/annotation.gtf.gz",
     output:
         txdb="resources/ref/txdb.db",
-        txnames="resources/ref/txnames.tsv",
+        txnames="resources/ref/txnames.rds",
     log:
-        "logs/generate_txdb.log",
+        "logs/generate_txdb_from_gene_elements.log",
     conda:
         "../envs/genomicfeatures.yaml"
     script:
         "../scripts/generate_txdb.R"
 
 
-rule annotate_gene_elements_filtered:
+rule annotate_dmrs_with_gene_elements:
     input:
         metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output_focused.bed",
         txdb="resources/ref/txdb.db",
-        txnames="resources/ref/txnames.tsv",
+        txnames="resources/ref/txnames.rds",
     output:
-        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_filtered.tsv",
+        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
     log:
-        "logs/annotate_gene_elements_filtered/{platform}_{caller}_{group2}.log",
+        "logs/annotate_dmrs_with_gene_elements/{platform}_{caller}_{group2}.log",
     conda:
         "../envs/chipseeker.yaml"
     script:
         "../scripts/chipseeker.R"
 
-
-# We need the complete unfiltered list for rna seq comparison
-rule annotate_gene_elements_complete:
+# We want real gene names like SOX2 instead of Ensembl transcript IDs.
+rule get_ensembl_gene_names_from_dmrs:
     input:
-        metilene="results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
-        txdb="resources/ref/txdb.db",
-        txnames="resources/ref/txnames.tsv",
-    output:
-        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
-    log:
-        "logs/annotate_gene_elements_complete/{platform}_{caller}_{group2}.log",
-    conda:
-        "../envs/chipseeker.yaml"
-    script:
-        "../scripts/chipseeker.R"
-
-
-rule get_ensembl_genes:
-    input:
-        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_complete.tsv",
+        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
     output:
         "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
     conda:
@@ -129,22 +118,22 @@ rule get_ensembl_genes:
         species=get_bioc_species_name(),
         version=config["resources"]["ref"]["release"],
     log:
-        "logs/get_ensembl_genes/{platform}_{caller}_{group2}.log",
+        "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/get_ensembl_genes.R"
 
 
-# We only merge with polars because the join in get_ensembl_genes.R does not work
-rule annotate_chipseeker:
+
+rule annotate_dmrs_with_ensembl_gene_names:
     input:
-        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_{type}.tsv",
+        chipseeker="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
         genes="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
     output:
-        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_{type}.tsv",
+        "results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
     conda:
         "../envs/python.yaml"
     log:
-        "logs/annotate_chipseeker/{platform}_{caller}_{group2}_{type}.log",
+        "logs/annotate_dmrs_with_ensembl_gene_names/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/annotate_chipseeker.py"
 
@@ -152,7 +141,7 @@ rule annotate_chipseeker:
 rule dmr_heatmap:
     input:
         expand(
-            "results/{{platform}}/{{caller}}/dmr_calls/{sample}/genes_transcripts/chipseeker_filtered.tsv",
+            "results/{{platform}}/{{caller}}/dmr_calls/{sample}/genes_transcripts/chipseeker_postprocessed.tsv",
             sample=[
                 sample for sample in samples.keys() if sample != config["ref_sample"]
             ],
@@ -180,7 +169,7 @@ rule dmr_heatmap:
 rule datavzrd_annotations:
     input:
         config=workflow.source_path("../resources/dmrs_annotated.yaml"),
-        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_filtered.tsv",
+        genes_transcripts="results/{platform}/{caller}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
         regulatory_elements="results/{platform}/{caller}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
         report(

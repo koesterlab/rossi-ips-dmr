@@ -1,6 +1,6 @@
 log <- file(snakemake@log[[1]], open="wt")
-# sink(log)
-# sink(log, type="message")
+sink(log)
+sink(log, type="message")
 
 library("fgsea")
 library(snakemake@params[["bioc_species_pkg"]], character.only = TRUE)
@@ -11,11 +11,22 @@ library("data.table")
 # get_prefix_col(), the latter requires snakemake@output[["samples"]] and
 # snakemake@params[["covariate"]]
 source(snakemake@input[["common_src"]])
+germ_layer <- snakemake@params[["germ_layer"]]
+print(germ_layer)
+if (germ_layer == "all") {
+
+  print("Using all samples for fgsea")
+} else {
+  print(str_c("Using only samples of germ layer ", germ_layer, " for fgsea"))
+
+}
 
 print(utils::head(read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]), n = 5))
 
 gene_sets <- gmtPathways(snakemake@input[["gene_sets"]])
 diffexp <- read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]) %>%
+                  # if germ_layer is not "all", then filter for the respective germ layer
+                  { if (germ_layer != "all") filter(., germ_layer == !!germ_layer) else . } %>% 
                   drop_na(ext_gene) %>%
                   mutate(
                     ext_gene = str_to_upper(ext_gene),

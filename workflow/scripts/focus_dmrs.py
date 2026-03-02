@@ -21,9 +21,6 @@ for regions, outfile in exclusive_sets:
     with open(outfile, "w") as out:
         for region in regions:
             try:
-                value = float(region[4])
-
-                if abs(value) > 0.20:
-                    print(region, file=out, end="")
+                print(region, file=out, end="")
             except (IndexError, ValueError):
                 continue

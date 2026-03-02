@@ -103,6 +103,10 @@ views:
           plot:
             heatmap:
               scale: linear
+              range:
+                - "#e6550d"
+                - "white"
+                - "#6baed6"
 
 
 

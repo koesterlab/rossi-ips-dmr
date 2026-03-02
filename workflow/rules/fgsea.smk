@@ -24,6 +24,11 @@ def render_enrichment_env():
         yaml.dump(env, f)
     return env_path.absolute()
 
+func_to_names = {
+    "mf": "molecular_function",
+    "bp": "biological_process",
+    "cc": "cellular_component",
+    "go": "all"}
 
 bioc_species_pkg = get_bioc_species_pkg()
 enrichment_env = render_enrichment_env()
@@ -33,72 +38,49 @@ rule fgsea_dmr_vs_diffexp:
     input:
         # samples="results/sleuth/{model}.samples.tsv",
         # diffexp="results/tables/diffexp/{model}.genes-representative.diffexp.tsv",
-        diffexp_vs_dmrs_promoter="results/platforms_combined/varlo/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
-        gene_sets=config["enrichment"]["fgsea"]["gene_sets_file"],
+        diffexp_vs_dmrs_promoter="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
+        gene_sets=lambda wildcards: config["enrichment"]["fgsea"][f"gene_sets_{wildcards.func}"],
         common_src=workflow.source_path("../scripts/common.R"),
     output:
-        enrichment="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
-        rank_ties="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-rank-ties.tsv",
-        significant="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-sig-gene-sets.tsv",
-        plot="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-table-plot.pdf",
-        plot_collapsed="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-collapsed_pathways.table-plot.pdf",
+        enrichment="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
+        rank_ties="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-rank-ties-{annotation_type}-{func}.tsv",
+        significant="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-sig-gene-sets-{annotation_type}-{func}.tsv",
+        plot="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-table-plot-{annotation_type}-{func}.pdf",
+        plot_collapsed="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-collapsed_pathways.table-plot-{annotation_type}-{func}.pdf",
     params:
         bioc_species_pkg=bioc_species_pkg,
         # model=get_model,
         gene_set_fdr=config["enrichment"]["fgsea"]["fdr_gene_set"],
         eps=config["enrichment"]["fgsea"]["eps"],
+        germ_layer=lambda wildcards: wildcards.germ_layer,
         # covariate=lambda w: config["diffexp"]["models"][w.model]["primary_variable"],
     conda:
         enrichment_env
     log:
-        "logs/tables/fgsea/{annotation_type}-gene-set-enrichment.log",
+        "logs/fgsea_dmr_vs_diffexp/{platform}_{caller}_{germ_layer}_{annotation_type}_{func}.log",
     threads: 25
     script:
         "../scripts/fgsea.R"
 
 
-# rule fgsea_plot_gene_sets:
-#     input:
-#         samples="results/sleuth/{model}.samples.tsv",
-#         diffexp="results/tables/diffexp/{model}.genes-representative.diffexp.tsv",
-#         gene_sets=config["enrichment"]["fgsea"]["gene_sets_file"],
-#         sig_gene_sets="results/tables/fgsea/{model}.sig-gene-sets.tsv",
-#         common_src=workflow.source_path("../scripts/common.R"),
-#     output:
-#         report(
-#             directory("results/plots/fgsea/{model}"),
-#             patterns=["{model}.{gene_set}.gene-set-plot.pdf"],
-#             caption="../report/plot-fgsea-gene-set.rst",
-#             category="Gene set enrichment analysis",
-#             labels={"model": "{model}"},
-#         ),
-#     params:
-#         model=get_model,
-#         covariate=lambda w: config["diffexp"]["models"][w.model]["primary_variable"],
-#     conda:
-#         enrichment_env
-#     log:
-#         "logs/plots/fgsea/{model}.plot_fgsea_gene_set.log",
-#     script:
-#         "../scripts/plot-fgsea-gene-sets.R"
-
 
 rule fgsea_datavzrd:
     input:
         config=workflow.source_path("../resources/fgsea.yaml"),
-        comp="results/platforms_combined/varlo/rna_seq_comp/{annotation_type}-all-gene-sets.tsv",
+        comp="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
     output:
         report(
-            directory("results/{platform}/{caller}/rna_seq_comp/gene_set_{annotation_type}"),
+            directory("results/{platform}/{caller}/rna_seq_comp/{germ_layer}-gene_set_{annotation_type}-{func}"),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-DMRs Comparison",
-            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
+            subcategory=lambda wildcards: "pathways no transcription factors",
             labels=lambda wildcards: {
-                "type": "pathways no transcription factors",
+                "layer": wildcards.germ_layer,
+                "func": wildcards.func,
             },
         ),
     log:
-        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
+        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{germ_layer}_{annotation_type}_{func}.log",
     wrapper:
         "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"

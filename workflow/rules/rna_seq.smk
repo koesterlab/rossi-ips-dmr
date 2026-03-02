@@ -35,9 +35,9 @@ rule compare_dmr_to_diffexp_no_tfs:
     input:
         diffexp="results/tables/diffexp/condition.genes-representative.diffexp.tsv",
         # diffexp="results/tables/diffexp/condition.genes-aggregated.diffexp.tsv",
-        endoderm="results/{platform}/{caller}/dmr_calls/endoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
-        mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
-        ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed_complete.tsv",
+        endoderm="results/{platform}/{caller}/dmr_calls/endoderm/genes_transcripts/chipseeker_postprocessed.tsv",
+        mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed.tsv",
+        ectoderm="results/{platform}/{caller}/dmr_calls/ectoderm/genes_transcripts/chipseeker_postprocessed.tsv",
     output:
         "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
         "results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.html",
@@ -93,7 +93,7 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-DMRs Comparison",
-            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
+            # subcategory=lambda wildcards: f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
                 "type": "no transcription factors",
             },
@@ -120,7 +120,7 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-DMRs Comparison",
-            subcategory=lambda wildcards: f"{wildcards.annotation_type}",
+            # subcategory=lambda wildcards: f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
                 "type": "with transcription factors",
             },
