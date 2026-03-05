@@ -13,3 +13,5 @@ config/units.tsv
 report.zip
 report/**
 results_old/**
+rna_new/**
+rna_old/**

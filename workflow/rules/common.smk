@@ -42,9 +42,10 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{tf}_tfs_{annotation_type}"
+            f"results/{platform}/{caller}/{rna_data}/diffexp_vs_dmrs_{tf}_tfs_{annotation_type}"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
+            for rna_data in ["rna_new", "rna_old"]
             for tf in ["no", "with"]
             for annotation_type in [
                 # "distal_intergenic",
@@ -60,9 +61,10 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/rna_seq_comp/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
+            f"results/{platform}/{caller}/{rna_data}/pathways/   {germ_layer}-gene_set_{annotation_type}-{func}"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
+            for rna_data in ["rna_new", "rna_old"]
             for germ_layer in ["endoderm", "mesoderm", "ectoderm", "all"]
             for annotation_type in [
                 # "distal_intergenic",

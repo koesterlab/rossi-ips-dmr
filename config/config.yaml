@@ -3,23 +3,29 @@ meth_caller:
   # nanopore: [varlo]
   platforms_combined: [varlo]
 
-rna_accessions: 
-  "SRR29898424": endoderm
-  "SRR29898425": psc
-  "SRR29898426": mesoderm
-  "SRR29898427": ectoderm
-  "SRR29898428": endoderm
-  "SRR29898429": psc
-  "SRR29898430": mesoderm
-  "SRR29898431": ectoderm
-  "SRR29898432": ectoderm
-  "SRR29898433": ectoderm
-  "SRR29898434": ectoderm
-  "SRR29898435": mesoderm
-  "SRR29898436": mesoderm
-  "SRR29898437": endoderm
-  "SRR29898438": endoderm
-  "SRR29898439": psc
+rna_accessions_old: 
+  "SRR29898426": mesoderm #SRS22057145
+  "SRR29898427": ectoderm #SRS22057144
+  "SRR29898428": endoderm #SRS22057149
+  "SRR29898429": psc #SRS22057143
+  "SRR29898430": mesoderm #SRS22057146
+  "SRR29898431": ectoderm #SRS22057142
+  "SRR29898438": endoderm #SRS22057135
+  "SRR29898439": psc #SRS22057134
+
+rna_accessions_new:
+  "SQK-NBD114-24_barcode01": ectoderm
+  "SQK-NBD114-24_barcode02": endoderm
+  "SQK-NBD114-24_barcode03": mesoderm
+  "SQK-NBD114-24_barcode04": psc
+  "SQK-NBD114-24_barcode05": ectoderm
+  "SQK-NBD114-24_barcode06": endoderm
+  "SQK-NBD114-24_barcode07": mesoderm
+  "SQK-NBD114-24_barcode08": psc
+  "SQK-NBD114-24_barcode09": ectoderm
+  "SQK-NBD114-24_barcode10": endoderm
+  "SQK-NBD114-24_barcode11": mesoderm
+  "SQK-NBD114-24_barcode12": psc
 
 resources:
   ref:
