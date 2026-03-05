@@ -28,7 +28,7 @@ chipseeker_output_df <- chipseeker_output_df %>%
   rename(chr = seqnames)
 output <- merge(chipseeker_output_df, metilene, by = c("chr", "start", "end")) %>%
   mutate(
-    absolute_signed_pi_val = ifelse(q_value == 0, NaN, abs(-log10(q_value) * mean_methylation_difference))
+    absolute_signed_pi_val = ifelse(p_MWU == 0, NaN, abs(-log10(p_MWU) * mean_methylation_difference))
   ) %>%
   arrange(desc(absolute_signed_pi_val)) %>%
   rename(start_dmr = start) %>%

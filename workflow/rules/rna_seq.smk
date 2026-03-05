@@ -33,7 +33,7 @@ rule prepare_kallisto_sleuth:
 # Compare the differential expression results with the DMR associated genes
 rule compare_dmr_to_diffexp_no_tfs:
     input:
-        diffexp="results/tables/diffexp/condition.genes-representative.diffexp.tsv",
+        diffexp="results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv",
         # diffexp="results/tables/diffexp/condition.genes-aggregated.diffexp.tsv",
         endoderm="results/{platform}/{caller}/dmr_calls/endoderm/genes_transcripts/chipseeker_postprocessed.tsv",
         mesoderm="results/{platform}/{caller}/dmr_calls/mesoderm/genes_transcripts/chipseeker_postprocessed.tsv",
@@ -93,6 +93,8 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-DMRs Comparison",
+            subcategory=lambda wildcards: f"Comparisons",
+
             # subcategory=lambda wildcards: f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
                 "type": "no transcription factors",
@@ -103,8 +105,8 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
     conda:
         "../envs/datavzrd.yaml"
     wrapper:
-        "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
-        # "v9.1.0/utils/datavzrd"
+        # "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
+        "v9.2.0/utils/datavzrd"
 
 
 rule datavzrd_dmr_vs_diffexp_with_tfs:
@@ -120,7 +122,7 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-DMRs Comparison",
-            # subcategory=lambda wildcards: f"{wildcards.annotation_type}",
+            subcategory=lambda wildcards: f"Comparisons",
             labels=lambda wildcards: {
                 "type": "with transcription factors",
             },
@@ -128,5 +130,5 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{annotation_type}.log",
     wrapper:
-        "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
-        # "v9.1.0/utils/datavzrd"
+        # "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
+        "v9.2.0/utils/datavzrd"

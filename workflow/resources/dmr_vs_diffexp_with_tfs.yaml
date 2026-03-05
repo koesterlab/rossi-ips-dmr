@@ -117,7 +117,10 @@ views:
           plot:
             heatmap:
               scale: linear
-
+              range:
+                - "#e6550d"
+                - "white"
+                - "#6baed6"
 
   diffexp_vs_dmrs_plot_with_tfs:
     dataset: data_with_tfs

@@ -23,42 +23,22 @@ def get_bioc_species_name():
 
 def all_input(wildcards):
     wanted_input = []
-
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/dmr_calls/heatmaps/{annotation}.png"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #         for annotation in [
-    #             "distal_intergenic",
-    #             "promoter",
-    #             "intron",
-    #             "exon",
-    #             "3_utr",
-    #             "5_utr",
-    #             # "downstream",
-    #         ]
-    #     ]
-    # )
-
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation}.{file_type}"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #         for annotation in [
-    #             "distal_intergenic",
-    #             "promoter",
-    #             "intron",
-    #             "exon",
-    #             "3_utr",
-    #             "5_utr",
-    #             "downstream",
-    #         ]
-    #         for file_type in ["html", "tsv"]
-    #     ]
-    # )
-    # wanted_input.append("results/platforms_combined/varlo/rna_seq_comp/gene_set")
+    wanted_input.extend(
+        [
+            f"results/{platform}/{caller}/dmr_calls/heatmaps/{annotation}.png"
+            for platform in config["meth_caller"].keys()
+            for caller in config["meth_caller"].get(platform, [])
+            for annotation in [
+                "distal_intergenic",
+                "promoter",
+                "intron",
+                "exon",
+                "3_utr",
+                "5_utr",
+                # "downstream",
+            ]
+        ]
+    )
 
     wanted_input.extend(
         [
@@ -80,11 +60,10 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/rna_seq_comp/{germ_layer}-gene_set_{annotation_type}-{func}"
+            f"results/{platform}/{caller}/rna_seq_comp/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for germ_layer in ["endoderm", "mesoderm", "ectoderm", "all"]
-
             for annotation_type in [
                 # "distal_intergenic",
                 "promoter",
@@ -97,45 +76,6 @@ def all_input(wildcards):
             for func in ["mf", "bp", "cc", "go"]
         ]
     )
-
-    # wanted_input.extend(
-    #     [f"results/{platform}/{caller}/rna_seq_comp/tfs/diffexp_vs_dmrs_{annotation}_table"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #         for annotation in [
-    #             "distal_intergenic",
-    #             "promoter",
-    #             "intron",
-    #             "exon",
-    #             "3_utr",
-    #             "5_utr",
-    #             "downstream",
-    #         ]
-    #     ]
-    # )
-
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs.html"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #     ]
-    # )
-
-    # wanted_input.extend(
-    #     [
-    #         f"results/platforms_combined/varlo/methreg/methreg_results.parquet"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #     ]
-    # )
-
-    # wanted_input.extend(
-    #     [
-    #         f"results/platforms_combined/varlo/rna_seq_comp/tfs/{layer}_significant_tfs.tsv"
-    #         for layer in ["ectoderm", "mesoderm", "endoderm"]
-    #     ]
-    # )
 
     wanted_input.extend(
         [
@@ -152,42 +92,6 @@ def all_input(wildcards):
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-        ]
-    )
-
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/rna_seq/datavzrd/{group2}"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-        ]
-    )
-
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/rna_seq/{group2}_{plot}.html"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-            for plot in ["scatter", "barplot"]
-        ]
-    )
-
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/rna_seq_comp/gene_set_{annotation_type}"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for annotation_type in [
-                # "distal_intergenic",
-                "promoter",
-                # "intron",
-                # "exon",
-                # "3_utr",
-                # "5_utr",
-                # "downstream",
-            ]
         ]
     )
 
@@ -215,19 +119,4 @@ def all_input(wildcards):
             for caller in config["meth_caller"].get(platform, [])
         ]
     )
-
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/plots_paper/pluripotency_score_psc.html"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #         for group2 in [s for s in samples.keys() if s != config["ref_sample"]]
-    #     ]
-    # )
-
-    # wanted_input.extend([
-    #         f"results/comp_pb_np/meth_comp_pb_np_{group}.png"
-    #         for group in [s for s in samples.keys() ]
-    #     ])
-
     return wanted_input

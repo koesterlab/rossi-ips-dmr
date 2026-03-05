@@ -11,5 +11,5 @@ config/units.tsv
 .snakemake
 .snakemake/**
 report.zip
-
+report/**
 results_old/**

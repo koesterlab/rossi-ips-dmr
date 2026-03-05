@@ -1,5 +1,5 @@
-
 ############################################ Annotate regulatory elements ############################################
+
 
 rule download_regulatory_elements:
     output:
@@ -61,7 +61,9 @@ rule postprocess_regulatory_elements:
     script:
         "../scripts/postprocess_regulatory_elements.py"
 
+
 ############################################### Annotate gene elements ############################################
+
 
 # Gene elemtents are e.g. promoters, exons, introns, etc.
 rule get_gene_elements_annotation:
@@ -106,6 +108,7 @@ rule annotate_dmrs_with_gene_elements:
     script:
         "../scripts/chipseeker.R"
 
+
 # We want real gene names like SOX2 instead of Ensembl transcript IDs.
 rule get_ensembl_gene_names_from_dmrs:
     input:
@@ -121,7 +124,6 @@ rule get_ensembl_gene_names_from_dmrs:
         "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{group2}.log",
     script:
         "../scripts/get_ensembl_genes.R"
-
 
 
 rule annotate_dmrs_with_ensembl_gene_names:
@@ -163,7 +165,7 @@ rule dmr_heatmap:
     resources:
         mem_mb=16000,
     script:
-        "../scripts/heatmap.py"
+        "../scripts/dmr-heatmap.py"
 
 
 rule datavzrd_annotations:
@@ -189,3 +191,4 @@ rule datavzrd_annotations:
         "logs/datavzrd_annotations/{platform}_{caller}_{group2}.log",
     wrapper:
         "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
+        # "v9.1.0/utils/datavzrd"

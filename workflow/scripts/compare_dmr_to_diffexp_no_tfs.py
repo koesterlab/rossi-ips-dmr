@@ -62,16 +62,14 @@ dmrs_df = (
 )
 
 
-common_df = diffexp_df.join(
-    dmrs_df,
-    on="ext_gene",
-    how="inner",
-).filter(
-    pl.col("mean_methylation_difference").is_not_null()
-    & pl.col("qval_diffexp").is_not_null()
-    & pl.col("qval_dmr").is_not_null()
-    & pl.col("pval_diffexp").is_not_null()
-    & pl.col("pval_dmr").is_not_null()
+common_df = diffexp_df.join(dmrs_df, on="ext_gene", how="inner").drop_nulls(
+    [
+        "mean_methylation_difference",
+        "qval_diffexp",
+        "qval_dmr",
+        "pval_diffexp",
+        "pval_dmr",
+    ]
 )
 
 
@@ -111,11 +109,11 @@ common_df = common_df.with_columns(
 )
 common_df = common_df.filter(pl.col("diffexp").is_not_null())
 
-
+print(common_df.head(6))
 common_df = common_df.group_by(
     [c for c in common_df.columns if c not in ["ens_gene", "target_id", "mane"]]
 ).agg(pl.col("ens_gene").first().alias("ens_gene"))
-
+print(common_df.head(6))
 
 x_domain = [
     common_df["diffexp"].min(),

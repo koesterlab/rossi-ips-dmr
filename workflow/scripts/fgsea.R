@@ -55,9 +55,6 @@ diffexp <- read_tsv(snakemake@input[["diffexp_vs_dmrs_promoter"]]) %>%
 
 
 
-diffexp %>%
-  arrange(ranked_meth_diffexp) %>%   # sortiert nach der Spalte
-  write.csv("diffexp.csv", row.names = FALSE)
 
 # signed_pi <- get_prefix_col("signed_pi_value", colnames(diffexp))
 signed_pi = "ranked_meth_diffexp"

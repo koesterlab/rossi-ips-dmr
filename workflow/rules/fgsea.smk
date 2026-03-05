@@ -24,11 +24,13 @@ def render_enrichment_env():
         yaml.dump(env, f)
     return env_path.absolute()
 
+
 func_to_names = {
     "mf": "molecular_function",
     "bp": "biological_process",
     "cc": "cellular_component",
-    "go": "all"}
+    "go": "all",
+}
 
 bioc_species_pkg = get_bioc_species_pkg()
 enrichment_env = render_enrichment_env()
@@ -39,7 +41,7 @@ rule fgsea_dmr_vs_diffexp:
         # samples="results/sleuth/{model}.samples.tsv",
         # diffexp="results/tables/diffexp/{model}.genes-representative.diffexp.tsv",
         diffexp_vs_dmrs_promoter="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
-        gene_sets=lambda wildcards: config["enrichment"]["fgsea"][f"gene_sets_{wildcards.func}"],
+        gene_sets=lambda wildcards: config["fgsea"][f"gene_sets_{wildcards.func}"],
         common_src=workflow.source_path("../scripts/common.R"),
     output:
         enrichment="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
@@ -50,8 +52,8 @@ rule fgsea_dmr_vs_diffexp:
     params:
         bioc_species_pkg=bioc_species_pkg,
         # model=get_model,
-        gene_set_fdr=config["enrichment"]["fgsea"]["fdr_gene_set"],
-        eps=config["enrichment"]["fgsea"]["eps"],
+        gene_set_fdr=config["fgsea"]["fdr_gene_set"],
+        eps=config["fgsea"]["eps"],
         germ_layer=lambda wildcards: wildcards.germ_layer,
         # covariate=lambda w: config["diffexp"]["models"][w.model]["primary_variable"],
     conda:
@@ -63,14 +65,15 @@ rule fgsea_dmr_vs_diffexp:
         "../scripts/fgsea.R"
 
 
-
 rule fgsea_datavzrd:
     input:
         config=workflow.source_path("../resources/fgsea.yaml"),
         comp="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
     output:
         report(
-            directory("results/{platform}/{caller}/rna_seq_comp/{germ_layer}-gene_set_{annotation_type}-{func}"),
+            directory(
+                "results/{platform}/{caller}/rna_seq_comp/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
+            ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category="DiffExp-DMRs Comparison",

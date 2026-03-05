@@ -40,34 +40,7 @@ ecto_position_pairs = {
     ("5", 107661548): "cg18118164",
     ("14", 68569167): "cg13075942",
 }
-# for positions in [
-#     ("PSC", psc_position_pairs),
-#     ("ENDO", endo_position_pairs),
-#     ("MESO", meso_position_pairs),
-#     ("ECTO", ecto_position_pairs),
-#     ("ENDOMESO", endomeso_position_pairs),
-# ]:
-#     filtered_df = df[
-#         df.apply(
-#             lambda row: (row["chromosome"], row["position"]) in psc_position_pairs,
-#             axis=1,
-#         )
-#     ].reset_index(drop=True)
-#     meth_vals = []
 
-#     long_df = filtered_df.melt(
-#         id_vars=["chromosome", "position"],
-#         value_vars=list(methylation_cols.keys()),
-#         var_name="type",
-#         value_name="methylation",
-#     ).assign(type=lambda x: x["type"].map(methylation_cols))
-#     print(long_df)
-#     # df["position_pair"] = list(zip(df["chromosome"].astype(str), df["position"]))
-#     # filtered_df = df[df["position_pair"].isin(positions[1])].reset_index(drop=True)
-#     # filtered_df["cg_id"] = filtered_df["position_pair"].map(positions[1])
-#     # print(positions[0])
-#     # print(filtered_df)
-#     # print("\n\n")
 
 all_positions = (
     psc_position_pairs
@@ -127,8 +100,8 @@ for biomarker, position_pairs in [
         alt.Chart(biomarker_df)
         .mark_point(size=100)
         .encode(
-            x=alt.X("type:N", title="Selection set"),
-            y=alt.Y("methylation:Q", title="Methylation"),
+            x=alt.X("methylation:Q", title="Methylation"),
+            y=alt.Y("type:N", title="Selection set"),
             color=alt.Color(
                 "layer:N",
                 title="Germ Layer",
@@ -139,87 +112,8 @@ for biomarker, position_pairs in [
             ),
         )
         .properties(
-            title=f"Methylation Scores by Layer {biomarker}", width=600, height=400
+            title=f"Methylation Scores by Layer {biomarker}", width=100, height=150
         )
     )
     charts.append(chart)
-alt.vconcat(*charts).save(snakemake.output[0], scale_factor=2.0)
-# df_melted = filtered_df.melt(
-#     id_vars=["position", "chromosome", "cg_id"],
-#     value_vars=[
-#         "psc_methylation",
-#         "endoderm_methylation",
-#         "mesoderm_methylation",
-#         "ectoderm_methylation",
-#     ],
-#     var_name="Cell_Type",
-#     value_name="Methylation",
-# )
-# df_melted["Cell_Type"] = df_melted["Cell_Type"].replace(
-#     {
-#         "psc_methylation": "PSC",
-#         "endoderm_methylation": "Endoderm",
-#         "mesoderm_methylation": "Mesoderm",
-#         "ectoderm_methylation": "Ectoderm",
-#     }
-# )
-# df_melted["biomarker"] = df_melted.apply(
-#     lambda row: (
-#         "PSC"
-#         if (row["chromosome"], row["position"]) in psc_position_pairs.keys()
-#         else (
-#             "ENDO"
-#             if (row["chromosome"], row["position"]) in endo_position_pairs.keys()
-#             else (
-#                 "MESO"
-#                 if (row["chromosome"], row["position"]) in meso_position_pairs.keys()
-#                 else (
-#                     "ECTO"
-#                     if (row["chromosome"], row["position"])
-#                     in ecto_position_pairs.keys()
-#                     else (
-#                         "ENDOMESO"
-#                         if (row["chromosome"], row["position"])
-#                         in endomeso_position_pairs
-#                         else None
-#                     )
-#                 )
-#             )
-#         )
-#     ),
-#     axis=1,
-# )
-# psc_values = df_melted[df_melted["Cell_Type"] == "PSC"][
-#     ["position", "Methylation"]
-# ].set_index("position")["Methylation"]
-# df_melted["Methylation_diff"] = df_melted.apply(
-#     lambda row: row["Methylation"] - psc_values.get(row["position"], 0), axis=1
-# )
-# charts = []
-# for biomarker in ["PSC", "ENDO", "MESO", "ENDOMESO", "ECTO"]:
-#     df = df_melted[df_melted["biomarker"] == biomarker]
-#     heatmap = (
-#         alt.Chart(df)
-#         .mark_rect()
-#         .encode(
-#             x=alt.X("Cell_Type:N", title="Cell Type"),
-#             y=alt.Y(
-#                 "cg_id:N",
-#                 title="Genomic Position",
-#             ),
-#             color=alt.Color(
-#                 "Methylation_diff:Q", scale=alt.Scale(scheme="redblue", domain=[-1, 1])
-#             ),
-#             tooltip=[
-#                 "position",
-#                 "chromosome",
-#                 "Cell_Type",
-#                 "Methylation",
-#                 "Methylation_diff",
-#                 "biomarker",
-#             ],
-#         )
-#         .properties(width=500, height=400, title=f"Methylation Heatmap {biomarker}")
-#     )
-#     charts.append(heatmap)
-# alt.vconcat(*charts).save(snakemake.output[0], scale_factor=2.0)
+alt.hconcat(*charts).save(snakemake.output[0])

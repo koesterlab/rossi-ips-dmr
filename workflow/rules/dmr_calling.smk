@@ -51,14 +51,13 @@ rule call_metilene:
         "results/{platform}/{caller}/dmr_calls/{group2}/metilene_output.bed",
     conda:
         "../envs/metilene.yaml"
-    threads: 10
     params:
         base_exp_number=config["ref_sample"],
     log:
         "logs/call_metilene/{platform}_{caller}_{group2}.log",
     shell:
         """
-        metilene -d 0.01 -t {threads} -c 2 -a {wildcards.group2} -b {params.base_exp_number} {input} > {output} 2> {log}
+        metilene -d 0.01 -t {threads} -c 2 -m 10 -a {wildcards.group2} -b {params.base_exp_number} {input} > {output} 2> {log}
         """
 
 
@@ -112,5 +111,3 @@ rule metilene_plots:
         echo $PARENT_DIR
         perl {input.met}/metilene_output.pl -q {input.met_out} -o $PARENT_DIR -a {params.base_exp_number} -b {wildcards.group2} 2> {log}
         """
-
-
