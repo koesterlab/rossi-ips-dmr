@@ -1,5 +1,6 @@
-import polars as pl
+
 import altair as alt
+import polars as pl
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
@@ -192,9 +193,7 @@ diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = common_df.select(
 
 (
     diffexp_min,
-    diffexp_max,
-) = -max(
-    abs(diffexp_min), abs(diffexp_max)
+) = -max(abs(diffexp_min), abs(diffexp_max)), max(abs(diffexp_min), abs(diffexp_max))
 ), max(abs(diffexp_min), abs(diffexp_max))
 (meth_diff_min, meth_diff_max) = (
     -max(abs(meth_diff_min), abs(meth_diff_max)),

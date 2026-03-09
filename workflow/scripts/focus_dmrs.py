@@ -1,5 +1,6 @@
-import pybedtools
 import sys
+
+import pybedtools
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 

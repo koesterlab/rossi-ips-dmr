@@ -1,6 +1,7 @@
-import pandas as pd
 import re
 import sys
+
+import pandas as pd
 import pysam
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
@@ -35,7 +36,12 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
             for sample in record.samples.values():
                 try:
                     af = float(sample.get("AF", [0])[0])
-                    dp = int(sample.get("DP", 0))
+                    bias = compute_bias(
+                        [
+                            v[0] if isinstance(v, tuple) and len(v) == 1 else v
+                            for v in sample.values()
+                        ]
+                    )
                     bias = compute_bias([v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in sample.values()])
                     if bias != "normal":
                         sample_bias = bias
@@ -57,7 +63,7 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                 if isinstance(info["PROB_PRESENT"][0], float):
                     prob_present = phred_to_prob(info["PROB_PRESENT"][0])
                 else:
-                    # print(f"Missing probability info at {chrom}:{position}", file=sys.stderr)   
+                    # print(f"Missing probability info at {chrom}:{position}", file=sys.stderr)
                     continue
             else:
                 # print(f"Missing probability info at {chrom}:{position}", file=sys.stderr)

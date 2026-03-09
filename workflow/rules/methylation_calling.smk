@@ -13,7 +13,7 @@ rule find_candidates:
     conda:
         "../envs/varlociraptor.yaml"
     shell:
-        """ 
+        """
         varlociraptor methylation-candidates {input.fasta} {output} --motifs CG 2> {log}
         """
 
@@ -61,7 +61,7 @@ rule compute_meth_observations:
     log:
         "logs/varlociraptor/compute_meth_observations/{platform}_{sample}_{scatteritem}.log",
     shell:
-        """ 
+        """
         varlociraptor preprocess variants {input.genome} --candidates {input.candidates} --bam {input.alignments}  --methylation-read-type annotated --max-depth 1000 > {output} 2> {log}
         """
 
@@ -103,7 +103,7 @@ rule compute_meth_observations:
 #     resources:
 #         mem_mb=128000,
 #     shell:
-#         """ 
+#         """
 #         cd {input.varlo_path}
 #         cargo run --release -- call variants --omit-strand-bias generic --scenario {input.scenario} \
 #             --obs psc_pacbio={input.pb_psc} meso_pacbio={input.pb_meso} endo_pacbio={input.pb_endo} ecto_pacbio={input.pb_ecto} \
@@ -124,7 +124,7 @@ rule call_methylation:
     resources:
         mem_mb=128000,
     shell:
-        """ 
+        """
         varlociraptor call variants generic --scenario {input.scenario} \
             --obs pacbio={input.pb}  nanopore={input.np}   > {output} 2> {log}
         """
