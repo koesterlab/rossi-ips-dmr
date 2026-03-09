@@ -1,0 +1,13 @@
+sample	unit	fragment_len_mean	fragment_len_sd	fq1	fq2	bam_single	bam_paired	fastp_adapters	fastp_extra
+ectoderm_01	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode01.fastq.gz	NA	NA	NA	NA	NA
+endoderm_02	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode02.fastq.gz	NA	NA	NA	NA	NA
+mesoderm_03	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode03.fastq.gz	NA	NA	NA	NA	NA
+psc_04	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode04.fastq.gz	NA	NA	NA	NA	NA
+ectoderm_05	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode05.fastq.gz	NA	NA	NA	NA	NA
+endoderm_06	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode06.fastq.gz	NA	NA	NA	NA	NA
+mesoderm_07	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode07.fastq.gz	NA	NA	NA	NA	NA
+psc_08	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode08.fastq.gz	NA	NA	NA	NA	NA
+ectoderm_09	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode09.fastq.gz	NA	NA	NA	NA	NA
+endoderm_10	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode10.fastq.gz	NA	NA	NA	NA	NA
+mesoderm_11	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode11.fastq.gz	NA	NA	NA	NA	NA
+psc_12	1	NA	NA	resources/fastqs/SQK-NBD114-24_barcode12.fastq.gz	NA	NA	NA	NA	NA

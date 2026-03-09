@@ -40,15 +40,15 @@ rule fgsea_dmr_vs_diffexp:
     input:
         # samples="results/sleuth/{model}.samples.tsv",
         # diffexp="results/tables/diffexp/{model}.genes-representative.diffexp.tsv",
-        diffexp_vs_dmrs_promoter="results/{platform}/{caller}/rna_seq_comp/diffexp_vs_dmrs_{annotation_type}.tsv",
+        diffexp_vs_dmrs_promoter="results/{platform}/{caller}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
         gene_sets=lambda wildcards: config["fgsea"][f"gene_sets_{wildcards.func}"],
         common_src=workflow.source_path("../scripts/common.R"),
     output:
-        enrichment="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
-        rank_ties="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-rank-ties-{annotation_type}-{func}.tsv",
-        significant="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-sig-gene-sets-{annotation_type}-{func}.tsv",
-        plot="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-table-plot-{annotation_type}-{func}.pdf",
-        plot_collapsed="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-collapsed_pathways.table-plot-{annotation_type}-{func}.pdf",
+        enrichment="results/{platform}/{caller}/{rna_data}/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
+        rank_ties="results/{platform}/{caller}/{rna_data}/{germ_layer}-rank-ties-{annotation_type}-{func}.tsv",
+        significant="results/{platform}/{caller}/{rna_data}/{germ_layer}-sig-gene-sets-{annotation_type}-{func}.tsv",
+        plot="results/{platform}/{caller}/{rna_data}/{germ_layer}-table-plot-{annotation_type}-{func}.pdf",
+        plot_collapsed="results/{platform}/{caller}/{rna_data}/{germ_layer}-collapsed_pathways.table-plot-{annotation_type}-{func}.pdf",
     params:
         bioc_species_pkg=bioc_species_pkg,
         # model=get_model,
@@ -59,7 +59,7 @@ rule fgsea_dmr_vs_diffexp:
     conda:
         enrichment_env
     log:
-        "logs/fgsea_dmr_vs_diffexp/{platform}_{caller}_{germ_layer}_{annotation_type}_{func}.log",
+        "logs/fgsea_dmr_vs_diffexp/{platform}_{caller}_{rna_data}_{germ_layer}_{annotation_type}_{func}.log",
     threads: 25
     script:
         "../scripts/fgsea.R"
@@ -68,11 +68,11 @@ rule fgsea_dmr_vs_diffexp:
 rule fgsea_datavzrd:
     input:
         config=workflow.source_path("../resources/fgsea.yaml"),
-        comp="results/{platform}/{caller}/rna_seq_comp/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
+        comp="results/{platform}/{caller}/{rna_data}/{germ_layer}-all-gene-sets-{annotation_type}-{func}.tsv",
     output:
         report(
             directory(
-                "results/{platform}/{caller}/rna_seq_comp/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
+                "results/{platform}/{caller}/{rna_data}/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
@@ -84,6 +84,6 @@ rule fgsea_datavzrd:
             },
         ),
     log:
-        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{germ_layer}_{annotation_type}_{func}.log",
+        "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{rna_data}_{germ_layer}_{annotation_type}_{func}.log",
     wrapper:
         "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"

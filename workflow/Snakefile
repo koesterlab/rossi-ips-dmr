@@ -37,29 +37,31 @@ inputflags:
 
 # module kallisto_sleuth_old:
 #     snakefile:
-#         github(
-#             "snakemake-workflows/rna-seq-kallisto-sleuth",
-#             path="workflow/Snakefile",
-#             branch="lr-kallisto"
-#         )
+#         # github(
+#         #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+#         #     path="workflow/Snakefile",
+#         #     branch="lr-kallisto"
+#         # )
+#         "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
 #     config:
 #         # inherit the whole shared config, but override only samples/units
 #         { **config["kallisto_sleuth"], 
-#           "samples": "rna_old/config/samples.tsv",
-#           "units": "rna_old/config/units.tsv" }
+#           "samples": "config/old_samples.tsv",
+#           "units": "config/old_units.tsv" }
 #     prefix: "rna_old"
 
 # module kallisto_sleuth_new:
 #     snakefile:
-#         github(
-#             "snakemake-workflows/rna-seq-kallisto-sleuth",
-#             path="workflow/Snakefile",
-#             branch="lr-kallisto"
-#         )
+#         # github(
+#         #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+#         #     path="workflow/Snakefile",
+#         #     branch="lr-kallisto"
+#         # )
+#         "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
 #     config:
 #         { **config["kallisto_sleuth"], 
-#           "samples": "rna_new/config/samples.tsv",
-#           "units": "rna_new/config/units.tsv" }
+#           "samples": "config/new_samples.tsv",
+#           "units": "config/new_units.tsv" }
 #     prefix: "rna_new"
 # use rule * from kallisto_sleuth_old as rna_old_*
 # use rule * from kallisto_sleuth_new as rna_new_*

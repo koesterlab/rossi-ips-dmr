@@ -61,7 +61,7 @@ def all_input(wildcards):
 
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/{rna_data}/pathways/   {germ_layer}-gene_set_{annotation_type}-{func}"
+            f"results/{platform}/{caller}/{rna_data}/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for rna_data in ["rna_new", "rna_old"]

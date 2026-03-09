@@ -18,8 +18,8 @@ rule prepare_kallisto_sleuth_old_rna_seq:
             accession=config["rna_accessions_old"].keys(),
         ),
     output:
-        samples="rna_old/config/samples.tsv",
-        units="rna_old/config/units.tsv",
+        samples="rna_old/config/old_samples.tsv",
+        units="rna_old/config/old_units.tsv",
     conda:
         "../envs/python.yaml"
     log:
@@ -64,8 +64,8 @@ rule prepare_kallisto_sleuth_new_rna_seq:
             sample=config["rna_accessions_new"].keys(),
         ),
     output:
-        samples="rna_new/config/samples.tsv",
-        units="rna_new/config/units.tsv",
+        samples="rna_new/config/new_samples.tsv",
+        units="rna_new/config/new_units.tsv",
     conda:
         "../envs/python.yaml"
     log:
