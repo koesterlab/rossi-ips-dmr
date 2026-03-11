@@ -8,7 +8,6 @@ from snakemake.utils import min_version
 min_version("8.13.0")
 
 
-
 container: "docker://continuumio/miniconda3"
 
 
@@ -47,7 +46,8 @@ module kallisto_sleuth_old:
         # inherit the whole shared config, but override only samples/units
         { **config["kallisto_sleuth"],
           "samples": "config/old_samples.tsv",
-          "units": "config/old_units.tsv" }
+          "units": "config/old_units.tsv",
+          "report_category_prefix": "old samples" }
     prefix: "rna_old"
 
 module kallisto_sleuth_new:
@@ -61,12 +61,134 @@ module kallisto_sleuth_new:
     config:
         { **config["kallisto_sleuth"],
           "samples": "config/new_samples.tsv",
-          "units": "config/new_units.tsv" }
+          "units": "config/new_units.tsv",
+          "report_category_prefix": "new samples" }
     prefix: "rna_new"
+
 use rule * from kallisto_sleuth_old as rna_old_*
 use rule * from kallisto_sleuth_new as rna_new_*
 
-G
+# ── Separate report categories for the two RNA-seq modules ──────────────────
+# The four datavzrd rules inside the module all call report(). Without
+# overrides both modules write into the same report sections. We override
+# only the output directive to assign distinct subcategories, so that
+# "RNA old" and "RNA new" appear as separate entries in the Snakemake report.
+
+# use rule spia_datavzrd from kallisto_sleuth_old as rna_old_spia_datavzrd with:
+#     output:
+#         report(
+#             directory("rna_old/results/datavzrd-reports/spia-{model}_{database}"),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/spia.rst"),
+#             category="Pathway enrichment",
+#             subcategory="RNA old",
+#             patterns=["index.html"],
+#             labels={
+#                 "model": "{model}",
+#                 "database": "{database}",
+#             },
+#         ),
+
+# use rule diffexp_datavzrd from kallisto_sleuth_old as rna_old_diffexp_datavzrd with:
+#     output:
+#         report(
+#             directory("rna_old/results/datavzrd-reports/diffexp-{model}"),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/diffexp.rst"),
+#             category="Differential expression analysis",
+#             subcategory="RNA old",
+#             patterns=["index.html"],
+#             labels={"model": "{model}"},
+#         ),
+
+# use rule go_enrichment_datavzrd from kallisto_sleuth_old as rna_old_go_enrichment_datavzrd with:
+#     output:
+#         report(
+#             directory(
+#                 "rna_old/results/datavzrd-reports/{model}.go_term_enrichment.gene_fdr_{gene_fdr}.go_term_sig_study_fdr_{go_term_fdr}"
+#             ),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/go-enrichment-sig_terms.rst"),
+#             category="GO term enrichment",
+#             subcategory="RNA old: {model}",
+#             patterns=["index.html"],
+#             labels={
+#                 "model": "{model}",
+#                 "gene_fdr": "{gene_fdr}",
+#                 "go_term_fdr": "{go_term_fdr}",
+#             },
+#         ),
+
+# use rule meta_compare_datavzrd from kallisto_sleuth_old as rna_old_meta_compare_datavzrd with:
+#     output:
+#         report(
+#             directory("rna_old/results/datavzrd-reports/{method}_meta_comparison_{meta_comp}"),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/meta_compare.rst"),
+#             category="Comparisons",
+#             subcategory="RNA old: {meta_comp}",
+#             patterns=["index.html"],
+#             labels={"meta_comp": "{meta_comp}", "method": "{method}"},
+#         ),
+
+# use rule spia_datavzrd from kallisto_sleuth_new as rna_new_spia_datavzrd with:
+#     output:
+#         report(
+#             directory("rna_new/results/datavzrd-reports/spia-{model}_{database}"),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/spia.rst"),
+#             category="Pathway enrichment",
+#             subcategory="RNA new",
+#             patterns=["index.html"],
+#             labels={
+#                 "model": "{model}",
+#                 "database": "{database}",
+#             },
+#         ),
+
+# use rule diffexp_datavzrd from kallisto_sleuth_new as rna_new_diffexp_datavzrd with:
+#     output:
+#         report(
+#             directory("rna_new/results/datavzrd-reports/diffexp-{model}"),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/diffexp.rst"),
+#             category="Differential expression analysis",
+#             subcategory="RNA new",
+#             patterns=["index.html"],
+#             labels={"model": "{model}"},
+#         ),
+
+# use rule go_enrichment_datavzrd from kallisto_sleuth_new as rna_new_go_enrichment_datavzrd with:
+#     output:
+#         report(
+#             directory(
+#                 "rna_new/results/datavzrd-reports/{model}.go_term_enrichment.gene_fdr_{gene_fdr}.go_term_sig_study_fdr_{go_term_fdr}"
+#             ),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/go-enrichment-sig_terms.rst"),
+#             category="GO term enrichment",
+#             subcategory="RNA new: {model}",
+#             patterns=["index.html"],
+#             labels={
+#                 "model": "{model}",
+#                 "gene_fdr": "{gene_fdr}",
+#                 "go_term_fdr": "{go_term_fdr}",
+#             },
+#         ),
+
+# use rule meta_compare_datavzrd from kallisto_sleuth_new as rna_new_meta_compare_datavzrd with:
+#     output:
+#         report(
+#             directory("rna_new/results/datavzrd-reports/{method}_meta_comparison_{meta_comp}"),
+#             htmlindex="index.html",
+#             caption=workflow.source_path("../../rna-seq-kallisto-sleuth/workflow/report/meta_compare.rst"),
+#             category="Comparisons",
+#             subcategory="RNA new: {meta_comp}",
+#             patterns=["index.html"],
+#             labels={"meta_comp": "{meta_comp}", "method": "{method}"},
+#         ),
+
+
 rule modified_all:
     default_target: True
     input:

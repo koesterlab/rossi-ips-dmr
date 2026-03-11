@@ -11,23 +11,23 @@ rule get_old_rna_seq_fastqs:
         "v7.6.0/bio/sra-tools/fasterq-dump"
 
 
-rule prepare_kallisto_sleuth_old_rna_seq:
+rule prepare_kallisto_sleuth:
     input:
         fastqs=expand(
-            "rna_old/resources/fastqs/{accession}.fastq.gz",
-            accession=config["rna_accessions_old"].keys(),
+            "rna_{rna_type}/resources/fastqs/{accession}.fastq.gz",
+            accession=lambda wildcards: config[f"rna_accessions_{wildcards.rna_type}"].keys(),
         ),
     output:
-        samples="rna_old/config/old_samples.tsv",
-        units="rna_old/config/old_units.tsv",
+        samples="rna_{rna_type}/config/{rna_type}_samples.tsv",
+        units="rna_{rna_type}/config/{rna_type}_units.tsv",
     conda:
         "../envs/python.yaml"
     log:
-        "logs/prepare_kallisto_sleuth_old.log",
+        "logs/prepare_kallisto_sleuth_{rna_type}.log",
     params:
-        types=config["rna_accessions_old"],
+        types=lambda wildcards: config[f"rna_accessions_{wildcards.rna_type}"],
     script:
-        "../scripts/prepare_kallisto_sleuth_old.py"
+        "../scripts/prepare_kallisto_sleuth.py"
 
 
 rule unzip_rna_new:
@@ -57,23 +57,7 @@ rule rna_bam_to_fastq_rna_new:
         samtools fastq {input.bam} | gzip > {output.fq} 2> {log}
         """
 
-rule prepare_kallisto_sleuth_new_rna_seq:
-    input:
-        fastqs=expand(
-            "rna_new/resources/fastqs/{sample}.fastq.gz",
-            sample=config["rna_accessions_new"].keys(),
-        ),
-    output:
-        samples="rna_new/config/new_samples.tsv",
-        units="rna_new/config/new_units.tsv",
-    conda:
-        "../envs/python.yaml"
-    log:
-        "logs/prepare_kallisto_sleuth_new.log",
-    params:
-        types=config["rna_accessions_new"],
-    script:
-        "../scripts/prepare_kallisto_sleuth_new.py"
+
 
 
 
@@ -139,11 +123,11 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
-            category="DiffExp-DMRs Comparison",
-            subcategory=lambda wildcards: f"Comparisons",
+            category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
+            subcategory=f"Comparisons",
 
-            # subcategory=lambda wildcards: f"{wildcards.annotation_type}",
-            labels=lambda wildcards: {
+            # subcategory=f"{wildcards.annotation_type}",
+            labels={
                 "type": "no transcription factors",
             },
         ),
@@ -168,9 +152,9 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
-            category="DiffExp-DMRs Comparison",
-            subcategory=lambda wildcards: f"Comparisons",
-            labels=lambda wildcards: {
+            category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
+            subcategory= f"Comparisons",
+            labels= {
                 "type": "with transcription factors",
             },
         ),

@@ -76,7 +76,7 @@ rule fgsea_datavzrd:
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
-            category="DiffExp-DMRs Comparison",
+            category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
             subcategory=lambda wildcards: "pathways no transcription factors",
             labels=lambda wildcards: {
                 "layer": wildcards.germ_layer,
