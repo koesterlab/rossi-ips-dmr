@@ -4,7 +4,7 @@ sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 bcf_file = snakemake.input[0]
 
-bcf = pysam.VariantFile(bcf_file)  
+bcf = pysam.VariantFile(bcf_file)
 
 with open(snakemake.output[0], "w") as bed_file:
     for record in bcf:

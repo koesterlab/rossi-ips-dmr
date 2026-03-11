@@ -8,7 +8,6 @@ from snakemake.utils import min_version
 min_version("8.13.0")
 
 
-
 container: "docker://continuumio/miniconda3"
 
 

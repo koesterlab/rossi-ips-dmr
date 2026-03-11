@@ -73,7 +73,6 @@ tf_df = tf_df.filter(pl.col("target").is_in(ext_genes))
 # plot(tf_df, "mean_methylation_difference", "tfs", snakemake.output[0])
 
 
-
 # We often have multiple DMRs per transcription factor. To sum over all DMRs influencing a target gene, we first need to aggregate the DMRs per tf
 tf_df = tf_df.group_by("tfs", "germ_layer", "target", "weight").agg(
     pl.col("mean_methylation_difference").mean(),
@@ -83,12 +82,12 @@ tf_df = tf_df.group_by("tfs", "germ_layer", "target", "weight").agg(
 tf_df.write_csv(snakemake.output["focus_tfs"], separator="\t")
 
 
-
 # Compute the sum of mean methylation differences of all influencing tfs per target gene and germ layer
 tf_effects_per_target = tf_df.group_by("target", "germ_layer").agg(
     (pl.col("weight") * pl.col("mean_methylation_difference"))
     # (pl.col("mean_methylation_difference"))
-    .sum().alias("tf_sum_mean_methylation_difference"),
+    .sum()
+    .alias("tf_sum_mean_methylation_difference"),
     pl.col("tfs").unique().sort().str.join(","),
 )
 
@@ -120,9 +119,7 @@ diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = comparison_with_tf.sele
 (
     diffexp_min,
     diffexp_max,
-) = -max(
-    abs(diffexp_min), abs(diffexp_max)
-), max(abs(diffexp_min), abs(diffexp_max))
+) = -max(abs(diffexp_min), abs(diffexp_max)), max(abs(diffexp_min), abs(diffexp_max))
 (meth_diff_min, meth_diff_max) = (
     -max(abs(meth_diff_min), abs(meth_diff_max)),
     max(abs(meth_diff_min), abs(meth_diff_max)),
@@ -136,8 +133,8 @@ max_dist = ((diffexp_max) ** 2 + meth_diff_max_scaled**2) ** 0.5
 
 
 ###################### Prepare for datavzrd #####################
-comparison_with_tf = (comparison_with_tf
-    .with_columns(
+comparison_with_tf = (
+    comparison_with_tf.with_columns(
         (pl.col("mean_methylation_difference_tf_adjusted") * diffexp_max).alias(
             "mean_methylation_difference_scaled"
         )

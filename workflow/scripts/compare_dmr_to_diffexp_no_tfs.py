@@ -185,7 +185,7 @@ diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = common_df.select(
     pl.col("mean_methylation_difference").min().alias("y_min"),
     pl.col("mean_methylation_difference").max().alias("y_max"),
 ).row(0)
-
+# The values should be symmetric around zero
 (diffexp_min, diffexp_max) = (
     -max(abs(diffexp_min), abs(diffexp_max)),
     max(abs(diffexp_min), abs(diffexp_max)),

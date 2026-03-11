@@ -1,5 +1,8 @@
+import sys
+
 import polars as pl
-import numpy as np
+
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 sample_rows = []
 unit_rows = []
@@ -7,7 +10,13 @@ unit_rows = []
 for fastq in snakemake.input.fastqs:
     sample_name = fastq.split("/")[-1].split(".")[0]
     cell_type = snakemake.params.types[sample_name]
-    sample_rows.append({"sample": f"{cell_type}_{sample_name[-2:]}", "condition": cell_type, "batch_effect": "NA"})
+    sample_rows.append(
+        {
+            "sample": f"{cell_type}_{sample_name[-2:]}",
+            "condition": cell_type,
+            "batch_effect": "NA",
+        }
+    )
 
     unit_rows.append(
         {
