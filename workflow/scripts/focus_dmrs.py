@@ -1,26 +1,18 @@
-import pybedtools
 import sys
+
+import pybedtools
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
-ecto = pybedtools.BedTool(snakemake.input["ecto"])
-endo = pybedtools.BedTool(snakemake.input["endo"])
-meso = pybedtools.BedTool(snakemake.input["meso"])
+this = pybedtools.BedTool(snakemake.input["this"])
+other1 = pybedtools.BedTool(snakemake.input["other1"])
+other2 = pybedtools.BedTool(snakemake.input["other2"])
 
-ecto_only = ecto.intersect(endo, v=True).intersect(meso, v=True)
-endo_only = endo.intersect(ecto, v=True).intersect(meso, v=True)
-meso_only = meso.intersect(ecto, v=True).intersect(endo, v=True)
+this_only = this.intersect(other1, v=True).intersect(other2, v=True)
 
-exclusive_sets = [
-    (ecto_only, snakemake.output["ecto"]),
-    (endo_only, snakemake.output["endo"]),
-    (meso_only, snakemake.output["meso"]),
-]
-
-for regions, outfile in exclusive_sets:
-    with open(outfile, "w") as out:
-        for region in regions:
-            try:
-                print(region, file=out, end="")
-            except (IndexError, ValueError):
-                continue
+with open(snakemake.output[0], "w") as out:
+    for region in this_only:
+        try:
+            print(region, file=out, end="")
+        except (IndexError, ValueError):
+            continue
