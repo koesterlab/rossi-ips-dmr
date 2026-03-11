@@ -164,7 +164,8 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
             subcategory=f"Comparisons",
 
             # subcategory=f"{wildcards.annotation_type}",
-            labels={
+            labels=lambda wildcards: {
+                "base": "{wildcards.base}",
                 "type": "no transcription factors",
             },
         ),
@@ -192,7 +193,8 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             htmlindex="index.html",
             category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
             subcategory= f"Comparisons",
-            labels= {
+            labels=lambda wildcards: {
+                "base": "{wildcards.base}",
                 "type": "with transcription factors",
             },
         ),

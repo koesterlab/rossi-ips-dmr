@@ -153,7 +153,7 @@ rule dmr_heatmap:
             category="DMR plots",
             subcategory=lambda wildcards: f"Heatmaps: {wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "base experiment": wildcards.base,
+                "base": wildcards.base,
                 "genetic element": wildcards.type,
             },
         ),
@@ -180,8 +180,8 @@ rule datavzrd_annotations:
             category="Annotated DMRs",
             subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "base experiment": wildcards.base,
-                "experiment 2": wildcards.group2,
+                "base": wildcards.base,
+                "layer": wildcards.group2,
             },
         ),
     params:

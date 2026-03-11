@@ -98,8 +98,8 @@ rule metilene_plots:
             category="DMR plots",
             subcategory=lambda wildcards: f"Metilene: {wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
-                "base experiment": wildcards.base,
-                "experiment 2": wildcards.group2,
+                "base": wildcards.base,
+                "layer": wildcards.group2,
             },
         ),
     conda:
