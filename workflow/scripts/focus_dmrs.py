@@ -37,14 +37,32 @@ try:
     other1 = load_bedtool(snakemake.input["other1"][0], "other1")
     other2 = load_bedtool(snakemake.input["other2"][0], "other2")
 
+    # Find exclusive regions
     this_only = this.intersect(other1, v=True).intersect(other2, v=True)
+
+    # Write output with validation
+    valid_count = 0
+    invalid_count = 0
 
     with open(snakemake.output[0], "w") as out:
         for region in this_only:
-            try:
-                print(region, file=out, end="")
-            except (IndexError, ValueError):
-                continue
+            mean_diff = float(region[4])
+            # mean_methylation_difference should be between -1 and +1
+            if mean_diff >= -1 and mean_diff <= 1:
+                try:
+                    print(region, file=out, end="")
+                    valid_count += 1
+                except (IndexError, ValueError):
+                    invalid_count += 1
+                    continue
+            else:
+                invalid_count += 1
+
+    print(
+        f"Wrote {valid_count} valid DMRs, filtered {invalid_count} invalid DMRs",
+        file=sys.stderr,
+    )
+
 except Exception as e:
     print(f"Fatal error: {e}", file=sys.stderr)
     sys.exit(1)
