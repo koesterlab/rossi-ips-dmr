@@ -30,7 +30,7 @@ rounds <- 0
 while (class(mart)[[1]] != "Mart") {
   mart <- tryCatch(
     {
-      if (mart == "www") rounds <- rounds + 1 
+      if (mart == "www") rounds <- rounds + 1
         withTimeout({
           biomaRt::useEnsembl(
             biomart = "ENSEMBL_MART_ENSEMBL",
@@ -38,7 +38,7 @@ while (class(mart)[[1]] != "Mart") {
             mirror = mart
           )
         }, timeout = 60, onTimeout = "error")
-      
+
     },
     error = function(e) {
       if (rounds >= 3) {
@@ -70,7 +70,7 @@ gene_info <- tryCatch({
       values = unique(data$transcriptId),
       mart = mart
     )
-  }, timeout = 3600, onTimeout = "error")
+  }, timeout = 5000, onTimeout = "error")
 
 }, error = function(e) {
   stop(paste("Error in getBM():", e$message))
@@ -83,4 +83,3 @@ print("Writing output file...")
 write.table(gene_info, file = snakemake@output[[1]], sep = "\t", row.names = FALSE, quote = FALSE)
 
 print("Script completed.")
-

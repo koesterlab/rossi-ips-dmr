@@ -10,15 +10,18 @@ rule get_old_rna_seq_fastqs:
         "v7.6.0/bio/sra-tools/fasterq-dump"
 
 
+
+
+
 rule prepare_kallisto_sleuth:
     input:
         fastqs=expand(
-            "rna_{rna_type}/resources/fastqs/{accession}.fastq.gz",
+            "rna_{{rna_type}}/resources/fastqs/{accession}.fastq.gz",
             accession=lambda wildcards: config[f"rna_accessions_{wildcards.rna_type}"].keys(),
         ),
     output:
-        samples="rna_old/config/samples_old.tsv",
-        units="rna_old/config/units_old.tsv",
+        samples="config/samples_{rna_type}.tsv",
+        units="config/units_{rna_type}.tsv",
     conda:
         "../envs/python.yaml"
     log:
@@ -27,6 +30,20 @@ rule prepare_kallisto_sleuth:
         types=lambda wildcards: config[f"rna_accessions_{wildcards.rna_type}"],
     script:
         "../scripts/prepare_kallisto_sleuth.py"
+
+rule copy_samples_and_units:
+    input:
+        samples="config/samples_{rna_type}.tsv",
+        units="config/units_{rna_type}.tsv",
+    output:
+        samples="{rna_data}/{base}/config/samples_{rna_type}.tsv",
+        units="{rna_data}/{base}/config/units_{rna_type}.tsv",
+    conda:
+        "../envs/python.yaml"
+    log:
+        "logs/copy_samples_units_{rna_data}_{base}_{rna_type}.log",
+    shell:
+        "cp {input.samples} {output.samples} && cp {input.units} {output.units}"
 
 
 rule unzip_rna_new:
@@ -61,6 +78,20 @@ rule rna_bam_to_fastq_rna_new:
         """
         samtools fastq {input.bam} | gzip > {output.fq} 2> {log}
         """
+
+# We need to copy the fastqs from {rna_data}/resources/fastqs to {rna_data}/resources/fastqs
+# so that the kallisto-sleuth modules can find them. This problem occurs because
+# the kallisto-sleuth modules are prefixed with rna_{rna_data}/base_{base},
+# and the fastqs are stored at rna_{rna_data}/resources/fastqs/{sample}.fastq.gz. There is no option to have an output prefix only for modules.
+# rule copy_fastqs:
+#     input:
+#         fq="{rna_data}/resources/fastqs/{sample}.fastq.gz",
+#     output:
+#         fq="{rna_data}/{base}/resources/fastqs/{sample}.fastq.gz",
+#     shell:
+#         """
+#         cp {input.fq} {output.fq}
+#         """
 
 
 

@@ -7,7 +7,6 @@ from snakemake.utils import min_version
 
 min_version("8.13.0")
 
-
 container: "docker://continuumio/miniconda3"
 
 
@@ -47,8 +46,8 @@ def ks_config(base_level, samples_path, units_path):
     Snakemake module prefix (e.g. 'rna_old/base_psc') is not prepended to them.
     """
     cfg = dict(config["kallisto_sleuth"])
-    cfg["samples"] = os.path.abspath(samples_path)
-    cfg["units"] = os.path.abspath(units_path)
+    cfg["samples"] = samples_path
+    cfg["units"] = units_path
     # Deep-copy the diffexp block so mutations don't leak across module instances.
     cfg["diffexp"] = copy.deepcopy(config["kallisto_sleuth"]["diffexp"])
     cfg["diffexp"]["models"]["condition"]["base_level"] = base_level
@@ -61,35 +60,37 @@ def ks_config(base_level, samples_path, units_path):
 # call expression spans an implicit continuation and the following `prefix:`
 # keyword is mis-parsed as an unexpected de-indent.  Plain variable references
 # are safe.
-cfg_old_psc       = ks_config("psc",       "rna_old/config/samples.tsv", "rna_old/config/units.tsv")
-cfg_new_psc       = ks_config("psc",       "rna_new/config/samples.tsv", "rna_new/config/units.tsv")
-cfg_old_endoderm  = ks_config("endoderm",  "rna_old/config/samples.tsv", "rna_old/config/units.tsv")
-cfg_new_endoderm  = ks_config("endoderm",  "rna_new/config/samples.tsv", "rna_new/config/units.tsv")
-cfg_old_mesoderm  = ks_config("mesoderm",  "rna_old/config/samples.tsv", "rna_old/config/units.tsv")
-cfg_new_mesoderm  = ks_config("mesoderm",  "rna_new/config/samples.tsv", "rna_new/config/units.tsv")
-cfg_old_ectoderm  = ks_config("ectoderm",  "rna_old/config/samples.tsv", "rna_old/config/units.tsv")
-cfg_new_ectoderm  = ks_config("ectoderm",  "rna_new/config/samples.tsv", "rna_new/config/units.tsv")
+cfg_old_psc       = ks_config("psc",       "config/samples_old.tsv", "config/units_old.tsv")
+cfg_new_psc       = ks_config("psc",       "config/samples_new.tsv", "config/units_new.tsv")
+cfg_old_endoderm  = ks_config("endoderm",  "config/samples_old.tsv", "config/units_old.tsv")
+cfg_new_endoderm  = ks_config("endoderm",  "config/samples_new.tsv", "config/units_new.tsv")
+cfg_old_mesoderm  = ks_config("mesoderm",  "config/samples_old.tsv", "config/units_old.tsv")
+cfg_new_mesoderm  = ks_config("mesoderm",  "config/samples_new.tsv", "config/units_new.tsv")
+cfg_old_ectoderm  = ks_config("ectoderm",  "config/samples_old.tsv", "config/units_old.tsv")
+cfg_new_ectoderm  = ks_config("ectoderm",  "config/samples_new.tsv", "config/units_new.tsv")
 
 
 # ── base: psc ──────────────────────────────────────────────────────────────
 
 module kallisto_sleuth_old_base_psc:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_old_psc
     prefix: "rna_old/base_psc"
 
 module kallisto_sleuth_new_base_psc:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_new_psc
     prefix: "rna_new/base_psc"
 
@@ -101,21 +102,23 @@ use rule * from kallisto_sleuth_new_base_psc as rna_new_base_psc_*
 
 module kallisto_sleuth_old_base_endoderm:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_old_endoderm
     prefix: "rna_old/base_endoderm"
 
 module kallisto_sleuth_new_base_endoderm:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_new_endoderm
     prefix: "rna_new/base_endoderm"
 
@@ -127,21 +130,23 @@ use rule * from kallisto_sleuth_new_base_endoderm as rna_new_base_endoderm_*
 
 module kallisto_sleuth_old_base_mesoderm:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_old_mesoderm
     prefix: "rna_old/base_mesoderm"
 
 module kallisto_sleuth_new_base_mesoderm:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_new_mesoderm
     prefix: "rna_new/base_mesoderm"
 
@@ -153,21 +158,23 @@ use rule * from kallisto_sleuth_new_base_mesoderm as rna_new_base_mesoderm_*
 
 module kallisto_sleuth_old_base_ectoderm:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_old_ectoderm
     prefix: "rna_old/base_ectoderm"
 
 module kallisto_sleuth_new_base_ectoderm:
     snakefile:
-        github(
-            "snakemake-workflows/rna-seq-kallisto-sleuth",
-            path="workflow/Snakefile",
-            branch="lr-kallisto"
-        )
+        # github(
+        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
+        #     path="workflow/Snakefile",
+        #     branch="lr-kallisto"
+        # )
+        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: cfg_new_ectoderm
     prefix: "rna_new/base_ectoderm"
 

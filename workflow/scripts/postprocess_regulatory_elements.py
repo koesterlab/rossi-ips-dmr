@@ -1,5 +1,7 @@
-import pandas as pd
+import sys
+
 import numpy as np
+import pandas as pd
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 

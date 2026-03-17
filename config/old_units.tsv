@@ -1,9 +1,0 @@
-sample	unit	fragment_len_mean	fragment_len_sd	fq1	fq2	bam_single	bam_paired	fastp_adapters	fastp_extra
-mesoderm_26	1	NA	NA	resources/fastqs/SRR29898426.fastq.gz	NA	NA	NA	NA	NA
-ectoderm_27	1	NA	NA	resources/fastqs/SRR29898427.fastq.gz	NA	NA	NA	NA	NA
-endoderm_28	1	NA	NA	resources/fastqs/SRR29898428.fastq.gz	NA	NA	NA	NA	NA
-psc_29	1	NA	NA	resources/fastqs/SRR29898429.fastq.gz	NA	NA	NA	NA	NA
-mesoderm_30	1	NA	NA	resources/fastqs/SRR29898430.fastq.gz	NA	NA	NA	NA	NA
-ectoderm_31	1	NA	NA	resources/fastqs/SRR29898431.fastq.gz	NA	NA	NA	NA	NA
-endoderm_38	1	NA	NA	resources/fastqs/SRR29898438.fastq.gz	NA	NA	NA	NA	NA
-psc_39	1	NA	NA	resources/fastqs/SRR29898439.fastq.gz	NA	NA	NA	NA	NA
