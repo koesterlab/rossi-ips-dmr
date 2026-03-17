@@ -50,13 +50,12 @@ rule call_metilene:
         "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output.bed",
     conda:
         "../envs/metilene.yaml"
-    params:
-        base=lambda wildcards: wildcards.base,
+    threads: 4
     log:
         "logs/call_metilene/{platform}_{caller}_{base}_{group2}.log",
     shell:
         """
-        metilene -d 0.01 -t {threads} -c 2 -m 10 -a {wildcards.group2} -b {params.base} {input} > {output} 2> {log}
+        metilene -d 0.01 -t {threads} -c 2 -m 10 -a {wildcards.group2} -b {wildcards.base} {input} > {output} 2> {log}
         """
 
 
