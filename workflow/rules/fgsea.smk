@@ -84,13 +84,11 @@ rule fgsea_datavzrd:
             ),
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
-            category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory=lambda wildcards: "pathways no transcription factors",
+            category=lambda wildcards: f"DiffExp-DMRs Pathways - {wildcards.rna_data}",
+            subcategory=lambda wildcards: f"Base: {wildcards.base}",
             labels=lambda wildcards: {
-                "base": wildcards.base,
-                "rna_data": wildcards.rna_data,
-                "layer": wildcards.germ_layer,
-                "func": wildcards.func,
+                "comparison": wildcards.germ_layer,
+                "func": func_to_names[wildcards.func],
             },
         ),
     wildcard_constraints:

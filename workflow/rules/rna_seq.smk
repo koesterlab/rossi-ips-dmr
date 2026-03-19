@@ -192,12 +192,11 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory=f"Comparisons",
+            subcategory=f"No tfs",
 
             # subcategory=f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
-                "base": "{wildcards.base}",
-                "type": "no transcription factors",
+                "base": wildcards.base,
             },
         ),
     wildcard_constraints:
@@ -223,10 +222,9 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory= f"Comparisons",
+            subcategory= f"With tfs",
             labels=lambda wildcards: {
-                "base": "{wildcards.base}",
-                "type": "with transcription factors",
+                "base": wildcards.base,
             },
         ),
     wildcard_constraints:
@@ -235,3 +233,16 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd_with_tfs/{platform}_{caller}_{base}_{rna_data}_{annotation_type}.log",
     wrapper:
         "v9.2.0/utils/datavzrd"
+
+
+rule view_val_genes:
+    input:
+        config=workflow.source_path("../resources/val_genes.rds"),
+    output:
+        tsv="results/val_genes.tsv"
+    conda:
+        "../envs/enrichment.yaml"
+    log:
+        "logs/val_genes/val_genes.log",
+    script:
+        "../scripts/view_val_genes.R"

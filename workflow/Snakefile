@@ -39,7 +39,7 @@ inputflags:
     access.sequential
 
 
-def ks_config(base_level, samples_path, units_path):
+def ks_config(base_level, samples_path, units_path, report_category):
     """Build a kallisto-sleuth config dict with the given base_level.
 
     samples_path and units_path are resolved to absolute paths so that the
@@ -51,6 +51,7 @@ def ks_config(base_level, samples_path, units_path):
     # Deep-copy the diffexp block so mutations don't leak across module instances.
     cfg["diffexp"] = copy.deepcopy(config["kallisto_sleuth"]["diffexp"])
     cfg["diffexp"]["models"]["condition"]["base_level"] = base_level
+    cfg["report_category_prefix"] = report_category
     return cfg
 
 
@@ -60,14 +61,14 @@ def ks_config(base_level, samples_path, units_path):
 # call expression spans an implicit continuation and the following `prefix:`
 # keyword is mis-parsed as an unexpected de-indent.  Plain variable references
 # are safe.
-cfg_old_psc       = ks_config("psc",       "config/samples_old.tsv", "config/units_old.tsv")
-cfg_new_psc       = ks_config("psc",       "config/samples_new.tsv", "config/units_new.tsv")
-cfg_old_endoderm  = ks_config("endoderm",  "config/samples_old.tsv", "config/units_old.tsv")
-cfg_new_endoderm  = ks_config("endoderm",  "config/samples_new.tsv", "config/units_new.tsv")
-cfg_old_mesoderm  = ks_config("mesoderm",  "config/samples_old.tsv", "config/units_old.tsv")
-cfg_new_mesoderm  = ks_config("mesoderm",  "config/samples_new.tsv", "config/units_new.tsv")
-cfg_old_ectoderm  = ks_config("ectoderm",  "config/samples_old.tsv", "config/units_old.tsv")
-cfg_new_ectoderm  = ks_config("ectoderm",  "config/samples_new.tsv", "config/units_new.tsv")
+cfg_old_psc       = ks_config("psc",       "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_psc")
+cfg_new_psc       = ks_config("psc",       "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_psc")
+cfg_old_endoderm  = ks_config("endoderm",  "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_endoderm")
+cfg_new_endoderm  = ks_config("endoderm",  "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_endoderm")
+cfg_old_mesoderm  = ks_config("mesoderm",  "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_mesoderm")
+cfg_new_mesoderm  = ks_config("mesoderm",  "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_mesoderm")
+cfg_old_ectoderm  = ks_config("ectoderm",  "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_ectoderm")
+cfg_new_ectoderm  = ks_config("ectoderm",  "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_ectoderm")
 
 
 # ── base: psc ──────────────────────────────────────────────────────────────

@@ -37,13 +37,12 @@ rule scatter_plot_endo_meso:
         calls="results/{platform}/{caller}/meth_calling/calls.parquet",
     output:
         report(
-            "results/{platform}/{caller}/base_{base}/plots_paper/endo_meso/scatter_plot.png",
+            "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
                 "Plot": "1C",
-                "Base": wildcards.base,
                 "Type": "endo_meso",
             },
         ),
@@ -56,7 +55,7 @@ rule scatter_plot_endo_meso:
     conda:
         "../envs/python.yaml"
     log:
-        "logs/scatter_plot_endo_meso/{platform}_{caller}_{base}.log",
+        "logs/scatter_plot_endo_meso/{platform}_{caller}.log",
     script:
         "../scripts/scatter_plot.py"
 
@@ -66,13 +65,12 @@ rule pluripotency_score_all:
         "results/{platform}/{caller}/meth_calling/calls.parquet",
     output:
         report(
-            "results/{platform}/{caller}/base_{base}/plots_paper/pluripotency_score_all.html",
+            "results/{platform}/{caller}/plots_paper/pluripotency_score_all.html",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
             labels=lambda wildcards: {
                 "Plot": "3B",
-                "Base": wildcards.base,
                 "Type": "differentiated",
             },
         ),
@@ -81,6 +79,6 @@ rule pluripotency_score_all:
     resources:
         mem_mb=16000,
     log:
-        "logs/pluripotency_score_all/{platform}_{caller}_{base}.log",
+        "logs/pluripotency_score_all/{platform}_{caller}.log",
     script:
         "../scripts/pluripotency_score_all_heatmap.py"

@@ -134,7 +134,7 @@ def all_input(wildcards):
     # Endo-meso scatter plots – only relevant when neither endoderm nor mesoderm is the base
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/base_{base}/plots_paper/endo_meso/scatter_plot.png"
+            f"results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for base in get_base_experiments()
@@ -146,7 +146,7 @@ def all_input(wildcards):
     # kept scoped per base for consistency)
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/base_{base}/plots_paper/pluripotency_score_all.html"
+            f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for base in get_base_experiments()

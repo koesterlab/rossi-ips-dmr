@@ -178,10 +178,10 @@ rule datavzrd_annotations:
             caption="../report/annotations.rst",
             htmlindex="index.html",
             category="Annotated DMRs",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            # subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            subcategory=lambda wildcards: f"Base: {wildcards.base}",
             labels=lambda wildcards: {
-                "base": wildcards.base,
-                "layer": wildcards.group2,
+                "comparison": wildcards.group2,
             },
         ),
     params:
