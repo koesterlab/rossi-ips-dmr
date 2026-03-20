@@ -39,41 +39,7 @@ inputflags:
     access.sequential
 
 
-def ks_config(base_level, samples_path, units_path, report_category):
-    """Build a kallisto-sleuth config dict with the given base_level.
-
-    samples_path and units_path are resolved to absolute paths so that the
-    Snakemake module prefix (e.g. 'rna_old/base_psc') is not prepended to them.
-    """
-    cfg = dict(config["kallisto_sleuth"])
-    cfg["samples"] = samples_path
-    cfg["units"] = units_path
-    # Deep-copy the diffexp block so mutations don't leak across module instances.
-    cfg["diffexp"] = copy.deepcopy(config["kallisto_sleuth"]["diffexp"])
-    cfg["diffexp"]["models"]["condition"]["base_level"] = base_level
-    cfg["report_category_prefix"] = report_category
-    return cfg
-
-
-# Pre-compute all config dicts BEFORE any module block.
-# IMPORTANT: passing a function call directly after `config:` inside a module
-# block triggers an IndentationError in Snakemake 9.16's tokenizer because the
-# call expression spans an implicit continuation and the following `prefix:`
-# keyword is mis-parsed as an unexpected de-indent.  Plain variable references
-# are safe.
-cfg_old_psc       = ks_config("psc",       "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_psc")
-cfg_new_psc       = ks_config("psc",       "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_psc")
-cfg_old_endoderm  = ks_config("endoderm",  "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_endoderm")
-cfg_new_endoderm  = ks_config("endoderm",  "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_endoderm")
-cfg_old_mesoderm  = ks_config("mesoderm",  "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_mesoderm")
-cfg_new_mesoderm  = ks_config("mesoderm",  "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_mesoderm")
-cfg_old_ectoderm  = ks_config("ectoderm",  "config/samples_old.tsv", "config/units_old.tsv", "rna_old/base_ectoderm")
-cfg_new_ectoderm  = ks_config("ectoderm",  "config/samples_new.tsv", "config/units_new.tsv", "rna_new/base_ectoderm")
-
-
-# ── base: psc ──────────────────────────────────────────────────────────────
-
-module kallisto_sleuth_old_base_psc:
+module kallisto_sleuth:
     snakefile:
         # github(
         #     "snakemake-workflows/rna-seq-kallisto-sleuth",
@@ -81,106 +47,9 @@ module kallisto_sleuth_old_base_psc:
         #     branch="lr-kallisto"
         # )
         "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_old_psc
-    prefix: "rna_old/base_psc"
+    config: config["kallisto_sleuth"]
 
-module kallisto_sleuth_new_base_psc:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_new_psc
-    prefix: "rna_new/base_psc"
-
-use rule * from kallisto_sleuth_old_base_psc as rna_old_base_psc_*
-use rule * from kallisto_sleuth_new_base_psc as rna_new_base_psc_*
-
-
-# ── base: endoderm ─────────────────────────────────────────────────────────
-
-module kallisto_sleuth_old_base_endoderm:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_old_endoderm
-    prefix: "rna_old/base_endoderm"
-
-module kallisto_sleuth_new_base_endoderm:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_new_endoderm
-    prefix: "rna_new/base_endoderm"
-
-use rule * from kallisto_sleuth_old_base_endoderm as rna_old_base_endoderm_*
-use rule * from kallisto_sleuth_new_base_endoderm as rna_new_base_endoderm_*
-
-
-# ── base: mesoderm ─────────────────────────────────────────────────────────
-
-module kallisto_sleuth_old_base_mesoderm:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_old_mesoderm
-    prefix: "rna_old/base_mesoderm"
-
-module kallisto_sleuth_new_base_mesoderm:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_new_mesoderm
-    prefix: "rna_new/base_mesoderm"
-
-use rule * from kallisto_sleuth_old_base_mesoderm as rna_old_base_mesoderm_*
-use rule * from kallisto_sleuth_new_base_mesoderm as rna_new_base_mesoderm_*
-
-
-# ── base: ectoderm ─────────────────────────────────────────────────────────
-
-module kallisto_sleuth_old_base_ectoderm:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_old_ectoderm
-    prefix: "rna_old/base_ectoderm"
-
-module kallisto_sleuth_new_base_ectoderm:
-    snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
-    config: cfg_new_ectoderm
-    prefix: "rna_new/base_ectoderm"
-
-use rule * from kallisto_sleuth_old_base_ectoderm as rna_old_base_ectoderm_*
-use rule * from kallisto_sleuth_new_base_ectoderm as rna_new_base_ectoderm_*
+use rule * from kallisto_sleuth
 
 
 # ---------------------------------------------------------------------------
@@ -191,13 +60,4 @@ rule modified_all:
     default_target: True
     input:
         all_input,
-        # old RNA – all 4 base levels
-        rules.rna_old_base_psc_all.input,
-        rules.rna_old_base_endoderm_all.input,
-        rules.rna_old_base_mesoderm_all.input,
-        rules.rna_old_base_ectoderm_all.input,
-        # new RNA – all 4 base levels
-        rules.rna_new_base_psc_all.input,
-        rules.rna_new_base_endoderm_all.input,
-        rules.rna_new_base_mesoderm_all.input,
-        rules.rna_new_base_ectoderm_all.input,
+        rules.all.input,

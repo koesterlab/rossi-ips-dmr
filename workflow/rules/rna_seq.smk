@@ -1,6 +1,6 @@
 rule get_old_rna_seq_fastqs:
     output:
-        "rna_old/resources/fastqs/{accession}.fastq.gz",
+        "resources/rna_seq_old/fastqs/{accession}.fastq.gz",
     log:
         "logs/get_old_rna_seq_fastqs/{accession}.log",
     params:
@@ -9,49 +9,12 @@ rule get_old_rna_seq_fastqs:
     wrapper:
         "v7.6.0/bio/sra-tools/fasterq-dump"
 
-
-
-
-
-rule prepare_kallisto_sleuth:
-    input:
-        fastqs=expand(
-            "rna_{{rna_type}}/resources/fastqs/{accession}.fastq.gz",
-            accession=lambda wildcards: config[f"rna_accessions_{wildcards.rna_type}"].keys(),
-        ),
-    output:
-        samples="config/samples_{rna_type}.tsv",
-        units="config/units_{rna_type}.tsv",
-    conda:
-        "../envs/python.yaml"
-    log:
-        "logs/prepare_kallisto_sleuth_{rna_type}.log",
-    params:
-        types=lambda wildcards: config[f"rna_accessions_{wildcards.rna_type}"],
-    script:
-        "../scripts/prepare_kallisto_sleuth.py"
-
-rule copy_samples_and_units:
-    input:
-        samples="config/samples_{rna_type}.tsv",
-        units="config/units_{rna_type}.tsv",
-    output:
-        samples="{rna_data}/{base}/config/samples_{rna_type}.tsv",
-        units="{rna_data}/{base}/config/units_{rna_type}.tsv",
-    conda:
-        "../envs/python.yaml"
-    log:
-        "logs/copy_samples_units_{rna_data}_{base}_{rna_type}.log",
-    shell:
-        "cp {input.samples} {output.samples} && cp {input.units} {output.units}"
-
-
 rule unzip_rna_new:
     input:
-        "rna_new/KOLF_Trilineage_RNAseq.zip",
+        "resources/rna_seq_new/KOLF_Trilineage_RNAseq.zip",
     output:
         expand(
-            "rna_new/resources/fastqs/{barcode}",
+            "resources/rna_seq_new/bams/{barcode}",
             barcode=[
                 f"SQK-NBD114-24_barcode{str(i).zfill(2)}.bam" for i in range(1, 13)
             ],
@@ -67,9 +30,9 @@ rule unzip_rna_new:
 
 rule rna_bam_to_fastq_rna_new:
     input:
-        bam="rna_new/resources/fastqs/{sample}.bam",
+        bam="resources/rna_seq_new/bams/{sample}.bam",
     output:
-        fq="rna_new/resources/fastqs/{sample}.fastq.gz",
+        fq="resources/rna_seq_new/fastqs/{sample}.fastq.gz",
     conda:
         "../envs/samtools.yaml"
     log:
@@ -78,6 +41,44 @@ rule rna_bam_to_fastq_rna_new:
         """
         samtools fastq {input.bam} | gzip > {output.fq} 2> {log}
         """
+
+rule prepare_kallisto_sleuth:
+    input:
+        old_fastqs=expand(
+            "resources/rna_seq_old/fastqs/{accession}.fastq.gz",
+            accession=lambda wildcards: config[f"rna_accessions_old"].keys(),
+        ),
+        new_fastqs=expand(
+            "resources/rna_seq_new/fastqs/{accession}.fastq.gz",
+            accession=lambda wildcards: config[f"rna_accessions_new"].keys(),
+        ),
+    output:
+        samples="config/samples.tsv",
+        units="config/units.tsv",
+    conda:
+        "../envs/python.yaml"
+    params:
+        labels_old=lambda wildcards: config[f"rna_accessions_old"],
+        labels_new=lambda wildcards: config[f"rna_accessions_new"],
+    log:
+        "logs/prepare_kallisto_sleuth.log",
+    script:
+        "../scripts/prepare_kallisto_sleuth.py"
+
+# rule copy_samples_and_units:
+#     input:
+#         samples="config/samples_{rna_type}.tsv",
+#         units="config/units_{rna_type}.tsv",
+#     output:
+#         samples="{rna_data}/{base}/config/samples_{rna_type}.tsv",
+#         units="{rna_data}/{base}/config/units_{rna_type}.tsv",
+#     conda:
+#         "../envs/python.yaml"
+#     log:
+#         "logs/copy_samples_units_{rna_data}_{base}_{rna_type}.log",
+#     shell:
+#         "cp {input.samples} {output.samples} && cp {input.units} {output.units}"
+
 
 # We need to copy the fastqs from {rna_data}/resources/fastqs to {rna_data}/resources/fastqs
 # so that the kallisto-sleuth modules can find them. This problem occurs because
