@@ -59,5 +59,5 @@ use rule * from kallisto_sleuth
 rule modified_all:
     default_target: True
     input:
-        all_input,
+        # all_input,
         rules.all.input,

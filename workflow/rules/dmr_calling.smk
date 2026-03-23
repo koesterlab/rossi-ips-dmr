@@ -55,7 +55,7 @@ rule call_metilene:
         "logs/call_metilene/{platform}_{caller}_{base}_{group2}.log",
     shell:
         """
-        metilene -d 0.01 -t {threads} -c 2 -m 10 -a {wildcards.group2} -b {wildcards.base} {input} > {output} 2> {log}
+        metilene -d 0.01 -t {threads} -m 10 -a {wildcards.group2} -b {wildcards.base} {input} > {output} 2> {log}
         """
 
 
@@ -79,8 +79,6 @@ rule focus_dmrs:
         "../envs/bedtools.yaml"
     log:
         "logs/focus_dmrs/{platform}_{caller}_base_{base}_{germ_layer}.log",
-    params:
-        meth_threshold=config["meth_threshold"],
     script:
         "../scripts/focus_dmrs.py"
 

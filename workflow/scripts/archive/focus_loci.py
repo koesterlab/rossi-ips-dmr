@@ -1,8 +1,8 @@
 # Define (un)methylated and prob_present as in compute_precision_recall
 
-import pandas as pd
 import sys
 
+import pandas as pd
 
 # Redirect standard error to snakemake log file
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
@@ -12,8 +12,6 @@ sys.stderr = open(snakemake.log[0], "w", buffering=1)
 pd.set_option("display.max_columns", None)
 
 # Threshold for methylation (When do we say a site is methylated. 0 is bad since the truth (avg bedgraph) has nearly never meth rates of 0)
-methylation_threshold = snakemake.params["meth_threshold"]
-
 df = pd.read_parquet(snakemake.input, engine="pyarrow")
 
 lineages = ["psc", "ectoderm", "mesoderm", "endoderm"]

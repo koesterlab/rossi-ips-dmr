@@ -11,7 +11,7 @@ rule get_old_rna_seq_fastqs:
 
 rule unzip_rna_new:
     input:
-        "resources/rna_seq_new/KOLF_Trilineage_RNAseq.zip",
+        "resources/rna_seq_new/KOLF_Trilineage_RNAseq_new.zip",
     output:
         expand(
             "resources/rna_seq_new/bams/{barcode}",
@@ -24,6 +24,7 @@ rule unzip_rna_new:
     threads: 4
     shell:
         """
+        mkdir -p $(dirname {output[0]})
         UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE unzip -o {input} -d $(dirname {output[0]}) > {log} 2>&1
         """
 
@@ -39,6 +40,7 @@ rule rna_bam_to_fastq_rna_new:
         "logs/bam_to_fastq/{sample}.log",
     shell:
         """
+        mkdir -p $(dirname {output.fq})
         samtools fastq {input.bam} | gzip > {output.fq} 2> {log}
         """
 

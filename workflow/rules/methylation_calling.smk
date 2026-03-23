@@ -216,8 +216,6 @@ rule df_from_calls:
         mem_mb=64000,
     params:
         meth_caller=lambda wildcards: wildcards.caller,
-        prob_pres_threshhold=config["prob_pres_threshold"],
-        prob_abs_threshhold=config["prob_abs_threshold"],
         alpha=config["alpha"],
     script:
         "../scripts/df_from_calls.py"

@@ -52,11 +52,7 @@ sample_path: "config/alignment_samples.tsv"
 ref_sample: "psc"
 
 # Define threshhold for false positive cutoff
-prob_pres_threshold: 0.95
-prob_abs_threshold: 0.95
 alpha: 1.0
-# Define the minimum percantage  of methylation to be considered as a methylated site
-meth_threshold: 5
 
 fgsea:
     # gene set enrichment analysis (GSEA)
@@ -168,7 +164,7 @@ kallisto_sleuth:
         labels:
             # Columns of sample sheet to use for coloring samples in the PCA plots.
             # For each column, a separate set of PCA plots will be generated.
-            - condition
+            - label
 
     scatter:
         # diagnostic all-vs-all pairwise scatter plots:
@@ -192,67 +188,68 @@ kallisto_sleuth:
         # specify at least one such contrast, but you can also specify multiple
         # models.
         models:
+            # The last mentioned cell type is the primary variable
             ecto_vs_psc_old:
                 full: ~ectoderm_vs_psc_old
                 reduced: ~1
                 primary_variable: ectoderm_vs_psc_old
-                base_level: psc
+                base_level: "-"
             endo_vs_psc_old:
                 full: ~endoderm_vs_psc_old
                 reduced: ~1
                 primary_variable: endoderm_vs_psc_old
-                base_level: psc
+                base_level: "-"
             meso_vs_psc_old:
                 full: ~mesoderm_vs_psc_old
                 reduced: ~1
                 primary_variable: mesoderm_vs_psc_old
-                base_level: psc
+                base_level: "-"
             ecto_vs_endo_old:
                 full: ~ectoderm_vs_endoderm_old
                 reduced: ~1
                 primary_variable: ectoderm_vs_endoderm_old
-                base_level: endoderm
+                base_level: "-"
             ecto_vs_meso_old:
                 full: ~ectoderm_vs_mesoderm_old
                 reduced: ~1
                 primary_variable: ectoderm_vs_mesoderm_old
-                base_level: mesoderm
+                base_level: "-"
             meso_vs_endo_old:
                 full: ~mesoderm_vs_endoderm_old
                 reduced: ~1
                 primary_variable: mesoderm_vs_endoderm_old
-                base_level: endoderm
+                base_level: "-"
 
             ecto_vs_psc_new:
                 full: ~ectoderm_vs_psc_new
                 reduced: ~1
                 primary_variable: ectoderm_vs_psc_new
-                base_level: psc
+                base_level: "-"
             endo_vs_psc_new:
                 full: ~endoderm_vs_psc_new
                 reduced: ~1
                 primary_variable: endoderm_vs_psc_new
-                base_level: psc
+                base_level: "-"
             meso_vs_psc_new:
                 full: ~mesoderm_vs_psc_new
                 reduced: ~1
                 primary_variable: mesoderm_vs_psc_new
-                base_level: psc
+                base_level: "-"
             ecto_vs_endo_new:
                 full: ~ectoderm_vs_endoderm_new
                 reduced: ~1
                 primary_variable: ectoderm_vs_endoderm_new
-                base_level: endoderm
+                base_level: "-"
             ecto_vs_meso_new:
                 full: ~ectoderm_vs_mesoderm_new
                 reduced: ~1
                 primary_variable: ectoderm_vs_mesoderm_new
-                base_level: mesoderm
+                base_level: "-"
             meso_vs_endo_new:
                 full: ~mesoderm_vs_endoderm_new
                 reduced: ~1
                 primary_variable: mesoderm_vs_endoderm_new
-                base_level: endoderm
+                base_level: "-"
         # significance levels to use for volcano, ma- and qq-plots
         sig-level:
             volcano-plot: 0.05
@@ -388,7 +385,7 @@ kallisto_sleuth:
         # maximum number of bootstrap plots to generate, i.e. top n discoveries to plot
         top_n: 20
         # sample sheet column to use for determining sample colors
-        color_by: condition
+        color_by: label
         # for now, this will plot the sleuth-normalised kallisto count estimations with kallisto
         # for all the transcripts of the respective genes
 
