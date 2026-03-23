@@ -11,7 +11,7 @@ rule get_old_rna_seq_fastqs:
 
 rule unzip_rna_new:
     input:
-        "resources/rna_seq_new/KOLF_Trilineage_RNAseq_new.zip",
+        "resources/rna_seq_new/KOLF_Trilineage_RNAseq.zip",
     output:
         expand(
             "resources/rna_seq_new/bams/{barcode}",
@@ -109,13 +109,29 @@ rule prepare_kallisto_sleuth:
 #   rna_new/base_{base}/results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv
 
 
+def compute_diffexp_tables(wildcards, directive):
+    computed_diffexp = config["kallisto_sleuth"]["diffexp"]["models"].keys()
+    results = []
+    # Remove the trailing "derm" from every cell_type
+    for cell_type in get_non_base_layers(wildcards.base):
+        cell_type = cell_type.replace("derm", "")
+        rna_type = wildcards.rna_data.replace("rna_", "")
+        print(f"{cell_type}_vs_{wildcards.base.replace("derm", "")}_{rna_type}")
+        if f"{cell_type}_vs_{wildcards.base.replace("derm", "")}_{rna_type}" in computed_diffexp:
+            print(1)
+            results.append(f"results/tables/diffexp/{cell_type}_vs_{wildcards.base.replace("derm", "")}_{rna_type}.genes-representative.diffexp_postprocessed.tsv") if directive == "input" else results.append(1)
+        else:
+            print(2)
+
+            results.append(f"results/tables/diffexp/{wildcards.base.replace("derm", "")}_vs_{cell_type}_{rna_type}.genes-representative.diffexp_postprocessed.tsv") if directive == "input" else results.append(-1)
+    print(results)
+    return results
+
+
+
 rule compare_dmr_to_diffexp_no_tfs:
     input:
-        diffexp=lambda wildcards: (
-            f"{wildcards.rna_data}/base_{wildcards.base}"
-            "/results/tables/diffexp/"
-            "condition.genes-representative.diffexp_postprocessed.tsv"
-        ),
+        diffexp = lambda wildcards: compute_diffexp_tables(wildcards, "input"),
         # For a given base, ChIPseeker annotations exist for the 3 non-base layers.
         layer1=lambda wildcards: (
             "results/{platform}/{caller}/base_{base}/dmr_calls/"
@@ -135,14 +151,15 @@ rule compare_dmr_to_diffexp_no_tfs:
     output:
         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
         html="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.html",
-    wildcard_constraints:
-        # rna_data is strictly rna_old or rna_new – no slashes
-        rna_data="rna_old|rna_new",
+    # wildcard_constraints:
+    #     # rna_data is strictly rna_old or rna_new – no slashes
+    #     rna_data="old|new",
     conda:
         "../envs/python.yaml"
     params:
         annotation_type=lambda wildcards: wildcards.annotation_type,
         base=lambda wildcards: wildcards.base,
+        diffexp_base_signs = lambda wildcards: compute_diffexp_tables(wildcards, "params"),
         # Pass the three non-base layer names so the script can label them
         # and look up the correct diffexp columns dynamically.
         non_base_layers=lambda wildcards: get_non_base_layers(wildcards.base),
