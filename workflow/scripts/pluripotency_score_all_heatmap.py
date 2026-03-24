@@ -1,4 +1,5 @@
 import sys
+from this import s
 
 import altair as alt
 import pandas as pd
@@ -163,6 +164,7 @@ long_df = filtered_df.melt(
     value_name="methylation",
 ).assign(layer=lambda x: x["layer"].map(METHYLATION_COLS))
 
+long_df["methylation"] = long_df["methylation"] / 100
 print("Long format data:")
 print(long_df)
 print("\n")
@@ -216,19 +218,33 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
     print(score_per_layer)
     print("\n")
 
+    # Add score_per_layer to biomarker_df for display
+    biomarker_df["layer_score"] = biomarker_df["layer"].map(score_per_layer)
+
     # Create visualization
     chart = (
         alt.Chart(biomarker_df)
-        .mark_point(size=100)
+        .mark_point(size=150)
         .encode(
-            x=alt.X("methylation:Q", title="Methylation"),
+            x=alt.X(
+                "methylation:Q", title="Methylation", scale=alt.Scale(domain=[0, 1])
+            ),
             y=alt.Y("type:N", title="Selection set"),
             color=alt.Color("layer:N", title="Germ Layer"),
+            tooltip=["methylation:Q", "layer:N", "type:N", "layer_score:Q"],
         )
         .properties(
-            title=f"Methylation Scores by Layer - {biomarker_name}",
-            width=100,
-            height=150,
+            title=alt.TitleParams(
+                text=f"Biomarker: {biomarker_name}",
+                subtitle=", ".join(
+                    [
+                        f"{layer}: {score:.2f}"
+                        for layer, score in score_per_layer.items()
+                    ]
+                ),
+            ),
+            width=400,
+            height=250,
         )
     )
     charts.append(chart)
