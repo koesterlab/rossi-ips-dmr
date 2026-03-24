@@ -75,8 +75,8 @@ def all_input(wildcards):
             for caller in config["meth_caller"].get(platform, [])
             for base in get_base_experiments()
             for rna_data in get_rna_data_values()
-            for tf in ["no"]
-            # for tf in ["no", "with"]
+            # for tf in ["no"]
+            for tf in ["no", "with"]
             for annotation_type in [
                 "promoter",
             ]

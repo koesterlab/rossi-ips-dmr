@@ -195,7 +195,9 @@ def plot_df(common_df: pl.DataFrame):
     qval_slider = alt.param(
         name="qval_min",
         value=0.05,
-        bind=alt.binding_range(min=0, max=1, step=0.01, name="max qval: "),
+        bind=alt.binding_range(
+            min=0, max=1, step=0.01, name="min(qval_dmr, qval_diffexp): "
+        ),
     )
 
     color = alt.condition(
