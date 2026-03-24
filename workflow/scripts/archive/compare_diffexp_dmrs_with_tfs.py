@@ -183,7 +183,6 @@ comparison_with_tf = (
             "ranked_meth_diffexp",
         ]
     )
-    .rename({"mean_methylation_difference": "mean_methylation_difference_original"})
     .with_row_count("row_id")
 )
 

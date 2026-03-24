@@ -37,7 +37,8 @@ def read_dmrs(path: str, layer: str) -> pl.DataFrame:
             null_values="NA",
         )
         .with_columns(pl.lit(layer).alias("germ_layer"))
-        .filter(pl.col("annotation_type") == annotation_type)
+        # Do not filter here since we want also information for validating Jochen genes
+        # .filter(pl.col("annotation_type") == annotation_type)
         .select(
             "ext_gene",
             "transcriptId",
@@ -260,7 +261,7 @@ if __name__ == "__main__":
     )
 
     find_val_genes(diffexp_df, dmrs_df)
-
+    dmrs_df = dmrs_df.filter(pl.col("annotation_type") == annotation_type)
     common_df = merge_diffexp_dmr(diffexp_df, dmrs_df)
 
     plot_df(common_df)

@@ -1,5 +1,5 @@
-import polars as pl
 import altair as alt
+import polars as pl
 
 pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(300)
@@ -183,7 +183,6 @@ comparison_with_tf = (
             "ranked_meth_diffexp",
         ]
     )
-    .rename({"mean_methylation_difference": "mean_methylation_difference_original"})
     .with_row_count("row_id")
 )
 
