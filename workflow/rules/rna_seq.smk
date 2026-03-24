@@ -116,15 +116,10 @@ def compute_diffexp_tables(wildcards, directive):
     for cell_type in get_non_base_layers(wildcards.base):
         cell_type = cell_type.replace("derm", "")
         rna_type = wildcards.rna_data.replace("rna_", "")
-        print(f"{cell_type}_vs_{wildcards.base.replace("derm", "")}_{rna_type}")
         if f"{cell_type}_vs_{wildcards.base.replace("derm", "")}_{rna_type}" in computed_diffexp:
-            print(1)
             results.append(f"results/tables/diffexp/{cell_type}_vs_{wildcards.base.replace("derm", "")}_{rna_type}.genes-representative.diffexp_postprocessed.tsv") if directive == "input" else results.append(1)
         else:
-            print(2)
-
             results.append(f"results/tables/diffexp/{wildcards.base.replace("derm", "")}_vs_{cell_type}_{rna_type}.genes-representative.diffexp_postprocessed.tsv") if directive == "input" else results.append(-1)
-    print(results)
     return results
 
 
@@ -148,9 +143,11 @@ rule compare_dmr_to_diffexp_no_tfs:
             + get_non_base_layers(wildcards.base)[2]
             + "/genes_transcripts/chipseeker_postprocessed.tsv"
         ).format(**wildcards),
+        val_genes="resources/rna_seq/val_genes.tsv",
     output:
         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
         html="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.html",
+        val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",
     # wildcard_constraints:
     #     # rna_data is strictly rna_old or rna_new – no slashes
     #     rna_data="old|new",
@@ -204,6 +201,7 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
     input:
         config=workflow.source_path("../resources/dmr_vs_diffexp_no_tfs.yaml"),
         table="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
+        val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",
     output:
         report(
             directory(
@@ -259,10 +257,23 @@ rule view_val_genes:
     input:
         config=workflow.source_path("../resources/val_genes.rds"),
     output:
-        tsv="results/val_genes.tsv"
+        tsv="resources/rna_seq/val_genes.tsv"
     conda:
         "../envs/enrichment.yaml"
     log:
         "logs/val_genes/val_genes.log",
     script:
         "../scripts/view_val_genes.R"
+
+# rule val_genes_table:
+#     input:
+#         "results/val_genes.tsv",
+#         "results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv"
+#     output:
+#         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv"
+#     conda:
+#         "../envs/python.yaml"
+#     log:
+#         "logs/val_genes/val_genes_{platform}_{caller}_{base}_{rna_data}_{annotation_type}.log",
+#     script:
+#         "../scripts/filter_val_genes.py"

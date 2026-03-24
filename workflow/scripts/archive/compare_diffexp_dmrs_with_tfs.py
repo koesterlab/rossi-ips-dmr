@@ -1,267 +1,168 @@
-import polars as pl
 import altair as alt
+import polars as pl
 
-# Polars Anzeigeoptionen
-pl.Config.set_tbl_rows(500)
+pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(300)
 
-# Mapping für Annotation Types
-filename_to_name = {
-    "distal_intergenic": "Distal Intergenic",
-    "promoter": "Promoter",
-    "intron": "Intron",
-    "exon": "Exon",
-    "3_utr": "3' UTR",
-    "5_utr": "5' UTR",
-    "downstream": "Downstream",
-}
-annotation_type = filename_to_name.get(snakemake.params.get("annotation_type", None))
 
-
-# Read DMRs
-def read_dmrs(path: str, layer: str) -> pl.DataFrame:
-    return (
-        pl.read_csv(
-            path,
-            separator="\t",
-            schema_overrides={"chr": pl.Utf8},
-            null_values="NA",
-        )
-        .with_columns(pl.lit(layer).alias("germ_layer"))
-        .filter(pl.col("annotation_type") == annotation_type)
-        .group_by(["ext_gene", "germ_layer"])
-        .agg(
-            [
-                pl.mean("mean_methylation_difference"),
-                pl.mean("qval"),
-                pl.mean("absolute_signed_pi_val"),
-            ]
-        )
-        .select(
-            [
-                "ext_gene",
-                "mean_methylation_difference",
-                "qval",
-                "germ_layer",
-                "absolute_signed_pi_val",
-            ]
-        )
+def plot(df, effect_col, gene_col, output_path):
+    layer_select = alt.selection_point(
+        fields=["germ_layer"], bind="legend", name="Germ Layer"
     )
-
-
-# Differential-Expression Daten
-diffexp_df = (
-    pl.read_csv(snakemake.input.diffexp, separator="\t", null_values="NA")
-    .rename({"qval": "qval_diffexp"})
-    .select(
-        [
-            "ext_gene",
-            "ens_gene",
-            "b_conditionectoderm",
-            "b_conditionectoderm_se",
-            "b_conditionendoderm",
-            "b_conditionendoderm_se",
-            "b_conditionmesoderm",
-            "b_conditionmesoderm_se",
-            "qval_diffexp",
-        ]
-    )
-)
-
-
-# --- TF DMR Aggregation ---
-def tf_dmr_sum(tf_path: str, dmrs_df: pl.DataFrame, layer: str) -> pl.DataFrame:
-    tf_df = (
-        pl.read_csv(tf_path, separator=",")
-        .rename(
-            {
-                "TFs": "TF_list",
-                "target": "ext_gene",
-            }
-        )
-        .with_columns(pl.col("TF_list").str.split(", ").alias("TF"))
-        .explode("TF")  # put each TF in its own row
-        .join(
-            dmrs_df,  # join with dmr dataset to get methylation differences per ext_gene
-            on="ext_gene",
-            how="right",
-        )
-    )
-    # Join another time to get methylation differences per TF. The TF corresponds to the original ext_gene. We do not find a value for each transcription factor, since the TFs are from the diffexp and we merge with DMRs here.
-    tf_dmr = tf_df.join(
-        dmrs_df.select(
-            pl.col("ext_gene").alias("TF"),
-            pl.col("mean_methylation_difference").alias(
-                "mean_methylation_difference_TF"
-            ),
+    color = alt.condition(
+        layer_select,
+        alt.Color(
+            "germ_layer:N",
+            title="Germ Layer",
+            scale=alt.Scale(scheme="category10"),
         ),
-        on="TF",
-        how="left",
+        alt.value("lightgray"),
     )
 
-    # Now aggregate per target gene. The mean_methylation_difference_TF is the summed value of all DMRs associated with TFs targeting that gene.
-    return tf_dmr.group_by("ext_gene").agg(
-        [
-            pl.sum("mean_methylation_difference_TF").alias("dmr_sum_TFs"),
-            pl.first("qval").alias("qval"),
-            pl.first("absolute_signed_pi_val").alias("mean_absolute_signed_pi_val"),
-            pl.first("germ_layer").alias("germ_layer"),
-            pl.first("mean_methylation_difference"),
-        ]
+    chart = (
+        alt.Chart(df.to_pandas())
+        .mark_point(filled=True)
+        .encode(
+            x="diffexp:Q",
+            y=f"{effect_col}:Q",
+            size=alt.Size(
+                "qval_combined:Q",
+                title="max(qval1, qval2)",
+                scale=alt.Scale(range=[30, 1]),
+            ),
+            tooltip=[
+                f"{gene_col}",
+                "diffexp",
+                # "mean_methylation_difference",
+                "qval_combined",
+                "qval_diffexp",
+                "qval_dmr",
+            ],
+            color=color,
+            opacity=alt.Opacity(
+                "qval_combined:Q",
+                scale=alt.Scale(range=[1, 0.1]),
+                title="max(qval1, qval2)",
+            ),
+        )
+        .add_params(layer_select)
     )
 
-
-# DMR files per germ layer
-ectoderm_df = read_dmrs(snakemake.input.ectoderm, "ectoderm")
-endoderm_df = read_dmrs(snakemake.input.endoderm, "endoderm")
-mesoderm_df = read_dmrs(snakemake.input.mesoderm, "mesoderm")
-
-# taget genes with their TFs
-ectoderm_tfs = snakemake.input.ectoderm_tfs
-endoderm_tfs = snakemake.input.endoderm_tfs
-mesoderm_tfs = snakemake.input.mesoderm_tfs
-
-ectoderm_dmr_sum_from_tfs = tf_dmr_sum(ectoderm_tfs, ectoderm_df, "ectoderm")
-endoderm_dmr_sum_from_tfs = tf_dmr_sum(endoderm_tfs, endoderm_df, "endoderm")
-mesoderm_dmr_sum_from_tfs = tf_dmr_sum(mesoderm_tfs, mesoderm_df, "mesoderm")
+    chart.save(output_path)
 
 
-# Concat the DMRs from all germ layers
-dmrs_df = (
-    pl.concat(
-        [
-            ectoderm_dmr_sum_from_tfs,
-            endoderm_dmr_sum_from_tfs,
-            mesoderm_dmr_sum_from_tfs,
-        ]
-    )
-    .unique()
-    .rename({"qval": "qval_dmr"})
-    .select(
-        [
-            "ext_gene",
-            "mean_methylation_difference",
-            "dmr_sum_TFs",
-            "qval_dmr",
-            "germ_layer",
-        ]
-    )
-    .group_by("ext_gene", "germ_layer")
-    .agg(
-        [
-            pl.mean("mean_methylation_difference"),
-            pl.mean("qval_dmr"),
-            pl.sum("dmr_sum_TFs"),
-        ]
-    )
+# DMR and Diffexp information of all genes
+comparison_df = pl.read_csv(snakemake.input.comp, separator="\t", null_values="NA")
+
+# Transcription factors with target genes
+tf_df = pl.read_csv(snakemake.input.tf_list, separator=",", null_values="NA")
+
+###################### Plot only transcription factors #####################
+
+# The merge ext_gene and source to get all transcription factors of our analysis. We get a new target column, but not all targets are in the comparison df, therefore not every tf has an incfluence. This table gets quite big since every tf can have multiple targets and everz target becomes a new row.
+tf_df = comparison_df.join(
+    tf_df,
+    left_on="ext_gene",
+    right_on="source",
+    how="inner",
+).rename({"ext_gene": "tfs"})
+
+# Keep only rows where the target gene is in the comparison df. This way we lose all targets not included in the diffexp/dmr analysis.
+ext_genes = comparison_df.select(pl.col("ext_gene").unique()).to_series().to_list()
+tf_df = tf_df.filter(pl.col("target").is_in(ext_genes))
+# plot(tf_df, "mean_methylation_difference", "tfs", snakemake.output[0])
+
+
+# We often have multiple DMRs per transcription factor. To sum over all DMRs influencing a target gene, we first need to aggregate the DMRs per tf
+tf_df = tf_df.group_by("tfs", "germ_layer", "target", "weight").agg(
+    pl.col("mean_methylation_difference").mean(),
+    pl.col("qval_dmr").max(),
+    pl.col("pval_dmr").max(),
+)
+tf_df.write_csv(snakemake.output["focus_tfs"], separator="\t")
+
+
+# Compute the sum of mean methylation differences of all influencing tfs per target gene and germ layer
+tf_effects_per_target = tf_df.group_by("target", "germ_layer").agg(
+    (pl.col("weight") * pl.col("mean_methylation_difference"))
+    # (pl.col("mean_methylation_difference"))
+    .sum()
+    .alias("tf_sum_mean_methylation_difference"),
+    pl.col("tfs").unique().sort().str.join(","),
 )
 
 
-common_df = diffexp_df.join(dmrs_df, on="ext_gene", how="inner").filter(
-    (
-        pl.col("mean_methylation_difference").is_not_null()
-        | pl.col("dmr_sum_TFs").is_not_null()
-    )
-    & pl.col("qval_diffexp").is_not_null()
-    & pl.col("qval_dmr").is_not_null()
+# Merge comparison df with TF target info
+comparison_with_tf = comparison_df.join(
+    tf_effects_per_target,
+    left_on=["ext_gene", "germ_layer"],
+    right_on=["target", "germ_layer"],
+    how="left",
 )
 
-# Combine q-values
-common_df = common_df.with_columns(
-    (pl.max_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr"))).alias(
-        "qval_combined"
-    )
+# Choose the sum if the target is influenced by tfs, otherwise keep the original mean methylation difference
+comparison_with_tf = comparison_with_tf.with_columns(
+    pl.when(pl.col("tf_sum_mean_methylation_difference").is_not_null())
+    .then(pl.col("tf_sum_mean_methylation_difference"))
+    .otherwise(pl.col("mean_methylation_difference"))
+    .alias("mean_methylation_difference_tf_adjusted")
+).with_columns(
+    pl.col("tf_sum_mean_methylation_difference").is_not_null().alias("is_tf_target")
 )
 
-# Choose diffexp columns based on germ layer
-common_df = (
-    common_df.with_columns(
-        pl.when(pl.col("germ_layer") == "ectoderm")
-        .then(pl.col("b_conditionectoderm"))
-        .when(pl.col("germ_layer") == "endoderm")
-        .then(pl.col("b_conditionendoderm"))
-        .when(pl.col("germ_layer") == "mesoderm")
-        .then(pl.col("b_conditionmesoderm"))
-        .otherwise(None)
-        .alias("diffexp")
+diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = comparison_with_tf.select(
+    pl.col("diffexp").min().alias("x_min"),
+    pl.col("diffexp").max().alias("x_max"),
+    pl.col("mean_methylation_difference_tf_adjusted").min().alias("y_min"),
+    pl.col("mean_methylation_difference_tf_adjusted").max().alias("y_max"),
+).row(0)
+(
+    diffexp_min,
+    diffexp_max,
+) = -max(abs(diffexp_min), abs(diffexp_max)), max(abs(diffexp_min), abs(diffexp_max))
+(meth_diff_min, meth_diff_max) = (
+    -max(abs(meth_diff_min), abs(meth_diff_max)),
+    max(abs(meth_diff_min), abs(meth_diff_max)),
+)
+meth_diff_max_scaled, meth_diff_min_scaled = (
+    meth_diff_max * diffexp_max,
+    meth_diff_min * diffexp_max,
+)
+
+max_dist = ((diffexp_max) ** 2 + meth_diff_max_scaled**2) ** 0.5
+
+
+###################### Prepare for datavzrd #####################
+comparison_with_tf = (
+    comparison_with_tf.with_columns(
+        (pl.col("mean_methylation_difference_tf_adjusted") * diffexp_max).alias(
+            "mean_methylation_difference_scaled"
+        )
     )
     .with_columns(
-        pl.when(pl.col("germ_layer") == "ectoderm")
-        .then(pl.col("b_conditionectoderm_se"))
-        .when(pl.col("germ_layer") == "endoderm")
-        .then(pl.col("b_conditionendoderm_se"))
-        .when(pl.col("germ_layer") == "mesoderm")
-        .then(pl.col("b_conditionmesoderm_se"))
-        .otherwise(None)
-        .alias("diffexp_se")
+        (
+            (
+                (pl.col("diffexp") - diffexp_min) ** 2
+                + (pl.col("mean_methylation_difference_scaled") - meth_diff_max_scaled)
+                ** 2
+            ).sqrt()
+        ).alias("dist_top_left"),
+        (
+            (
+                (pl.col("diffexp") - diffexp_max) ** 2
+                + (pl.col("mean_methylation_difference_scaled") - meth_diff_min_scaled)
+                ** 2
+            ).sqrt()
+        ).alias("dist_bottom_right"),
     )
-    .filter(pl.col("diffexp").is_not_null())
-)
-
-# If we have a DMR sum from TFs, use that as methylation difference, otherwise use the mean methylation difference of the gene itself
-common_df = common_df.with_columns(
-    pl.when(pl.col("dmr_sum_TFs").is_not_null() & (pl.col("dmr_sum_TFs") != 0))
-    .then(pl.col("dmr_sum_TFs"))
-    .otherwise(pl.col("mean_methylation_difference"))
-    .alias("meth_difference_per_gene")
-)
-
-
-layer_select = alt.selection_point(
-    fields=["germ_layer"], bind="legend", name="Germ Layer"
-)
-
-color = alt.condition(
-    layer_select,
-    alt.Color(
-        "germ_layer:N",
-        title="Germ Layer",
-        scale=alt.Scale(scheme="category10"),
-    ),
-    alt.value("lightgray"),
-)
-
-chart = (
-    alt.Chart(common_df.to_pandas())
-    .mark_point(filled=True)
-    .encode(
-        x="diffexp:Q",
-        y="meth_difference_per_gene:Q",
-        size=alt.Size(
-            "qval_combined:Q",
-            title="max(qval1, qval2)",
-            scale=alt.Scale(range=[30, 1]),
-        ),
-        tooltip=[
-            "ext_gene",
-            "diffexp",
-            "meth_difference_per_gene",
-            "qval_combined",
-            "qval_diffexp",
-            "qval_dmr",
-        ],
-        color=color,
-        opacity=alt.Opacity(
-            "qval_combined:Q",
-            scale=alt.Scale(range=[1, 0.1]),
-            title="max(qval1, qval2)",
-        ),
+    .with_columns(
+        pl.when(pl.col("dist_top_left") < pl.col("dist_bottom_right"))
+        .then(max_dist - pl.col("dist_top_left"))
+        .otherwise(-max_dist + pl.col("dist_bottom_right"))
+        .alias("ranked_meth_diffexp")
     )
-    .add_params(layer_select)
-)
-
-chart.save(snakemake.output[0])
-
-
-# --- Optional: export table ---
-common_df = (
-    # common_df.filter(pl.col("qval_combined") <= 0.5)
-    common_df.with_columns(
-        (pl.col("meth_difference_per_gene") * pl.col("diffexp")).alias(
-            "dmr_sum_x_diffexp"
-        )
-    )
-    .sort("dmr_sum_x_diffexp", descending=False)
+    .sort(pl.col("ranked_meth_diffexp").abs(), descending=True)
+    # .sort("methylation_diff_x_diffexp", descending=False)
     .select(
         [
             "ext_gene",
@@ -269,14 +170,31 @@ common_df = (
             "germ_layer",
             "qval_diffexp",
             "qval_dmr",
+            "qval_combined",
+            "pval_dmr",
+            "pval_diffexp",
             "diffexp",
             "diffexp_se",
             "mean_methylation_difference",
+            "mean_methylation_difference_tf_adjusted",
+            "tfs",
+            "is_tf_target",
             # "methylation_diff_x_diffexp",
-            "dmr_sum_x_diffexp",
+            "ranked_meth_diffexp",
         ]
     )
+    .rename({"mean_methylation_difference": "mean_methylation_difference_original"})
+    .with_row_count("row_id")
 )
 
-
-common_df.write_csv(snakemake.output[1], separator="\t")
+plot(
+    comparison_with_tf,
+    "mean_methylation_difference_tf_adjusted",
+    "ext_gene",
+    snakemake.output["plot"],
+)
+# Are there any inf or NA values in the qval_combined column?
+comparison_with_tf = comparison_with_tf.with_columns(
+    pl.col("qval_combined").fill_null(1.0).fill_nan(1.0)
+)
+comparison_with_tf.write_csv(snakemake.output["comp_tf_adj"], separator="\t")

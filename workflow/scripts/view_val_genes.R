@@ -1,19 +1,22 @@
 #!/usr/bin/env Rscript
+log <- file(snakemake@log[[1]], open = "wt")
+sink(log)
+sink(log, type = "message")
 
-# Read command line arguments
-args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) < 2) {
-  stop("Usage: Rscript view_val_genes.R <input.rds> <output.tsv>")
-}
-
-input_file <- args[1]
-output_file <- args[2]
+input_file <- snakemake@input[[1]]
+output_file <- snakemake@output[[1]]
 
 # Read RDS file
 data <- readRDS(input_file)
 
+print(data)
+print(typeof(data))
+
+# Convert character vector to data frame with column name 'gene_id'
+data_df <- data.frame(ext_gene = data, stringsAsFactors = FALSE)
+
 # Write to TSV
-write.table(data, file = output_file, sep = "\t", quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(data_df, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 
 cat("Successfully wrote validation genes to", output_file, "\n")
