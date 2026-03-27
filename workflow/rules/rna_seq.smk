@@ -147,6 +147,7 @@ rule compare_dmr_to_diffexp_no_tfs:
     output:
         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
         html="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.html",
+        # We create a common val_genes file for all annotation_types
         val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",
     # wildcard_constraints:
     #     # rna_data is strictly rna_old or rna_new – no slashes
@@ -259,7 +260,7 @@ rule view_val_genes:
     output:
         tsv="resources/rna_seq/val_genes.tsv"
     conda:
-        "../envs/enrichment.yaml"
+        "../envs/human_annotation.yaml"
     log:
         "logs/val_genes/val_genes.log",
     script:

@@ -113,7 +113,7 @@ def all_input(wildcards):
     # datavzrd annotation reports – one per base × non-base group
     wanted_input.extend(
         [
-            f"results/{platform}/{caller}/base_{base}/datavzrd-report/{group2}"
+            f"results/{platform}/{caller}/base_{base}/dmr_calls/datavzrd-report/{group2}"
             for platform in config["meth_caller"].keys()
             for caller in config["meth_caller"].get(platform, [])
             for base in get_base_experiments()

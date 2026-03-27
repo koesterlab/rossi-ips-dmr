@@ -73,6 +73,7 @@ rule fgsea_dmr_vs_diffexp:
         "../scripts/fgsea.R"
 
 
+
 rule fgsea_datavzrd:
     input:
         config=workflow.source_path("../resources/fgsea.yaml"),
@@ -96,4 +97,4 @@ rule fgsea_datavzrd:
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{base}_{rna_data}_{germ_layer}_{annotation_type}_{func}.log",
     wrapper:
-        "641c90c4da86d4acf2022f347f3c8017334c0f44/utils/datavzrd"
+        "v9.4.1/utils/datavzrd"
