@@ -66,55 +66,29 @@ rule compute_meth_observations:
         """
 
 
-# rule call_methylation_single:
-# input:
-#     varlo_path="resources/tools/varlociraptor",
-#     preprocess_obs="results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
-#     scenario="resources/scenario.yaml",
-# output:
-#     "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
-# conda:
-#     "../envs/varlociraptor.yaml"
-# shell:
-#     """
-#     cd {input.varlo_path}
-#     cargo run --release -- call variants --omit-strand-bias generic --scenario {input.scenario} --obs normal={input.preprocess_obs} > {output}
-#     """
-
-
-# rule call_methylation_together:
-#     input:
-#         varlo_path="resources/tools/varlociraptor",
-#         pb_psc="results/pacbio/varlo/meth_calling/psc/normal_{scatteritem}.bcf",
-#         pb_ecto="results/pacbio/varlo/meth_calling/ectoderm/normal_{scatteritem}.bcf",
-#         pb_endo="results/pacbio/varlo/meth_calling/endoderm/normal_{scatteritem}.bcf",
-#         pb_meso="results/pacbio/varlo/meth_calling/mesoderm/normal_{scatteritem}.bcf",
-#         np_psc="results/nanopore/varlo/meth_calling/psc/normal_{scatteritem}.bcf",
-#         np_ecto="results/nanopore/varlo/meth_calling/ectoderm/normal_{scatteritem}.bcf",
-#         np_endo="results/nanopore/varlo/meth_calling/endoderm/normal_{scatteritem}.bcf",
-#         np_meso="results/nanopore/varlo/meth_calling/mesoderm/normal_{scatteritem}.bcf",
-#         scenario="resources/scenario.yaml",
-#     output:
-#         "results/platforms_combined/varlo/meth_calling/cell_lines_combined/calls_{scatteritem}.bcf",
-#     conda:
-#         "../envs/varlociraptor.yaml"
-#     log:
-#         "logs/compute_meth_together_{scatteritem}.log",
-#     resources:
-#         mem_mb=128000,
-#     shell:
-#         """
-#         cd {input.varlo_path}
-#         cargo run --release -- call variants --omit-strand-bias generic --scenario {input.scenario} \
-#             --obs psc_pacbio={input.pb_psc} meso_pacbio={input.pb_meso} endo_pacbio={input.pb_endo} ecto_pacbio={input.pb_ecto} \
-#             psc_nanopore={input.np_psc} meso_nanopore={input.np_meso} endo_nanopore={input.np_endo} ecto_nanopore={input.np_ecto}  > {output} 2> {log}
-#         """
+rule call_methylation_single:
+    input:
+        varlo_path="resources/tools/varlociraptor",
+        preprocess_obs="results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
+        scenario=workflow.source_path("../resources/scenarios/scenario.yaml"),
+    output:
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
+    conda:
+        "../envs/varlociraptor.yaml"
+    wildcard_constraints:
+        platform="(pacbio|nanopore)",
+    log:
+        "results/call_methylation_single/{platform}_{sample}_{scatteritem}.log",
+    shell:
+        """
+            varlociraptor call variants generic --scenario {input.scenario} --obs normal={input.preprocess_obs} > {output} 2> {log}
+        """
 
 rule call_methylation:
     input:
         pb="results/pacbio/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
         np="results/nanopore/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
-        scenario="resources/scenarios/scenario_common.yaml",
+        scenario=workflow.source_path("../resources/scenarios/scenario_common.yaml"),
     output:
         "results/platforms_combined/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     conda:
@@ -128,6 +102,7 @@ rule call_methylation:
         varlociraptor call variants generic --scenario {input.scenario} \
             --obs pacbio={input.pb}  nanopore={input.np}   > {output} 2> {log}
         """
+
 
 
 

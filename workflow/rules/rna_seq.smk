@@ -7,11 +7,11 @@ rule get_old_rna_seq_fastqs:
         extra="--skip-technical",
     threads: 6
     wrapper:
-        "v7.6.0/bio/sra-tools/fasterq-dump"
+        "v9.4.0/bio/sra-tools/fasterq-dump"
 
 rule unzip_rna_new:
     input:
-        "resources/rna_seq_new/KOLF_Trilineage_RNAseq.zip",
+        "resources/rna_seq_new/KOLF_Trilineage_RNAseq_new.zip",
     output:
         expand(
             "resources/rna_seq_new/bams/{barcode}",

@@ -1,6 +1,6 @@
 meth_caller:
-    # pacbio: [varlo]
-    # nanopore: [varlo]
+    pacbio: [varlo]
+    nanopore: [varlo]
     platforms_combined: [varlo]
 
 rna_accessions_old:
@@ -44,15 +44,8 @@ resources:
 #
 scatter_items: 100
 
-# platforms: [pacbio, nanopore]
-platforms: [platforms_combined]
-
-# platforms: []
 # Path of the sample file
 sample_path: "config/alignment_samples.tsv"
-
-# Name of base experiment
-ref_sample: "psc"
 
 # Define threshhold for false positive cutoff
 alpha: 1.0

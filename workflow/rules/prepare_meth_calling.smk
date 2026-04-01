@@ -7,10 +7,10 @@ rule download_varlociraptor:
         "logs/download_varlociraptor.log",
     shell:
         """
-        PARENT_DIR=$(dirname {output})        
-        mkdir -p $PARENT_DIR        
+        PARENT_DIR=$(dirname {output})
+        mkdir -p $PARENT_DIR
         cd $PARENT_DIR
-        git clone git@github.com:varlociraptor/varlociraptor.git varlociraptor
+        git clone git@github.com:varlociraptor/varlociraptor.git
         cd varlociraptor
         git checkout methylation-paired-end
         """
