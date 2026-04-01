@@ -252,3 +252,8 @@ views:
               color-scheme: category10
         synonyms:
           display-mode: detail
+          spell:
+            url: https://raw.githubusercontent.com/Addimator/separated-links-spell/c86c060be05adba629f7c22f0260de0f6edcbe77/stats/separated-links/spell.yaml
+            with:
+              separator: ","
+              url_template: "https://www.genecards.org/cgi-bin/carddisp.pl?gene=${value}"

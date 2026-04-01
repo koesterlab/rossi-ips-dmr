@@ -1,5 +1,4 @@
 import sys
-from this import s
 
 import altair as alt
 import pandas as pd
