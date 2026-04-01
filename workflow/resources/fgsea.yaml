@@ -3,6 +3,7 @@ __use_yte__: true
 max-in-memory-rows: 5000
 
 name: Gene set enrichment on genes differentially expressed and associated to DMRs
+
 datasets:
   diffexp_vs_dmrs:
     path: ?input.comp
@@ -12,48 +13,33 @@ views:
   diffexp_vs_dmrs:
     dataset: diffexp_vs_dmrs
     desc: |
-      Gene set enrichment analysis was performed using fgsea on genes that are both differentially expressed and associated with differentially methylated regions (DMRs). fgsea requires a ranked list of genes, which we constructed by combining expression and methylation information. Specifically, genes were ranked using the product of the mean methylation difference and the l2fc from the differential expression analysis. 
+      Gene set enrichment analysis was performed using fgsea on genes that are both differentially expressed and associated with differentially methylated regions (DMRs). fgsea requires a ranked list of genes, which we constructed by combining expression and methylation information. Specifically, genes were ranked using the product of the mean methylation difference and the l2fc from the differential expression analysis.
       Because we were primarily interested in genes showing concordant regulation—namely hypermethylation with downregulation and hypomethylation with upregulation—genes displaying the opposite pattern were down-weighted by multiplying their ranking score by a factor of 0.5. Finally, ranks were sign-adjusted so that hypomethylated genes received negative values, ensuring a consistent ordering of genes for the enrichment analysis.
     render-table:
       columns:
-        pval:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#a1d99b"
-                - "#fdae6b"
-        padj:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#a1d99b"
-                - "#fdae6b"
-
-        log2err:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#a1d99b"
-                - "#fdae6b"
-        ES:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#a1d99b"
-                - "#fdae6b"
-        NES:
-          plot:
-            heatmap:
-              scale: linear
-        size:
-          plot:
-            heatmap:
-              scale: linear
-        GO_term:
+        pathway:
           link-to-url:
             geneontology:
-              url: https://www.ebi.ac.uk/QuickGO/GTerm?id={GO_term}
+              url: https://www.gsea-msigdb.org/gsea/msigdb/cards/{pathway}
+        GO_term:
+          display-mode: hidden
+        pval:
+          spell:
+            url: v1.5.1/stats/p-value
+            with:
+              significance_threshold: 0.05
+        padj:
+          spell:
+            url: v1.5.1/stats/p-value
+            with:
+              significance_threshold: 0.05
+        leading_edge_ens_gene:
+          display-mode: hidden
+        leading_edge_entrez_id:
+          display-mode: hidden
+        leadingEdge:
+          spell:
+            url: https://raw.githubusercontent.com/Addimator/separated-links-spell/c86c060be05adba629f7c22f0260de0f6edcbe77/stats/separated-links/spell.yaml
+            with:
+              separator: ","
+              url_template: "https://www.genecards.org/cgi-bin/carddisp.pl?gene=${value}"

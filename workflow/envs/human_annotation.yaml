@@ -1,0 +1,9 @@
+name: r-env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base>=4.2
+  - bioconductor-org.hs.eg.db
+  - bioconductor-annotationdbi

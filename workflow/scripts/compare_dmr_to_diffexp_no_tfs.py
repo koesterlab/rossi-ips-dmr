@@ -1,4 +1,5 @@
 import sys
+from re import RegexFlag
 from unittest.main import main
 
 import altair as alt
@@ -7,7 +8,7 @@ import polars as pl
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
 pl.Config.set_tbl_rows(10000000)
-pl.Config.set_tbl_cols(30)
+pl.Config.set_tbl_cols(10000000)
 
 
 filename_to_name = {
@@ -61,7 +62,6 @@ def read_dmrs(path: str, layer: str) -> pl.DataFrame:
             }
         )
     )
-    print(df, file=sys.stderr)
 
     return df
 
@@ -129,19 +129,53 @@ def read_diffexp(path: str, layer: str, sign: int) -> pl.DataFrame:
 
 
 def find_val_genes(diffexp_df: pl.DataFrame, dmrs_df: pl.DataFrame) -> pl.DataFrame:
+    # 1) val_genes: val_gene, synonyms
     val_genes = pl.read_csv(
         snakemake.input["val_genes"], separator="\t", null_values="NA"
     )
-    print(diffexp_df.filter(pl.col("ext_gene") == "FEZF1"))
-    print(dmrs_df.filter(pl.col("ext_gene") == "FEZF1"))
+
+    # 2) diffexp + dmr zusammenführen
     common_df = diffexp_df.join(dmrs_df, on="ext_gene", how="outer")
     common_df = common_df.with_columns(
         pl.coalesce("ext_gene", "ext_gene_right").alias("ext_gene"),
         pl.coalesce("germ_layer", "germ_layer_right").alias("germ_layer"),
     ).drop("ext_gene_right", "germ_layer_right")
-    print(common_df.filter(pl.col("ext_gene") == "FEZF1"))
 
-    result = val_genes.join(common_df, on="ext_gene", how="left").select(
+    # 3) Match-Tabelle: welche val_gene-Sätze passen zu welchem ext_gene?
+    matches = (
+        val_genes.join(common_df, how="cross")
+        .filter(
+            # ext_gene kommt als Ganzwort in der Synonymliste vor
+            (pl.col("synonyms") != "")
+            & pl.col("synonyms").str.contains(
+                pl.concat_str([pl.lit(r"(^|,)"), pl.col("ext_gene"), pl.lit(r"(,|$)")])
+            )
+        )
+        .select(
+            "val_gene",  # Original-Wunschgen
+            "synonyms",  # gesamte Synonymliste
+            "ext_gene",  # tatsächlich gefundener Hit in den DMR/DE-Daten
+            "qval_diffexp",
+            "pval_diffexp",
+            "diffexp",
+            "diffexp_se",
+            "qval_dmr",
+            "pval_dmr",
+            "mean_methylation_difference",
+            "germ_layer",
+            "annotation_type",
+        )
+    )
+
+    # 4) Optional: auch val_genes ohne Treffer behalten (mit NA in ext_gene/Stats)
+    #    Wenn du das willst:
+    result = val_genes.join(
+        matches,
+        on=["val_gene", "synonyms"],
+        how="left",
+    ).select(
+        "val_gene",
+        "synonyms",
         "ext_gene",
         "qval_diffexp",
         "pval_diffexp",
@@ -150,14 +184,10 @@ def find_val_genes(diffexp_df: pl.DataFrame, dmrs_df: pl.DataFrame) -> pl.DataFr
         "qval_dmr",
         "pval_dmr",
         "mean_methylation_difference",
-        # "absolute_signed_pi_val",
         "germ_layer",
-        # "annotation_type",
+        "annotation_type",
     )
 
-    # Write output
-    #  WidBk?
-    #
     result.write_csv(snakemake.output["val_genes"], separator="\t")
 
 

@@ -1,5 +1,4 @@
 import sys
-from this import s
 
 import altair as alt
 import pandas as pd
@@ -151,14 +150,14 @@ filtered_df = df[df["position_pair"].isin(biomarker_pairs)].copy()
 
 # Merge biomarker metadata
 filtered_df = filtered_df.merge(
-    BIOMARKER_POSITIONS[["chromosome", "position", "direction", "biomarker"]],
+    BIOMARKER_POSITIONS[["chromosome", "position", "direction", "biomarker", "cg_id"]],
     on=["chromosome", "position"],
     how="left",
 )
 
 # Reshape to long format
 long_df = filtered_df.melt(
-    id_vars=["chromosome", "position", "direction", "biomarker"],
+    id_vars=["chromosome", "position", "direction", "biomarker", "cg_id"],
     value_vars=list(METHYLATION_COLS.keys()),
     var_name="layer",
     value_name="methylation",
@@ -209,29 +208,24 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
         axis=1,
     )
 
-    # Print statistics
-    print(f"Biomarker: {biomarker_name}")
-    print(biomarker_df)
-
     score_per_layer = biomarker_df.groupby("layer")["adjusted_methylation"].sum()
-    print(f"Score per layer (sum of adjusted methylation):")
-    print(score_per_layer)
-    print("\n")
 
     # Add score_per_layer to biomarker_df for display
     biomarker_df["layer_score"] = biomarker_df["layer"].map(score_per_layer)
-
+    print("Biomarker_df with layer scores:")
+    print(biomarker_df)
+    print("\n")
     # Create visualization
     chart = (
         alt.Chart(biomarker_df)
-        .mark_point(size=150)
+        .mark_point(size=100, filled=True)
         .encode(
             x=alt.X(
                 "methylation:Q", title="Methylation", scale=alt.Scale(domain=[0, 1])
             ),
             y=alt.Y("type:N", title="Selection set"),
             color=alt.Color("layer:N", title="Germ Layer"),
-            tooltip=["methylation:Q", "layer:N", "type:N", "layer_score:Q"],
+            tooltip=["methylation:Q", "layer:N", "type:N", "layer_score:Q", "cg_id:N"],
         )
         .properties(
             title=alt.TitleParams(
@@ -243,8 +237,8 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
                     ]
                 ),
             ),
-            width=400,
-            height=250,
+            width=200,
+            height=150,
         )
     )
     charts.append(chart)
