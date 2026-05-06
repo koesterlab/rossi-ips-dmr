@@ -225,7 +225,7 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
             ),
             y=alt.Y("type:N", title="Selection set"),
             color=alt.Color("layer:N", title="Germ Layer"),
-            tooltip=["methylation:Q", "layer:N", "type:N", "layer_score:Q", "cg_id:N"],
+            tooltip=[alt.Tooltip("methylation:Q", format=".2f"), "layer:N", "cg_id:N"],
         )
         .properties(
             title=alt.TitleParams(

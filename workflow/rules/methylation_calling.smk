@@ -68,7 +68,6 @@ rule compute_meth_observations:
 
 rule call_methylation_single:
     input:
-        varlo_path="resources/tools/varlociraptor",
         preprocess_obs="results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
         scenario=workflow.source_path("../resources/scenarios/scenario.yaml"),
     output:
@@ -156,6 +155,18 @@ rule gather_calls:
         """
         bcftools concat  {input} -o {output} 2> {log}
         """
+
+rule prepare_wasabi:
+    input:
+        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
+    output:
+        "results/wasabi/{platform}_{sample}.tsv.gz",
+    conda:
+        "../envs/pysam.yaml"
+    log:
+        "logs/varlociraptor/prepare_wasabi/{platform}_{sample}.log"
+    script:
+        "../scripts/bcf_to_wasabi_tsv.py"
 
 
 rule index_varlo_bcf:

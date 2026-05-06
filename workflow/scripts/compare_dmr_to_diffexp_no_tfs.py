@@ -166,7 +166,6 @@ def find_val_genes(diffexp_df: pl.DataFrame, dmrs_df: pl.DataFrame) -> pl.DataFr
             "annotation_type",
         )
     )
-
     # 4) Optional: auch val_genes ohne Treffer behalten (mit NA in ext_gene/Stats)
     #    Wenn du das willst:
     result = val_genes.join(
