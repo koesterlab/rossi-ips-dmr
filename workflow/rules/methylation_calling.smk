@@ -31,18 +31,18 @@ rule split_candidates:
         "rbt vcf-split {input} {output} 2> {log}"
 
 
-# We want to extract only the important reads from the bam file. Since the candidates span more than one chromosome we cant just use the normal samtools view -b
-rule candidates_to_bed:
-    input:
-        "resources/candidates/candidates_{scatteritem}.bcf",
-    output:
-        "resources/candidates/candidates_{scatteritem}.bed",
-    log:
-        "logs/varlociraptor/candidates_to_bed/{scatteritem}.log",
-    conda:
-        "../envs/pysam.yaml"
-    script:
-        "../scripts/candidates_to_bed.py"
+# # We want to extract only the important reads from the bam file. Since the candidates span more than one chromosome we cant just use the normal samtools view -b
+# rule candidates_to_bed:
+#     input:
+#         "resources/candidates/candidates_{scatteritem}.bcf",
+    # output:
+#         "resources/candidates/candidates_{scatteritem}.bed",
+#     log:
+#         "logs/varlociraptor/candidates_to_bed/{scatteritem}.log",
+#     conda:
+#         "../envs/pysam.yaml"
+#     script:
+#         "../scripts/candidates_to_bed.py"
 
 
 rule compute_meth_observations:
@@ -180,6 +180,7 @@ rule index_varlo_bcf:
         """
         bcftools index -c {input}
         """
+
 
 rule df_from_calls:
     input:
