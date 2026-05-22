@@ -30,7 +30,7 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                 continue
 
             sample_afs = []
-            sample_dps = []
+            # sample_dps = []
             sample_bias = "normal"
 
             for sample in record.samples.values():
@@ -51,14 +51,13 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                     if bias != "normal":
                         sample_bias = bias
                     sample_afs.append(af * 100)
-                    sample_dps.append(dp)
+                    # sample_dps.append(dp)
                 except Exception:
                     pass
 
             meth_rate = sum(sample_afs) / len(sample_afs) if sample_afs else 0
 
             info = record.info
-            alpha = float(snakemake.params["alpha"])
 
             def phred_to_prob(score):
                 return 10 ** (-float(score) / 10)
@@ -76,9 +75,6 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
             prob_absent = phred_to_prob(info["PROB_ABSENT"][0])
             prob_artifact = phred_to_prob(info["PROB_ARTIFACT"][0])
             prob_identified = max(prob_present, prob_absent + prob_artifact)
-
-            if prob_identified < (1 - alpha):
-                continue
 
             df.append([chrom, position, meth_rate, sample_bias, prob_identified])
 

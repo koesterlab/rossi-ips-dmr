@@ -47,8 +47,9 @@ scatter_items: 100
 # Path of the sample file
 sample_path: "config/alignment_samples.tsv"
 
-# Define threshhold for false positive cutoff
-alpha: 1.0
+# Define threshold for Varlociraptor's FDR control for PROB_ABSENT and PROB_PRESENT
+fdr_absent: 0.05
+fdr_present: 0.05
 
 fgsea:
     # gene set enrichment analysis (GSEA)
