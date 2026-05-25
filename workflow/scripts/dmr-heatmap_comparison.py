@@ -69,8 +69,6 @@ for input_files in [pacbio_input_files, nanopore_input_files]:
     # heatmap_data = heatmap_data.dropna()
 
     name = os.path.basename(output).replace(".png", "")
-    annotation_type = filename_to_name[name]
-    # df_filtered = heatmap_data[heatmap_data["annotation_type"] == annotation_type]
     df_filtered = heatmap_data[sample_names + ["region"]]
     df_filtered = df_filtered.replace([np.inf, -np.inf], np.nan)
     dfs.append(df_filtered)

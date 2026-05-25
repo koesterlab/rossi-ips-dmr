@@ -76,6 +76,9 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
             prob_artifact = phred_to_prob(info["PROB_ARTIFACT"][0])
             prob_identified = max(prob_present, prob_absent + prob_artifact)
 
+            if prob_identified < 0:
+                continue
+
             df.append([chrom, position, meth_rate, sample_bias, prob_identified])
 
     elif meth_caller == "modkit":
