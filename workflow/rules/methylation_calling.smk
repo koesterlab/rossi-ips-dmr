@@ -179,11 +179,11 @@ rule gather_calls:
         bcftools concat  {input} -o {output} 2> {log}
         """
 
-rule prepare_wasabi:
+rule prepare_wsabi:
     input:
         "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
     output:
-        "results/wasabi/{platform}_{sample}.tsv.gz",
+        "results/wsabi/{platform}_{sample}.tsv.gz",
     conda:
         "../envs/pysam.yaml"
     log:
