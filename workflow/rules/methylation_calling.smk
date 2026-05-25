@@ -189,7 +189,7 @@ rule prepare_wasabi:
     log:
         "logs/varlociraptor/prepare_wasabi/{platform}_{sample}.log"
     script:
-        "../scripts/bcf_to_wasabi_tsv.py"
+        "../scripts/bcf_to_wsabi_tsv.py"
 
 
 rule index_bcf:

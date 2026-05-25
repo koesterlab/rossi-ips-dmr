@@ -37,20 +37,19 @@ while (class(mart)[[1]] != "Mart") {
             dataset = paste0(snakemake@params[["species"]], "_gene_ensembl"),
             mirror = mart
           )
-        }, timeout = 60, onTimeout = "error")
+        }, timeout = 600, onTimeout = "error")
 
     },
     error = function(e) {
-      if (rounds >= 3) {
+      if (rounds >= 5) {
         stop(paste("All Ensembl mirrors tried,", rounds, "rounds. No success. Last error:", e$message))
       }
       mart <- switch(mart,
-        useast = "uswest",
-        uswest = "asia",
-        asia = "www",
-        www = {
-          Sys.sleep(30)
-          "useast"
+        useast = "useast",
+        asia   = "asia",
+        www    = {
+          Sys.sleep(100) # Wartezeit erhöhen, damit der Server sich beruhigt
+          "www"
         }
       )
     }

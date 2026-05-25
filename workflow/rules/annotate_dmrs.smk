@@ -122,6 +122,9 @@ rule get_ensembl_gene_names_from_dmrs:
         version=config["resources"]["ref"]["release"],
     log:
         "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{base}_{group2}.log",
+    # Use unrealistc high memory to avoid parallel computation since ensembl then detects DOS attacks
+    resources:
+        mem_mb=16000,
     script:
         "../scripts/get_ensembl_genes.R"
 
