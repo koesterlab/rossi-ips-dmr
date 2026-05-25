@@ -1,3 +1,5 @@
+import sys
+
 import polars as pl
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)

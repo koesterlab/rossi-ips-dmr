@@ -82,3 +82,51 @@ rule pluripotency_score_all:
         "logs/pluripotency_score_all/{platform}_{caller}.log",
     script:
         "../scripts/pluripotency_score_all_heatmap.py"
+
+rule compute_own_biomarker:
+    input:
+        nanopore="results/nanopore/{caller}/meth_calling/calls.parquet",
+        pacbio="results/pacbio/{caller}/meth_calling/calls.parquet",
+    output:
+        "results/platforms_combined/{caller}/plots_paper/own_biomarker.txt"
+    resources:
+        mem_mb=16000,
+    conda:
+        "../envs/python.yaml"
+    log:
+        "logs/compute_own_biomarker/{caller}.log",
+    script:
+        "../scripts/compute_own_biomarker.py"
+
+
+rule dmr_heatmap_comparison:
+    input:
+        pacbio = lambda wildcards: expand(
+            "results/pacbio/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+            group2=get_non_base_layers(wildcards.base),
+        ),
+        nanopore = lambda wildcards: expand(
+            "results/nanopore/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+            group2=get_non_base_layers(wildcards.base),
+        ),
+    output:
+        report(
+            "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.png",
+            caption="../report/heatmap.rst",
+            category="DMR plots",
+            subcategory=lambda wildcards: f"Heatmaps: {wildcards.platform} - {wildcards.caller}",
+            labels=lambda wildcards: {
+                "base": wildcards.base,
+                "genetic element": wildcards.type,
+            },
+        ),
+    conda:
+        "../envs/plot.yaml"
+    log:
+        "logs/dmr_heatmap/comparison.log",
+    resources:
+        mem_mb=16000,
+    params:
+        base = lambda wildcards: wildcards.base
+    script:
+        "../scripts/dmr-heatmap_comparison.py"
