@@ -238,7 +238,7 @@ views:
                 }
     val_genes:
         dataset: val_genes
-        desc: "Diffexp and DMR values for genes validated by Jochen. Empty values mean no DMR or diffexp value available. Sometimes on genes occurs multiple times for a single germ layer since we found multiple DMRs for the same gene."
+        desc: "Diffexp and DMR values for genes validated by Jochen. Empty values mean no DMR or diffexp value available. Sometimes a gene occurs multiple times for a single germ layer since we found multiple DMRs for the same gene."
         render-table:
             columns:
                 qval_diffexp:

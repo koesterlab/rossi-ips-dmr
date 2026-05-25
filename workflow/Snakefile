@@ -24,6 +24,8 @@ include: "rules/rna_seq.smk"
 include: "rules/methylation_calling.smk"
 include: "rules/annotate_dmrs.smk"
 include: "rules/fgsea.smk"
+include: "rules/compute_biomarker.smk"
+
 
 # ---------------------------------------------------------------------------
 # Kallisto-sleuth modules – one pair (old + new RNA data) per base experiment.

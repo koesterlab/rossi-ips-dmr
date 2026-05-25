@@ -239,7 +239,6 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
                     domain=list(LAYER_COLORS.keys()), range=list(LAYER_COLORS.values())
                 ),
             ),
-            tooltip=["methylation:Q", "layer:N", "type:N", "layer_score:Q", "cg_id:N"],
         )
         .properties(
             title=alt.TitleParams(

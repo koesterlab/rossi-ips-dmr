@@ -31,18 +31,18 @@ rule split_candidates:
         "rbt vcf-split {input} {output} 2> {log}"
 
 
-# We want to extract only the important reads from the bam file. Since the candidates span more than one chromosome we cant just use the normal samtools view -b
-rule candidates_to_bed:
-    input:
-        "resources/candidates/candidates_{scatteritem}.bcf",
-    output:
-        "resources/candidates/candidates_{scatteritem}.bed",
-    log:
-        "logs/varlociraptor/candidates_to_bed/{scatteritem}.log",
-    conda:
-        "../envs/pysam.yaml"
-    script:
-        "../scripts/candidates_to_bed.py"
+# # We want to extract only the important reads from the bam file. Since the candidates span more than one chromosome we cant just use the normal samtools view -b
+# rule candidates_to_bed:
+#     input:
+#         "resources/candidates/candidates_{scatteritem}.bcf",
+    # output:
+#         "resources/candidates/candidates_{scatteritem}.bed",
+#     log:
+#         "logs/varlociraptor/candidates_to_bed/{scatteritem}.log",
+#     conda:
+#         "../envs/pysam.yaml"
+#     script:
+#         "../scripts/candidates_to_bed.py"
 
 
 rule compute_meth_observations:
@@ -68,7 +68,6 @@ rule compute_meth_observations:
 
 rule call_methylation_single:
     input:
-        varlo_path="resources/tools/varlociraptor",
         preprocess_obs="results/{platform}/varlo/meth_calling/{sample}/normal_{scatteritem}.bcf",
         scenario=workflow.source_path("../resources/scenarios/scenario.yaml"),
     output:
@@ -103,31 +102,54 @@ rule call_methylation:
             --obs pacbio={input.pb}  nanopore={input.np}   > {output} 2> {log}
         """
 
+rule filter_prob_absent:
+    input:
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
+    output:
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent.bcf",
+    conda:
+        "../envs/varlociraptor.yaml"
+    params:
+        event="ABSENT",
+        fdr=config["fdr_absent"]
+    log:
+        "logs/varlociraptor/filter_prob_absent/{platform}_{sample}_{scatteritem}.log",
+    shell:
+        "varlociraptor filter-calls control-fdr --mode local-smart {input} --events {params.event} --fdr {params.fdr} > {output} 2> {log}"
 
+rule filter_prob_present:
+    input:
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
+    output:
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present.bcf",
+    conda:
+        "../envs/varlociraptor.yaml"
+    params:
+        event="PRESENT",
+        fdr=config["fdr_present"]
+    log:
+        "logs/varlociraptor/filter_prob_present/{platform}_{sample}_{scatteritem}.log",
+    shell:
+        "varlociraptor filter-calls control-fdr --mode local-smart {input} --events {params.event} --fdr {params.fdr} > {output} 2> {log}"
 
+rule concatenate_filtered_calls:
+    input:
+        absent="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent.bcf",
+        absent_index="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent.bcf.csi",
+        present="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present.bcf",
+        present_index="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present.bcf.csi",
+    output:
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
+    log:
+        "logs/varlociraptor/concatenate_filtered_calls/{platform}_{sample}_{scatteritem}.log",
+    shell:
+        "bcftools concat -a {input.absent} {input.present} -o {output} 2> {log}"
 
-# # TODO: Reactivate, right now it deletes too much data
-# rule filter_calls:
-#     input:
-#         calls="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
-#         varlo_path="resources/tools/varlociraptor",
-#     output:
-#         "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
-#     conda:
-#         "../envs/varlociraptor.yaml"
-#     params:
-#         event="PRESENT",
-#     shell:
-#         """
-#         PIPELINE_PATH=$(pwd)
-#         cd {input.varlo_path}
-#         cargo run --release -- filter-calls control-fdr --mode local-smart {input.calls} --events {params.event} --fdr 1 > {output}
-#         """
 
 
 rule calls_to_vcf:
     input:
-        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
     output:
         "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.vcf",
     conda:
@@ -144,7 +166,7 @@ rule calls_to_vcf:
 rule gather_calls:
     input:
         gather.split_candidates(
-            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.bcf"
+            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.filtered.bcf"
         ),
     output:
         "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
@@ -157,18 +179,31 @@ rule gather_calls:
         bcftools concat  {input} -o {output} 2> {log}
         """
 
-
-rule index_varlo_bcf:
+rule prepare_wasabi:
     input:
-        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf"
+        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf.csi"
+        "results/wasabi/{platform}_{sample}.tsv.gz",
+    conda:
+        "../envs/pysam.yaml"
+    log:
+        "logs/varlociraptor/prepare_wasabi/{platform}_{sample}.log"
+    script:
+        "../scripts/bcf_to_wasabi_tsv.py"
+
+
+rule index_bcf:
+    input:
+        "{bcf}.bcf"
+    output:
+        "{bcf}.bcf.csi"
     conda:
         "../envs/samtools.yaml"
     shell:
         """
         bcftools index -c {input}
         """
+
 
 rule df_from_calls:
     input:
@@ -191,6 +226,5 @@ rule df_from_calls:
         mem_mb=64000,
     params:
         meth_caller=lambda wildcards: wildcards.caller,
-        alpha=config["alpha"],
     script:
         "../scripts/df_from_calls.py"

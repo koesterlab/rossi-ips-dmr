@@ -211,7 +211,7 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory=f"No tfs",
+            subcategory=lambda wildcards: f"{wildcards.platform} - No tfs",
 
             # subcategory=f"{wildcards.annotation_type}",
             labels=lambda wildcards: {
@@ -241,7 +241,7 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
             caption="../report/diffexp_vs_dmrs.rst",
             htmlindex="index.html",
             category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory= f"With tfs",
+            subcategory=lambda wildcards: f"{wildcards.platform} - With tfs",
             labels=lambda wildcards: {
                 "base": wildcards.base,
             },

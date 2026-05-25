@@ -30,7 +30,7 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                 continue
 
             sample_afs = []
-            sample_dps = []
+            # sample_dps = []
             sample_bias = "normal"
 
             for sample in record.samples.values():
@@ -42,19 +42,22 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                             for v in sample.values()
                         ]
                     )
-                    bias = compute_bias([v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in sample.values()])
+                    bias = compute_bias(
+                        [
+                            v[0] if isinstance(v, tuple) and len(v) == 1 else v
+                            for v in sample.values()
+                        ]
+                    )
                     if bias != "normal":
                         sample_bias = bias
                     sample_afs.append(af * 100)
-                    sample_dps.append(dp)
+                    # sample_dps.append(dp)
                 except Exception:
                     pass
 
             meth_rate = sum(sample_afs) / len(sample_afs) if sample_afs else 0
-            coverage = sum(sample_dps) / len(sample_dps) if sample_dps else 0
 
             info = record.info
-            alpha = float(snakemake.params["alpha"])
 
             def phred_to_prob(score):
                 return 10 ** (-float(score) / 10)
@@ -73,25 +76,18 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
             prob_artifact = phred_to_prob(info["PROB_ARTIFACT"][0])
             prob_identified = max(prob_present, prob_absent + prob_artifact)
 
-            if prob_identified < (1 - alpha):
-                continue
-
-            df.append(
-                [chrom, position, meth_rate, coverage, sample_bias, prob_identified]
-            )
+            df.append([chrom, position, meth_rate, sample_bias, prob_identified])
 
     elif meth_caller == "modkit":
         chrom = parts[0].removeprefix("chr")
         position = int(parts[2])
         details = parts[9].split()
-        coverage = int(details[0])
         meth_rate = float(details[1])
         df.append(
             [
                 chrom,
                 position,
                 meth_rate,
-                coverage,
                 "normal",
                 0,
             ]
@@ -100,13 +96,11 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
         chrom = parts[0]
         position = int(parts[2])
         meth_rate = float(parts[3])
-        coverage = int(parts[5])
         df.append(
             [
                 chrom,
                 position,
                 meth_rate,
-                coverage,
                 "normal",
                 0,
             ]
@@ -115,7 +109,6 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
         "chromosome",
         "position",
         f"{axis_name}_methylation",
-        f"{axis_name}_coverage",
         f"{axis_name}_bias",
         f"{axis_name}_prob_identified",
     ]

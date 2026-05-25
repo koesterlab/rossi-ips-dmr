@@ -156,5 +156,12 @@ def all_input(wildcards):
 
     "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.png",
 
+    wanted_input.extend(
+        [
+            f"results/wsabi/{platform}_{layer}.tsv.gz"
+            for platform in config["meth_caller"].keys()
+            for layer in ["psc", "mesoderm", "endoderm", "ectoderm"]
+        ]
+    )
 
     return wanted_input

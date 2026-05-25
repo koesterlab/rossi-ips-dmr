@@ -2,258 +2,258 @@ __use_yte__: true
 
 name: Diffexp vs DMRs
 datasets:
-  data_no_tfs:
-    path: ?input.table
-    separator: "\t"
-    links:
-      data_no_tfs:
-        column: row_id
-        table-row: diffexp_vs_dmrs_table_no_tfs/row_id
-  val_genes:
-    path: ?input.val_genes
-    separator: "\t"
+    data_no_tfs:
+        path: ?input.table
+        separator: "\t"
+        links:
+            data_no_tfs:
+                column: row_id
+                table-row: diffexp_vs_dmrs_table_no_tfs/row_id
+    val_genes:
+        path: ?input.val_genes
+        separator: "\t"
 default-view: diffexp_vs_dmrs_plot_no_tfs
 views:
-  diffexp_vs_dmrs_table_no_tfs:
-    dataset: data_no_tfs
-    desc:
-      "This table contains DMR values and differential expression (DiffExp) per gene and germ layer.
-      A gene can appear multiple times if multiple differentially methylated regions (DMRs) are associated with it.
-      qval_combined is defined as the minimum of the adjusted q-values from the DMR and differential expression analyses.
-      To prioritize the most extreme concordant effects (strong methylation change together with strong expression change), we compute a geometric ranking score that emphasizes genes located toward the top-left or bottom-right corners of the joint distribution. For this, methylation differences are scaled to the same numerical range as differential expression. This prevents one variable from dominating the distance calculation.
-      Then, two reference points are defined: the top-left corner (minimum expression, maximum methylation) and the bottom-right corner (maximum expression, minimum methylation).
-      For each gene entry, we compute the Euclidean distance to both corner points.
-      The smaller of the two distances determines which corner the gene is closer to.
-      The final ranking score is derived from this distance and assigned a sign depending on the closer corner.
-      Genes closer to the extreme corners receive stronger ranking values, while genes near the center receive values close to zero."
-    render-table:
-      columns:
-        # row_id:
-        # display-mode: detail
-        qval_diffexp:
-          spell:
-            url: v1.5.1/stats/p-value
-            with:
-              significance_threshold: 0.05
-        qval_dmr:
-          spell:
-            url: v1.5.1/stats/p-value
-            with:
-              significance_threshold: 0.05
-        qval_combined:
-          spell:
-            url: v1.5.1/stats/p-value
-            with:
-              significance_threshold: 0.05
-        pval_combined:
-          spell:
-            url: v1.5.1/stats/p-value
-            with:
-              significance_threshold: 0.05
-        mean_methylation_difference:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#e6550d"
-                - "white"
-                - "#6baed6"
-              domain:
-                - -1
-                - 0
-                - 1
-        diffexp:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#e6550d"
-                - "white"
-                - "#6baed6"
-              domain:
-                - -5
-                - 0
-                - 5
-        diffexp_se:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "white"
-                - "#6baed6"
-              domain:
-                - 0
-                - 2
-        germ_layer:
-          plot:
-            heatmap:
-              scale: ordinal
-              color-scheme: category10
-        ext_gene:
-          display-mode: normal
-          link-to-url:
-            geneontology:
-              url: https://www.genecards.org/cgi-bin/carddisp.pl?gene={ext_gene}
+    diffexp_vs_dmrs_table_no_tfs:
+        dataset: data_no_tfs
+        desc:
+            "This table contains DMR values and differential expression (DiffExp) per gene and germ layer.
+            A gene can appear multiple times if multiple differentially methylated regions (DMRs) are associated with it.
+            qval_combined is defined as the minimum of the adjusted q-values from the DMR and differential expression analyses.
+            To prioritize the most extreme concordant effects (strong methylation change together with strong expression change), we compute a geometric ranking score that emphasizes genes located toward the top-left or bottom-right corners of the joint distribution. For this, methylation differences are scaled to the same numerical range as differential expression. This prevents one variable from dominating the distance calculation.
+            Then, two reference points are defined: the top-left corner (minimum expression, maximum methylation) and the bottom-right corner (maximum expression, minimum methylation).
+            For each gene entry, we compute the Euclidean distance to both corner points.
+            The smaller of the two distances determines which corner the gene is closer to.
+            The final ranking score is derived from this distance and assigned a sign depending on the closer corner.
+            Genes closer to the extreme corners receive stronger ranking values, while genes near the center receive values close to zero."
+        render-table:
+            columns:
+                # row_id:
+                # display-mode: detail
+                qval_diffexp:
+                    spell:
+                        url: v1.5.1/stats/p-value
+                        with:
+                            significance_threshold: 0.05
+                qval_dmr:
+                    spell:
+                        url: v1.5.1/stats/p-value
+                        with:
+                            significance_threshold: 0.05
+                qval_combined:
+                    spell:
+                        url: v1.5.1/stats/p-value
+                        with:
+                            significance_threshold: 0.05
+                pval_combined:
+                    spell:
+                        url: v1.5.1/stats/p-value
+                        with:
+                            significance_threshold: 0.05
+                mean_methylation_difference:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "#e6550d"
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - -1
+                                - 0
+                                - 1
+                diffexp:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "#e6550d"
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - -5
+                                - 0
+                                - 5
+                diffexp_se:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - 0
+                                - 2
+                germ_layer:
+                    plot:
+                        heatmap:
+                            scale: ordinal
+                            color-scheme: category10
+                ext_gene:
+                    display-mode: normal
+                    link-to-url:
+                        geneontology:
+                            url: https://www.genecards.org/cgi-bin/carddisp.pl?gene={ext_gene}
 
-        ens_gene:
-          display-mode: normal
-          link-to-url:
-            geneontology:
-              url: https://useast.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g={ens_gene}
-        pval_diffexp:
-          display-mode: detail
-        pval_dmr:
-          display-mode: detail
-        ranked_meth_diffexp:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#e6550d"
-                - "white"
-                - "#6baed6"
-              domain:
-                - -10
-                - 0
-                - 10
+                ens_gene:
+                    display-mode: normal
+                    link-to-url:
+                        geneontology:
+                            url: https://useast.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g={ens_gene}
+                pval_diffexp:
+                    display-mode: detail
+                pval_dmr:
+                    display-mode: detail
+                ranked_meth_diffexp:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "#e6550d"
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - -10
+                                - 0
+                                - 10
 
-  diffexp_vs_dmrs_plot_no_tfs:
-    dataset: data_no_tfs
-    desc: "Scatter plot with DMR values and DiffExp per gene and germ_layer. Sometimes a gene appears multiple times because there are multiple differentially methylated region within that gene. We show 'qval combined' (the minimum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers. Furthermore you can click on a data point to see its details in a table."
-    render-plot:
-      spec: |
-        {
-          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-          "config": {"view": {"continuousWidth": 500, "continuousHeight": 500}},
-          "mark": {"type": "point", "filled": true},
-          "encoding": {
-            "color": {
-              "condition": {
-                "param": "Germ Layer",
-                "field": "germ_layer",
-                "scale": {
-                  "domain": ["psc", "endoderm", "mesoderm", "ectoderm"],
-                  "range": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
-                },
-                "title": "Germ Layer",
-                "type": "nominal"
-              },
-              "value": "lightgray"
-            },
-            "opacity": {
-              "field": "qval_combined",
-              "scale": {"range": [1, 0.1]},
-              "title": "max(qval1, qval2)",
-              "type": "quantitative"
-            },
-            "size": {
-              "field": "qval_combined",
-              "scale": {"range": [30, 1]},
-              "title": "min(qval1, qval2)",
-              "type": "quantitative"
-            },
-            "tooltip": [
-              {"field": "ext_gene", "type": "nominal"},
-              {"field": "ranked_meth_diffexp", "type": "quantitative"},
-              {"field": "diffexp", "type": "quantitative"},
-              {"field": "mean_methylation_difference", "type": "quantitative"},
-            ],
-            "x": {"field": "diffexp", "type": "quantitative"},
-            "y": {"field": "mean_methylation_difference", "scale": {"domain": [-1, 1]}, "type": "quantitative"},
-            "href": {"field": "data_no_tfs"},
-          },
-          "params": [
-            {
-              "name": "Germ Layer",
-              "select": {"type": "point", "fields": ["germ_layer"]},
-              "bind": "legend"
-            },
-            {
-              "name": "qval_combined_min",
-              "bind": {
-                "input": "range",
-                "max": 1,
-                "min": 0,
-                "name": "min(qval_dmr, qval_diffexp):",
-                "step": 0.01
-              },
-              "value": 0.05
-            }
-          ],
-          "transform": [{"filter": "(datum.qval_combined <= qval_combined_min)"}],
-        }
-  val_genes:
-    dataset: val_genes
-    desc: "Diffexp and DMR values for genes of interestn. Empty values mean no DMR or diffexp value available. Sometimes on genes occurs multiple times for a single germ layer since we found multiple DMRs for the same gene. While the column 'val genes' shows the gene of interest, the column 'ext_gene' shows the actual gene name found in our analysis. You can find all synonyms of the validated gene in the 'synonyms' column by clicking on the '+' button."
-    render-table:
-      columns:
-        qval_diffexp:
-          spell:
-            url: v1.5.1/stats/p-value
-            with:
-              significance_threshold: 0.05
-        qval_dmr:
-          spell:
-            url: v1.5.1/stats/p-value
-            with:
-              significance_threshold: 0.05
-        pval_dmr:
-          display-mode: detail
-        pval_diffexp:
-          display-mode: detail
-        mean_methylation_difference:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#e6550d"
-                - "white"
-                - "#6baed6"
-              domain:
-                - -1
-                - 0
-                - 1
-        diffexp:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#e6550d"
-                - "white"
-                - "#6baed6"
-              domain:
-                - -5
-                - 0
-                - 5
-        diffexp_se:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "white"
-                - "#6baed6"
-              domain:
-                - 0
-                - 2
-        germ_layer:
-          plot:
-            heatmap:
-              scale: ordinal
-              color-scheme: category10
-        val_gene:
-          plot:
-            heatmap:
-              scale: ordinal
-              color-scheme: category10
-        annotation_type:
-          plot:
-            heatmap:
-              scale: ordinal
-              color-scheme: category10
-        synonyms:
-          display-mode: detail
-          spell:
-            url: https://raw.githubusercontent.com/Addimator/separated-links-spell/c86c060be05adba629f7c22f0260de0f6edcbe77/stats/separated-links/spell.yaml
-            with:
-              separator: ","
-              url_template: "https://www.genecards.org/cgi-bin/carddisp.pl?gene=${value}"
+    diffexp_vs_dmrs_plot_no_tfs:
+        dataset: data_no_tfs
+        desc: "Scatter plot with DMR values and DiffExp per gene and germ_layer. Sometimes a gene appears multiple times because there are multiple differentially methylated region within that gene. We show 'qval combined' (the minimum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers. Furthermore you can click on a data point to see its details in a table."
+        render-plot:
+            spec: |
+                {
+                  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                  "config": {"view": {"continuousWidth": 500, "continuousHeight": 500}},
+                  "mark": {"type": "point", "filled": true},
+                  "encoding": {
+                    "color": {
+                      "condition": {
+                        "param": "Germ Layer",
+                        "field": "germ_layer",
+                        "scale": {
+                          "domain": ["psc", "endoderm", "mesoderm", "ectoderm"],
+                          "range": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
+                        },
+                        "title": "Germ Layer",
+                        "type": "nominal"
+                      },
+                      "value": "lightgray"
+                    },
+                    "opacity": {
+                      "field": "qval_combined",
+                      "scale": {"range": [1, 0.1]},
+                      "title": "max(qval1, qval2)",
+                      "type": "quantitative"
+                    },
+                    "size": {
+                      "field": "qval_combined",
+                      "scale": {"range": [30, 1]},
+                      "title": "min(qval1, qval2)",
+                      "type": "quantitative"
+                    },
+                    "tooltip": [
+                      {"field": "ext_gene", "type": "nominal"},
+                      {"field": "ranked_meth_diffexp", "type": "quantitative"},
+                      {"field": "diffexp", "type": "quantitative"},
+                      {"field": "mean_methylation_difference", "type": "quantitative"},
+                    ],
+                    "x": {"field": "diffexp", "type": "quantitative"},
+                    "y": {"field": "mean_methylation_difference", "scale": {"domain": [-1, 1]}, "type": "quantitative"},
+                    "href": {"field": "data_no_tfs"},
+                  },
+                  "params": [
+                    {
+                      "name": "Germ Layer",
+                      "select": {"type": "point", "fields": ["germ_layer"]},
+                      "bind": "legend"
+                    },
+                    {
+                      "name": "qval_combined_min",
+                      "bind": {
+                        "input": "range",
+                        "max": 1,
+                        "min": 0,
+                        "name": "min(qval_dmr, qval_diffexp):",
+                        "step": 0.01
+                      },
+                      "value": 0.05
+                    }
+                  ],
+                  "transform": [{"filter": "(datum.qval_combined <= qval_combined_min)"}],
+                }
+    val_genes:
+        dataset: val_genes
+        desc: "Diffexp and DMR values for genes of interest. Empty values mean no DMR or diffexp value available. Sometimes a gene occurs multiple times for a single germ layer since we found multiple DMRs for the same gene. While the column 'val genes' shows the gene of interest, the column 'ext gene' shows the actual gene name found in our analysis. You can find all synonyms of the validated gene in the 'synonyms' column by clicking on the '+' button."
+        render-table:
+            columns:
+                qval_diffexp:
+                    spell:
+                        url: v1.5.1/stats/p-value
+                        with:
+                            significance_threshold: 0.05
+                qval_dmr:
+                    spell:
+                        url: v1.5.1/stats/p-value
+                        with:
+                            significance_threshold: 0.05
+                pval_dmr:
+                    display-mode: detail
+                pval_diffexp:
+                    display-mode: detail
+                mean_methylation_difference:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "#e6550d"
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - -1
+                                - 0
+                                - 1
+                diffexp:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "#e6550d"
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - -5
+                                - 0
+                                - 5
+                diffexp_se:
+                    plot:
+                        heatmap:
+                            scale: linear
+                            range:
+                                - "white"
+                                - "#6baed6"
+                            domain:
+                                - 0
+                                - 2
+                germ_layer:
+                    plot:
+                        heatmap:
+                            scale: ordinal
+                            color-scheme: category10
+                val_gene:
+                    plot:
+                        heatmap:
+                            scale: ordinal
+                            color-scheme: category10
+                annotation_type:
+                    plot:
+                        heatmap:
+                            scale: ordinal
+                            color-scheme: category10
+                synonyms:
+                    display-mode: detail
+                    spell:
+                        url: https://raw.githubusercontent.com/Addimator/separated-links-spell/c86c060be05adba629f7c22f0260de0f6edcbe77/stats/separated-links/spell.yaml
+                        with:
+                            separator: ","
+                            url_template: "https://www.genecards.org/cgi-bin/carddisp.pl?gene=${value}"
