@@ -163,6 +163,8 @@ rule dmr_heatmap:
         "logs/dmr_heatmap/{platform}_{caller}_{base}_{type}.log",
     resources:
         mem_mb=16000,
+    params:
+        base = lambda wildcards: wildcards.base
     script:
         "../scripts/dmr-heatmap.py"
 

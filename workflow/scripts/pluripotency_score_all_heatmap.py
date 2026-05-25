@@ -117,21 +117,21 @@ BIOMARKER_POSITIONS = pd.DataFrame(
             "position": 111309143,
             "direction": 1,
             "cg_id": "cg23385847",
-            "biomarker": "endomesoderm",
+            "biomarker": "endomeso",
         },
         {
             "chromosome": "5",
             "position": 24208809,
             "direction": 1,
             "cg_id": "cg24919344",
-            "biomarker": "endomesoderm",
+            "biomarker": "endomeso",
         },
         {
             "chromosome": "10",
             "position": 33773306,
             "direction": 1,
             "cg_id": "cg11147278",
-            "biomarker": "endomesoderm",
+            "biomarker": "endomeso",
         },
     ]
 )
@@ -185,7 +185,15 @@ BIOMARKER_FOCUS_SETS = {
     "endoderm": {"endoderm"},
     "mesoderm": {"mesoderm"},
     "ectoderm": {"ectoderm"},
-    "endomesoderm": {"endoderm", "mesoderm"},
+    "endomeso": {"endoderm", "mesoderm"},
+}
+
+# Definiere eine feste Farbskala für alle Layer
+LAYER_COLORS = {
+    "psc": "#1f77b4",
+    "endoderm": "#ff7f0e",
+    "mesoderm": "#2ca02c",
+    "ectoderm": "#d62728",
 }
 
 # Generate charts for each biomarker
@@ -197,7 +205,7 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
     # Determine focus type based on biomarker
     focus_set = BIOMARKER_FOCUS_SETS[biomarker_name]
     biomarker_df["type"] = biomarker_df["layer"].apply(
-        lambda layer: "focus" if layer in focus_set else "unfocused"
+        lambda layer: "target" if layer in focus_set else "other"
     )
 
     # Calculate adjusted methylation scores
@@ -221,15 +229,21 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
         .mark_point(size=100, filled=True)
         .encode(
             x=alt.X(
-                "methylation:Q", title="Methylation", scale=alt.Scale(domain=[0, 1])
+                "methylation:Q", title="methylation", scale=alt.Scale(domain=[0, 1])
             ),
-            y=alt.Y("type:N", title="Selection set"),
-            color=alt.Color("layer:N", title="Germ Layer"),
+            y=alt.Y("type:N", title="cell line"),
+            color=alt.Color(
+                "layer:N",
+                title="Germ Layer",
+                scale=alt.Scale(
+                    domain=list(LAYER_COLORS.keys()), range=list(LAYER_COLORS.values())
+                ),
+            ),
             tooltip=["methylation:Q", "layer:N", "type:N", "layer_score:Q", "cg_id:N"],
         )
         .properties(
             title=alt.TitleParams(
-                text=f"Biomarker: {biomarker_name}",
+                text=f"{biomarker_name}",
                 subtitle=", ".join(
                     [
                         f"{layer}: {score:.2f}"
@@ -244,5 +258,8 @@ for biomarker_name in BIOMARKER_POSITIONS["biomarker"].unique():
     charts.append(chart)
 
 # Save concatenated charts
-alt.hconcat(*charts).save(snakemake.output[0])
+chart_top = alt.hconcat(*charts[0:2])
+chart_mid = alt.hconcat(*charts[2:4])
+chart_bottom = alt.vconcat(chart_mid, charts[4])
+alt.vconcat(chart_top, chart_bottom).save(snakemake.output[0])
 print(f"Chart saved to {snakemake.output[0]}")
