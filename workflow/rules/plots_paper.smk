@@ -106,7 +106,7 @@ rule dmr_heatmap_comparison:
         #     },
         # ),
     conda:
-        "../envs/plot.yaml"
+        "../envs/python.yaml"
     log:
         "logs/dmr_heatmap/comparison.log",
     resources:

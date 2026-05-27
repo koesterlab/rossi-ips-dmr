@@ -1,16 +1,24 @@
 import os
 import sys
 
-import matplotlib.pyplot as plt
+import altair as alt
+
+# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from scipy.cluster.hierarchy import dendrogram, linkage
+
+
+def bin_methylation(series: pd.Series, bin_size: int) -> pd.Series:
+    """Round methylation values to nearest bin_size and cast to int."""
+    return (np.round(series / bin_size) * bin_size).astype(int)
+
 
 # We need this to cluster huge data
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
+alt.data_transformers.enable("vegafusion")
+
 sys.setrecursionlimit(100000)
 base = snakemake.params["base"]
 
@@ -27,18 +35,16 @@ filename_to_name = {
 
 # Group df by gene regions
 def aggregate_by_gene_region(df):
-    # For every gene region take the mean of methylation differences
     df_grouped = (
-        df.groupby(["transcriptId", "annotation"])["mean_methylation_difference"]
+        df.groupby(["transcriptId", "annotation_type"])["mean_methylation_difference"]
         .mean()
         .reset_index()
     )
-    df_grouped["annotation_type"] = df_grouped["annotation"].str.replace(
-        r"\s*\([^)]*\)", "", regex=True
-    )
+
     df_grouped["region"] = df_grouped.apply(
         lambda row: f"{row['transcriptId']}:{row['annotation_type']}", axis=1
     )
+
     return df_grouped[["region", "annotation_type", "mean_methylation_difference"]]
 
 
@@ -65,8 +71,6 @@ for input_files in [pacbio_input_files, nanopore_input_files]:
         heatmap_data = heatmap_data.merge(
             df, on=["region", "annotation_type"], how="outer"
         )
-    # Drop rows with all NaN values
-    # heatmap_data = heatmap_data.dropna()
 
     name = os.path.basename(output).replace(".png", "")
     df_filtered = heatmap_data[sample_names + ["region"]]
@@ -91,77 +95,100 @@ df_complete = df_complete.set_index("region")
 vmin = df_complete.min().min()
 vmax = df_complete.max().max()
 
-fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+# fig, axes = plt.subplots(1, 3, figsize=(15, 6))
 
 layers = ["endoderm", "mesoderm", "ectoderm"]
-
+charts = []
 for idx, layer in enumerate(layers):
     number_nanopore_genes = df_complete[f"{layer}_nanopore"].notna().sum()
     number_pacbio_genes = df_complete[f"{layer}_pacbio"].notna().sum()
     number_common_genes = (
         df_complete[[f"{layer}_nanopore", f"{layer}_pacbio"]].dropna().shape[0]
     )
-    print(layer, number_nanopore_genes, number_pacbio_genes, number_common_genes)
     df_temp = df_complete[[f"{layer}_nanopore", f"{layer}_pacbio"]].dropna()
     df_temp = df_temp.rename(
         columns={f"{layer}_nanopore": "nanopore", f"{layer}_pacbio": "pacbio"}
     )
-    if len(df_temp) > 1:
-        # Clustering durchführen
-        row_linkage = linkage(df_temp, method="ward")
-        col_linkage = linkage(df_temp.T, method="ward")
 
-        # Daten nach Clustering sortieren
-        row_order = dendrogram(row_linkage, no_plot=True)["leaves"]
-        df_sorted = df_temp.iloc[row_order]
-    else:
-        df_sorted = df_temp
+    df_sorted = df_temp
     corr = df_sorted["nanopore"].corr(df_sorted["pacbio"])
-    corr_pear = df_sorted.corr(method="pearson")
-    covariance = df_sorted.cov()["nanopore"]["pacbio"]
-    variance_nanopore = df_sorted["nanopore"].var()
-    variance_pacbio = df_sorted["pacbio"].var()
-    own_corr = covariance / ((variance_nanopore**0.5) * (variance_pacbio**0.5))
     print(layer)
-    print("COrr", corr)
-    print("Pearson", corr_pear)
-    print("Own corr", own_corr)
-    # Heatmap zeichnen mit gemeinsamer Skala
-    sns.heatmap(
-        df_sorted,
-        cmap="vlag_r",
-        center=0,
-        vmin=vmin,
-        vmax=vmax,
-        ax=axes[idx],
-        cbar=(idx == 2),  # Nur rechts eine Colorbar
-        cbar_kws={"label": "Value"},
+    print("Pearson", corr)
+
+    df_sorted["pacbio"] = df_sorted["pacbio"] * 100
+    df_sorted["nanopore"] = df_sorted["nanopore"] * 100
+    df_sorted = df_sorted.assign(
+        pacbio_bin=bin_methylation(df_sorted["pacbio"], 10),
+        nanopore_bin=bin_methylation(df_sorted["nanopore"], 10),
     )
 
-    axes[idx].set_title(f"{layer} ({number_common_genes})")
-    # X-ticks mit Nummern
-    x_labels = [
-        f"nanopore\n{number_nanopore_genes}",
-        f"pacbio\n{number_pacbio_genes}",
-    ]
-    axes[idx].set_xticklabels(x_labels, fontsize=9)
+    counts = (
+        pd.crosstab(df_sorted["pacbio_bin"], df_sorted["nanopore_bin"])
+        .stack()
+        .reset_index(name="count")
+    )
 
-    # Y-ticks verstecken
-    axes[idx].set_yticks([])
+    all_bins = range(-100, 101, 10)
 
-    # Y-Achsen-Label mit common gene count
-    # axes[idx].set_ylabel(f"Gene regions ({number_common_genes})")
-    # X-ticks drehen
-    # axes[idx].set_xticklabels(axes[idx].get_xticklabels(), rotation=45, ha="right")
+    # create complete grid
+    full_index = pd.MultiIndex.from_product(
+        [all_bins, all_bins],
+        names=["pacbio_bin", "nanopore_bin"],
+    )
 
-    # # Y-ticks verstecken
-    # axes[idx].set_yticks([])
+    # fill missing combinations with 0
+    counts = (
+        counts.set_index(["pacbio_bin", "nanopore_bin"])
+        .reindex(full_index, fill_value=0)
+        .reset_index()
+    )
 
-    if idx == 0:
-        axes[idx].set_ylabel("Gene regions")
-    else:
-        axes[idx].set_ylabel("")
+    print(counts.shape)
+    plot = (
+        alt.Chart(
+            counts,
+            title=f"{layer}: {number_common_genes}",
+        )
+        .mark_rect()
+        .encode(
+            x=alt.X(
+                "pacbio_bin:Q",
+                bin=alt.Bin(step=10),
+                sort=alt.SortOrder("ascending"),
+                title=f"PacBio:\n{number_pacbio_genes}",
+            ),
+            y=alt.Y(
+                "nanopore_bin:Q",
+                bin=alt.Bin(step=10),
+                sort=alt.SortOrder("ascending"),
+                title=f"Nanopore:\n{number_nanopore_genes}",
+            ),
+            color=alt.Color(
+                "count:Q",
+                scale=alt.Scale(
+                    type="log", scheme="viridis", domain=[1, counts["count"].max() + 1]
+                ),
+            ),
+        )
+    ).properties(width=200, height=200)
 
-plt.tight_layout()
-plt.savefig(output, format="png", dpi=300, bbox_inches="tight")
-plt.close()
+    v_line = (
+        alt.Chart(pd.DataFrame({"x": [0]}))
+        .mark_rule(color="red", size=1)
+        .encode(x=alt.X("x:O", title=None, axis=None))
+    )
+    h_line = (
+        alt.Chart(pd.DataFrame({"y": [0]}))
+        .mark_rule(color="red", size=1)
+        .encode(y=alt.Y("y:O", title=None, axis=None))
+    )
+    plot = plot + v_line + h_line
+
+    charts.append(plot)
+
+chart = alt.hconcat(*charts).resolve_scale("shared")
+
+chart.save(snakemake.output[0])
+# plt.tight_layout()
+# plt.savefig(output, format="png", dpi=300, bbox_inches="tight")
+# plt.close()
