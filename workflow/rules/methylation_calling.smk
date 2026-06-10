@@ -223,7 +223,7 @@ rule df_from_calls:
     log:
         "logs/varlociraptor/df_from_calls/{platform}_{caller}.log"
     resources:
-        mem_mb=64000,
+        mem_mb=32000,
     params:
         meth_caller=lambda wildcards: wildcards.caller,
     script:
