@@ -28,7 +28,7 @@ rule metilene_input:
     input:
         "results/{platform}/{caller}/meth_calling/calls_{fdr}.parquet",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_input_{fdr}.txt",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/{fdr}/metilene_input.txt",
     params:
         base=lambda wildcards: wildcards.base,
         group2=lambda wildcards: wildcards.group2,
@@ -45,14 +45,14 @@ rule metilene_input:
 # | chr | start | stop | q-value | mean methylation difference | #CpGs | p (MWU) | p (2D KS) | mean g1 | mean g2 |
 rule call_metilene:
     input:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_input_{fdr}.txt",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/{fdr}/metilene_input.txt",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_{fdr}.bed",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/{fdr}/metilene_output.bed",
     conda:
         "../envs/metilene.yaml"
     threads: 4
     log:
-        "logs/call_metilene/{platform}_{caller}_{base}_{group2}.log",
+        "logs/call_metilene/{platform}_{caller}_{base}_{group2}_{fdr}.log",
     shell:
         """
         metilene -d 0.01 -t {threads} -m 10 -a {wildcards.group2} -b {wildcards.base} {input} > {output} 2> {log}
@@ -62,17 +62,17 @@ rule call_metilene:
 rule focus_dmrs:
     """Compute DMRs exclusive to {germ_layer} by subtracting the other two non-base layers."""
     input:
-        this="results/{platform}/{caller}/base_{base}/dmr_calls/{germ_layer}/metilene_output_{fdr}.bed",
+        this="results/{platform}/{caller}/base_{base}/dmr_calls/{germ_layer}/{fdr}/metilene_output.bed",
         other1=lambda wc: expand(
-            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{layer}/metilene_output_{fdr}.bed",
+            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{layer}/{{fdr}}/metilene_output.bed",
             layer=[l for l in get_non_base_layers(wc.base) if l != wc.germ_layer][0],
         ),
         other2=lambda wc: expand(
-            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{layer}/metilene_output_{fdr}.bed",
+            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{layer}/{{fdr}}/metilene_output.bed",
             layer=[l for l in get_non_base_layers(wc.base) if l != wc.germ_layer][1],
         ),
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{germ_layer}/metilene_output_focused_{fdr}.bed",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{germ_layer}/{fdr}/metilene_output_focused.bed",
     wildcard_constraints:
         germ_layer="|".join(ALL_GERM_LAYERS),
     conda:
@@ -86,7 +86,7 @@ rule focus_dmrs:
 rule metilene_plots:
     input:
         met="resources/tools/metilene",
-        met_out="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused_0.05.bed",
+        met_out="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/0.05/metilene_output_focused.bed",
     output:
         bed="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/plots/dmr_qval.0.05.bedgraph",
         pdf=report(
@@ -97,8 +97,7 @@ rule metilene_plots:
             labels=lambda wildcards: {
                 "base": wildcards.base,
                 "layer": wildcards.group2,
-            },        nanopore = lambda wildcards: expand(
-
+            },
         ),
     conda:
         "../envs/metilene.yaml"

@@ -20,7 +20,7 @@ rule download_regulatory_elements:
 
 rule annotate_regulatory_elements:
     input:
-        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused_0.05.bed",
+        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/0.05/metilene_output_focused.bed",
         gene_annotation="resources/ref/regulatory_elements.gff3",
     output:
         "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
@@ -96,13 +96,13 @@ rule generate_txdb_from_gene_elements:
 
 rule annotate_dmrs_with_gene_elements:
     input:
-        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused_{fdr}.bed",
+        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/{fdr}/metilene_output_focused.bed",
         txdb="resources/ref/txdb.db",
         txnames="resources/ref/txnames.rds",
     output:
-        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_{fdr}.tsv",
+        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker.tsv",
     log:
-        "logs/annotate_dmrs_with_gene_elements/{platform}_{caller}_{base}_{group2}.log",
+        "logs/annotate_dmrs_with_gene_elements/{platform}_{caller}_{base}_{group2}_{fdr}.log",
     conda:
         "../envs/chipseeker.yaml"
     script:
@@ -112,16 +112,16 @@ rule annotate_dmrs_with_gene_elements:
 # We want real gene names like SOX2 instead of Ensembl transcript IDs.
 rule get_ensembl_gene_names_from_dmrs:
     input:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_{fdr}.tsv",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker.tsv",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/ensembl_genes_{fdr}.tsv",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/ensembl_genes.tsv",
     conda:
         "../envs/biomart.yaml"
     params:
         species=get_bioc_species_name(),
         version=config["resources"]["ref"]["release"],
     log:
-        "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{base}_{group2}.log",
+        "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{base}_{group2}_{fdr}.log",
     # Use unrealistc high memory to avoid parallel computation since ensembl then detects DOS attacks
     resources:
         mem_mb=16000,
@@ -131,14 +131,14 @@ rule get_ensembl_gene_names_from_dmrs:
 
 rule annotate_dmrs_with_ensembl_gene_names:
     input:
-        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_{fdr}.tsv",
-        genes="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/ensembl_genes_{fdr}.tsv",
+        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker.tsv",
+        genes="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/ensembl_genes.tsv",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_{fdr}.tsv",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker_postprocessed.tsv",
     conda:
         "../envs/python.yaml"
     log:
-        "logs/annotate_dmrs_with_ensembl_gene_names/{platform}_{caller}_{base}_{group2}.log",
+        "logs/annotate_dmrs_with_ensembl_gene_names/{platform}_{caller}_{base}_{group2}_{fdr}.log",
     script:
         "../scripts/annotate_chipseeker.py"
 
@@ -146,7 +146,7 @@ rule annotate_dmrs_with_ensembl_gene_names:
 rule dmr_heatmap:
     input:
         lambda wildcards: expand(
-            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_0.05.tsv",
+            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{group2}/genes_transcripts/0.05/chipseeker_postprocessed.tsv",
             group2=get_non_base_layers(wildcards.base),
         ),
     output:
@@ -175,7 +175,7 @@ rule dmr_heatmap:
 rule datavzrd_annotations:
     input:
         config=workflow.source_path("../resources/dmrs_annotated.yaml"),
-        genes_transcripts="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_0.05.tsv",
+        genes_transcripts="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/0.05/chipseeker_postprocessed.tsv",
         regulatory_elements="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
         report(

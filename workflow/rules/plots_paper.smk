@@ -84,19 +84,19 @@ rule pluripotency_score_all:
         "../scripts/pluripotency_score_all_heatmap.py"
 
 
-rule dmr_heatmap_comparison:
+rule dmr_scatter_comparison:
     input:
         pacbio = lambda wildcards: expand(
-            "results/pacbio/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_1.0.tsv",
+            "results/pacbio/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/1.0/chipseeker_postprocessed.tsv",
             group2=get_non_base_layers("psc"),
         ),
         nanopore = lambda wildcards: expand(
-            "results/nanopore/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_1.0.tsv",
+            "results/nanopore/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/1.0/chipseeker_postprocessed.tsv",
             group2=get_non_base_layers("psc"),
         ),
     output:
         # report(
-        "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.{plot_type}",
+        "results/platforms_combined/varlo/plots_paper/scatter_comparison.{plot_type}",
         #     caption="../report/heatmap.rst",
         #     category="DMR plots",
         #     subcategory=lambda wildcards: f"Heatmaps: {wildcards.platform} - {wildcards.caller}",
