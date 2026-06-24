@@ -1,15 +1,21 @@
 import sys
-from re import RegexFlag
+from socket import timeout
 from unittest.main import main
 
 import altair as alt
+import pandas as pd
 import polars as pl
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
-pl.Config.set_tbl_rows(10000000)
-pl.Config.set_tbl_cols(10000000)
+pl.Config.set_tbl_rows(10)
+pl.Config.set_tbl_cols(10)
 
+LAYER_COLORS = {
+    "endoderm": "#ff7f0e",
+    "mesoderm": "#2ca02c",
+    "ectoderm": "#d62728",
+}
 
 filename_to_name = {
     "distal_intergenic": "Distal Intergenic",
@@ -194,29 +200,21 @@ def merge_diffexp_dmr(diffexp_df: pl.DataFrame, dmrs_df: pl.DataFrame) -> pl.Dat
     common_df = diffexp_df.join(
         dmrs_df, on=["ext_gene", "germ_layer"], how="inner"
     ).filter(pl.col("annotation_type") == annotation_type)
-
     common_df = common_df.with_columns(
         pl.min_horizontal(pl.col("qval_diffexp"), pl.col("qval_dmr")).alias(
             "qval_combined"
         )
     ).with_columns(
-        pl.min_horizontal(pl.col("qval_diffexp"), pl.col("pval_dmr")).alias(
+        pl.min_horizontal(pl.col("pval_diffexp"), pl.col("pval_dmr")).alias(
             "pval_combined"
         )
     )
     return common_df
 
 
-def plot_df(common_df: pl.DataFrame):
-    x_domain = [
-        common_df["diffexp"].min(),
-        common_df["diffexp"].max(),
-    ]
-
-    y_domain = [
-        common_df["mean_methylation_difference"].min(),
-        common_df["mean_methylation_difference"].max(),
-    ]
+def plot_df(
+    common_df: pl.DataFrame, x_domain: list, y_domain: list, title: str, show_axes: dict
+):
 
     layer_select = alt.selection_point(
         fields=["germ_layer"], bind="legend", name="Germ Layer"
@@ -225,9 +223,7 @@ def plot_df(common_df: pl.DataFrame):
     qval_slider = alt.param(
         name="qval_min",
         value=0.05,
-        bind=alt.binding_range(
-            min=0, max=1, step=0.01, name="min(qval_dmr, qval_diffexp): "
-        ),
+        bind=alt.binding_range(min=0, max=1, step=0.01, name="q-value: "),
     )
 
     color = alt.condition(
@@ -235,7 +231,10 @@ def plot_df(common_df: pl.DataFrame):
         alt.Color(
             "germ_layer:N",
             title="Germ Layer",
-            scale=alt.Scale(scheme="category10"),
+            scale=alt.Scale(
+                domain=list(LAYER_COLORS.keys()),
+                range=list(LAYER_COLORS.values()),
+            ),
         ),
         alt.value("lightgray"),
     )
@@ -250,30 +249,48 @@ def plot_df(common_df: pl.DataFrame):
         "qval_diffexp",
     ]
 
-    chart = (
-        alt.Chart(common_df.to_pandas())
+    # 1. Define the base chart with data, filters, and params only
+    base = (
+        alt.Chart(common_df.to_pandas(), title=title)
         .transform_filter(alt.datum.qval_combined <= qval_slider)
-        .mark_point(filled=True)
-        .encode(
-            x=alt.X("diffexp:Q", scale=alt.Scale(domain=x_domain)),
-            y=alt.Y("mean_methylation_difference:Q", scale=alt.Scale(domain=y_domain)),
-            size=alt.Size(
-                "qval_combined:Q",
-                title="max(qval1, qval2)",
-                scale=alt.Scale(range=[30, 1]),
-            ),
-            tooltip=tooltip_cols,
-            color=color,
-            opacity=alt.Opacity(
-                "qval_combined:Q",
-                scale=alt.Scale(range=[0.5, 0]),
-                title="max(qval1, qval2)",
-            ),
-        )
         .add_params(layer_select, qval_slider)
     )
 
-    chart.save(snakemake.output.html)
+    # 2. Define the scatter plot layer (includes all complex encodings)
+    points = base.mark_point(filled=True).encode(
+        x=alt.X(
+            "diffexp:Q",
+            scale=alt.Scale(domain=x_domain),
+            title="log2 (CPM + 1)" if show_axes.get("x", False) else None,
+        ),
+        y=alt.Y(
+            "mean_methylation_difference:Q",
+            scale=alt.Scale(domain=y_domain),
+            title="DMR value" if show_axes.get("y", False) else None,
+        ),
+        size=alt.Size(
+            "qval_combined:Q", title="q-value", scale=alt.Scale(range=[50, 1])
+        ),
+        opacity=alt.Opacity(
+            "qval_combined:Q", scale=alt.Scale(range=[0.8, 0]), title="q-value"
+        ),
+        color=color,
+        tooltip=tooltip_cols,
+    )
+
+    # 3. Define the regression layer (inherits X and Y, but we keep it clean)
+    regression_line = (
+        base.transform_regression("diffexp", "mean_methylation_difference")
+        .mark_line(
+            size=2, color="blue"
+        )  # Changed size from 20 to 4 (20 is massive for a line!)
+        .encode(x="diffexp:Q", y="mean_methylation_difference:Q")
+    )
+
+    # 4. Combine them
+    chart = points + regression_line
+
+    return chart
 
 
 if __name__ == "__main__":
@@ -288,13 +305,31 @@ if __name__ == "__main__":
     dmrs_df = pl.concat(
         [read_dmrs(path, layer) for path, layer in zip(layer_inputs, non_base_layers)]
     )
-
     find_val_genes(diffexp_df, dmrs_df)
     dmrs_df = dmrs_df.filter(pl.col("annotation_type") == annotation_type)
     common_df = merge_diffexp_dmr(diffexp_df, dmrs_df)
+    charts = []
+    x_domain = [
+        common_df["diffexp"].min(),
+        common_df["diffexp"].max(),
+    ]
+    y_domain = [
+        common_df["mean_methylation_difference"].min(),
+        common_df["mean_methylation_difference"].max(),
+    ]
+    charts.append(
+        plot_df(common_df, x_domain, y_domain, "All Layers", {"x": False, "y": True})
+    )
 
-    plot_df(common_df)
-
+    for layer in common_df.select(pl.col("germ_layer")).unique().to_series().sort():
+        show_x = True if layer == "endoderm" or layer == "mesoderm" else False
+        show_y = True if layer == "endoderm" else False
+        print(layer)
+        layer_df = common_df.filter(pl.col("germ_layer") == layer)
+        chart = plot_df(layer_df, x_domain, y_domain, layer, {"x": show_x, "y": show_y})
+        charts.append(chart)
+    chart = alt.concat(*charts, columns=2)
+    chart.save(snakemake.output.html)
     diffexp_min, diffexp_max, meth_diff_min, meth_diff_max = common_df.select(
         pl.col("diffexp").min().alias("x_min"),
         pl.col("diffexp").max().alias("x_max"),
