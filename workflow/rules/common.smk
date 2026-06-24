@@ -154,7 +154,7 @@ def all_input(wildcards):
         ]
     )
 
-    "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.png",
+    "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.pdf",
 
     wanted_input.extend(
         [

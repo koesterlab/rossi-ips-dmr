@@ -131,17 +131,17 @@ rule compare_dmr_to_diffexp_no_tfs:
         layer1=lambda wildcards: (
             "results/{platform}/{caller}/base_{base}/dmr_calls/"
             + get_non_base_layers(wildcards.base)[0]
-            + "/genes_transcripts/chipseeker_postprocessed.tsv"
+            + "/genes_transcripts/chipseeker_postprocessed_0.05.tsv"
         ).format(**wildcards),
         layer2=lambda wildcards: (
             "results/{platform}/{caller}/base_{base}/dmr_calls/"
             + get_non_base_layers(wildcards.base)[1]
-            + "/genes_transcripts/chipseeker_postprocessed.tsv"
+            + "/genes_transcripts/chipseeker_postprocessed_0.05.tsv"
         ).format(**wildcards),
         layer3=lambda wildcards: (
             "results/{platform}/{caller}/base_{base}/dmr_calls/"
             + get_non_base_layers(wildcards.base)[2]
-            + "/genes_transcripts/chipseeker_postprocessed.tsv"
+            + "/genes_transcripts/chipseeker_postprocessed_0.05.tsv"
         ).format(**wildcards),
         val_genes="resources/rna_seq/val_genes.tsv",
     output:

@@ -3,7 +3,7 @@ ruleorder:
 
 rule scatter_plot:
     input:
-        calls="results/{platform}/{caller}/meth_calling/calls.parquet",
+        calls="results/{platform}/{caller}/meth_calling/calls_0.05.parquet",
     output:
         report(
             "results/{platform}/{caller}/base_{base}/plots_paper/{group2}/scatter_plot.png",
@@ -34,7 +34,7 @@ rule scatter_plot:
 
 rule scatter_plot_endo_meso:
     input:
-        calls="results/{platform}/{caller}/meth_calling/calls.parquet",
+        calls="results/{platform}/{caller}/meth_calling/calls_1.0.parquet",
     output:
         report(
             "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png",
@@ -62,7 +62,7 @@ rule scatter_plot_endo_meso:
 
 rule pluripotency_score_all:
     input:
-        "results/{platform}/{caller}/meth_calling/calls.parquet",
+        "results/{platform}/{caller}/meth_calling/calls_1.0.parquet",
     output:
         report(
             "results/{platform}/{caller}/plots_paper/pluripotency_score_all.html",
@@ -87,16 +87,16 @@ rule pluripotency_score_all:
 rule dmr_heatmap_comparison:
     input:
         pacbio = lambda wildcards: expand(
-            "results/pacbio/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+            "results/pacbio/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_1.0.tsv",
             group2=get_non_base_layers("psc"),
         ),
         nanopore = lambda wildcards: expand(
-            "results/nanopore/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+            "results/nanopore/varlo/base_psc/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_1.0.tsv",
             group2=get_non_base_layers("psc"),
         ),
     output:
         # report(
-        "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.png",
+        "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.{plot_type}",
         #     caption="../report/heatmap.rst",
         #     category="DMR plots",
         #     subcategory=lambda wildcards: f"Heatmaps: {wildcards.platform} - {wildcards.caller}",
@@ -108,7 +108,7 @@ rule dmr_heatmap_comparison:
     conda:
         "../envs/python.yaml"
     log:
-        "logs/dmr_heatmap/comparison.log",
+        "logs/dmr_heatmap/comparison_{plot_type}.log",
     resources:
         mem_mb=16000,
     params:

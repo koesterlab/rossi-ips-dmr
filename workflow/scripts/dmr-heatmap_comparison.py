@@ -143,25 +143,29 @@ for idx, layer in enumerate(layers):
         .reset_index()
     )
 
-    print(counts.shape)
+    counts["pacbio_bin"] = counts["pacbio_bin"] / 100
+    counts["nanopore_bin"] = counts["nanopore_bin"] / 100
+
     plot = (
         alt.Chart(
             counts,
-            title=f"{layer}: {number_common_genes}",
+            title=alt.Title(text=f"{layer}: {number_common_genes}", fontSize=20),
         )
         .mark_rect()
         .encode(
             x=alt.X(
                 "pacbio_bin:Q",
-                bin=alt.Bin(step=10),
+                bin=alt.Bin(step=0.1),
                 sort=alt.SortOrder("ascending"),
-                title=f"PacBio:\n{number_pacbio_genes}",
+                title=alt.Title(text=f"PacBio:\n{number_pacbio_genes}", fontSize=12),
             ),
             y=alt.Y(
                 "nanopore_bin:Q",
-                bin=alt.Bin(step=10),
+                bin=alt.Bin(step=0.1),
                 sort=alt.SortOrder("ascending"),
-                title=f"Nanopore:\n{number_nanopore_genes}",
+                title=alt.Title(
+                    text=f"Nanopore:\n{number_nanopore_genes}", fontSize=12
+                ),
             ),
             color=alt.Color(
                 "count:Q",
