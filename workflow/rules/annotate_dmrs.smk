@@ -20,7 +20,7 @@ rule download_regulatory_elements:
 
 rule annotate_regulatory_elements:
     input:
-        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused.bed",
+        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused_0.05.bed",
         gene_annotation="resources/ref/regulatory_elements.gff3",
     output:
         "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/regulatory_elements/regulatory_elements.tsv",
@@ -96,11 +96,11 @@ rule generate_txdb_from_gene_elements:
 
 rule annotate_dmrs_with_gene_elements:
     input:
-        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused.bed",
+        metilene="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/metilene_output_focused_{fdr}.bed",
         txdb="resources/ref/txdb.db",
         txnames="resources/ref/txnames.rds",
     output:
-        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_{fdr}.tsv",
     log:
         "logs/annotate_dmrs_with_gene_elements/{platform}_{caller}_{base}_{group2}.log",
     conda:
@@ -112,9 +112,9 @@ rule annotate_dmrs_with_gene_elements:
 # We want real gene names like SOX2 instead of Ensembl transcript IDs.
 rule get_ensembl_gene_names_from_dmrs:
     input:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_{fdr}.tsv",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/ensembl_genes_{fdr}.tsv",
     conda:
         "../envs/biomart.yaml"
     params:
@@ -131,10 +131,10 @@ rule get_ensembl_gene_names_from_dmrs:
 
 rule annotate_dmrs_with_ensembl_gene_names:
     input:
-        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker.tsv",
-        genes="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/ensembl_genes.tsv",
+        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_{fdr}.tsv",
+        genes="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/ensembl_genes_{fdr}.tsv",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_{fdr}.tsv",
     conda:
         "../envs/python.yaml"
     log:
@@ -146,7 +146,7 @@ rule annotate_dmrs_with_ensembl_gene_names:
 rule dmr_heatmap:
     input:
         lambda wildcards: expand(
-            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_0.05.tsv",
             group2=get_non_base_layers(wildcards.base),
         ),
     output:
@@ -175,7 +175,7 @@ rule dmr_heatmap:
 rule datavzrd_annotations:
     input:
         config=workflow.source_path("../resources/dmrs_annotated.yaml"),
-        genes_transcripts="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed.tsv",
+        genes_transcripts="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/chipseeker_postprocessed_0.05.tsv",
         regulatory_elements="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
         report(

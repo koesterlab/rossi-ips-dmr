@@ -50,8 +50,8 @@ rule merge_mosdepth:
 
 rule compute_own_biomarker:
     input:
-        nanopore="results/nanopore/{caller}/meth_calling/calls.parquet",
-        pacbio="results/pacbio/{caller}/meth_calling/calls.parquet",
+        nanopore="results/nanopore/{caller}/meth_calling/calls_0.01.parquet",
+        pacbio="results/pacbio/{caller}/meth_calling/calls_0.01.parquet",
         coverage_nanopore="resources/nanopore/coverage.parquet",
         coverage_pacbio="resources/pacbio/coverage.parquet",
     output:

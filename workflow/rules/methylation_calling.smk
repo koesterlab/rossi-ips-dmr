@@ -106,14 +106,14 @@ rule filter_prob_absent:
     input:
         "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent_{fdr}.bcf",
     conda:
         "../envs/varlociraptor.yaml"
     params:
         event="ABSENT",
-        fdr=config["fdr_absent"]
+        fdr=lambda wildcards: wildcards.fdr
     log:
-        "logs/varlociraptor/filter_prob_absent/{platform}_{sample}_{scatteritem}.log",
+        "logs/varlociraptor/filter_prob_absent/{platform}_{sample}_{scatteritem}_{fdr}.log",
     shell:
         "varlociraptor filter-calls control-fdr --mode local-smart {input} --events {params.event} --fdr {params.fdr} > {output} 2> {log}"
 
@@ -121,27 +121,27 @@ rule filter_prob_present:
     input:
         "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present_{fdr}.bcf",
     conda:
         "../envs/varlociraptor.yaml"
     params:
         event="PRESENT",
-        fdr=config["fdr_present"]
+        fdr=lambda wildcards: wildcards.fdr
     log:
-        "logs/varlociraptor/filter_prob_present/{platform}_{sample}_{scatteritem}.log",
+        "logs/varlociraptor/filter_prob_present/{platform}_{sample}_{scatteritem}_{fdr}.log",
     shell:
         "varlociraptor filter-calls control-fdr --mode local-smart {input} --events {params.event} --fdr {params.fdr} > {output} 2> {log}"
 
 rule concatenate_filtered_calls:
     input:
-        absent="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent.bcf",
-        absent_index="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent.bcf.csi",
-        present="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present.bcf",
-        present_index="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present.bcf.csi",
+        absent="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent_{fdr}.bcf",
+        absent_index="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_absent_{fdr}.bcf.csi",
+        present="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present_{fdr}.bcf",
+        present_index="results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_present_{fdr}.bcf.csi",
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_{fdr}.bcf",
     log:
-        "logs/varlociraptor/concatenate_filtered_calls/{platform}_{sample}_{scatteritem}.log",
+        "logs/varlociraptor/concatenate_filtered_calls/{platform}_{sample}_{scatteritem}_{fdr}.log",
     shell:
         "bcftools concat -a {input.absent} {input.present} -o {output} 2> {log}"
 
@@ -149,14 +149,14 @@ rule concatenate_filtered_calls:
 
 rule calls_to_vcf:
     input:
-        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.filtered_{fdr}.bcf",
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.vcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}_{fdr}.vcf",
     conda:
         "../envs/samtools.yaml"
     threads: 10
     log:
-        "logs/varlociraptor/calls_to_vcf/{platform}_{sample}_{scatteritem}.log"
+        "logs/varlociraptor/calls_to_vcf/{platform}_{sample}_{scatteritem}_{fdr}.log"
     shell:
         """
         bcftools view --threads {threads} {input} -o {output} 2> {log}
@@ -166,14 +166,14 @@ rule calls_to_vcf:
 rule gather_calls:
     input:
         gather.split_candidates(
-            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.filtered.bcf"
+            "results/{{platform}}/varlo/meth_calling/{{sample}}/calls_{scatteritem}.filtered_{fdr}.bcf"
         ),
     output:
-        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/varlo_{fdr}.bcf",
     conda:
         "../envs/samtools.yaml"
     log:
-        "logs/varlociraptor/gather_calls/{platform}_{sample}.log",
+        "logs/varlociraptor/gather_calls/{platform}_{sample}_{fdr}.log",
     shell:
         """
         bcftools concat  {input} -o {output} 2> {log}
@@ -181,7 +181,7 @@ rule gather_calls:
 
 rule prepare_wsabi:
     input:
-        "results/{platform}/varlo/meth_calling/{sample}/varlo.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/varlo_0.05.bcf",
     output:
         "results/wsabi/{platform}_{sample}.tsv.gz",
     conda:
@@ -207,17 +207,17 @@ rule index_bcf:
 
 rule df_from_calls:
     input:
-        undifferentiated="results/{platform}/{caller}/meth_calling/psc/{caller}.bcf",
-        undifferentiated_index="results/{platform}/{caller}/meth_calling/psc/{caller}.bcf.csi",
-        meso="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.bcf",
-        meso_index="results/{platform}/{caller}/meth_calling/mesoderm/{caller}.bcf.csi",
-        endo="results/{platform}/{caller}/meth_calling/endoderm/{caller}.bcf",
-        endo_index="results/{platform}/{caller}/meth_calling/endoderm/{caller}.bcf.csi",
-        ecto="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.bcf",
-        ecto_index="results/{platform}/{caller}/meth_calling/ectoderm/{caller}.bcf.csi",
+        undifferentiated="results/{platform}/{caller}/meth_calling/psc/{caller}_{fdr}.bcf",
+        undifferentiated_index="results/{platform}/{caller}/meth_calling/psc/{caller}_{fdr}.bcf.csi",
+        meso="results/{platform}/{caller}/meth_calling/mesoderm/{caller}_{fdr}.bcf",
+        meso_index="results/{platform}/{caller}/meth_calling/mesoderm/{caller}_{fdr}.bcf.csi",
+        endo="results/{platform}/{caller}/meth_calling/endoderm/{caller}_{fdr}.bcf",
+        endo_index="results/{platform}/{caller}/meth_calling/endoderm/{caller}_{fdr}.bcf.csi",
+        ecto="results/{platform}/{caller}/meth_calling/ectoderm/{caller}_{fdr}.bcf",
+        ecto_index="results/{platform}/{caller}/meth_calling/ectoderm/{caller}_{fdr}.bcf.csi",
         # "results/{platform}/{caller}/meth_calling/{group}/calls.vcf",
     output:
-        "results/{platform}/{caller}/meth_calling/calls.parquet",
+        "results/{platform}/{caller}/meth_calling/calls_{fdr}.parquet",
     conda:
         "../envs/pysam.yaml"
     log:
