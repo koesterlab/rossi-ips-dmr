@@ -106,7 +106,7 @@ rule annotate_dmrs_with_gene_elements:
     conda:
         "../envs/chipseeker.yaml"
     script:
-        "../scripts/chipseeker.R"
+        "../scripts/chipseeker_metilene.R"
 
 
 # We want real gene names like SOX2 instead of Ensembl transcript IDs.

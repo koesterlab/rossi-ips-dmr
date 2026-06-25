@@ -1,31 +1,36 @@
 import sys
 
 import altair as alt
-import pandas as pd
+import numpy as np
+import polars as pl
 
-
-def calculate_adjusted_methylation(methylation_value, direction):
-    """
-    Adjust methylation based on direction:
-    - If direction=1: return methylation as is
-    - If direction=-1: return 1 - methylation
-    """
-    return methylation_value if direction == 1 else 1 - methylation_value
-
-
-sys.stderr = open(snakemake.log[0], "w", buffering=1)
-
-pd.set_option("display.max_columns", None)
-df = pd.read_parquet(snakemake.input, engine="pyarrow")
-
-METHYLATION_COLS = {
+# Maps the methylation column names in the input dataframe to short layer names.
+METH_TO_LAYER = {
     "psc_methylation": "psc",
     "endoderm_methylation": "endoderm",
     "mesoderm_methylation": "mesoderm",
     "ectoderm_methylation": "ectoderm",
 }
 
-BIOMARKER_POSITIONS = pd.DataFrame(
+# For each biomarker, which germ layer(s) it is expected to mark ("target" vs "other").
+# "endomeso" markers are shared between endoderm and mesoderm.
+BIOMARKER_TO_TARGET = {
+    "psc": {"psc"},
+    "endoderm": {"endoderm"},
+    "mesoderm": {"mesoderm"},
+    "ectoderm": {"ectoderm"},
+    "endomeso": {"endoderm", "mesoderm"},
+}
+
+LAYER_COLORS = {
+    "psc": "#1f77b4",
+    "endoderm": "#ff7f0e",
+    "mesoderm": "#2ca02c",
+    "ectoderm": "#d62728",
+}
+
+
+BIOMARKER_POSITIONS = pl.DataFrame(
     [
         # PSC
         {
@@ -137,123 +142,112 @@ BIOMARKER_POSITIONS = pd.DataFrame(
             "cg_id": "cg11147278",
             "biomarker": "endomeso",
         },
-    ]
+    ],
+    schema={
+        "chromosome": pl.Utf8,
+        "position": pl.Int64,
+        "direction": pl.Int64,
+        "cg_id": pl.Utf8,
+        "biomarker": pl.Utf8,
+    },
 )
 
-BIOMARKER_POSITIONS["chromosome"] = BIOMARKER_POSITIONS["chromosome"].astype(str)
 
-BIOMARKER_TO_TARGET = {
-    "psc": {"psc"},
-    "endoderm": {"endoderm"},
-    "mesoderm": {"mesoderm"},
-    "ectoderm": {"ectoderm"},
-    "endomeso": {"endoderm", "mesoderm"},
-}
-
-LAYER_COLORS = {
-    "psc": "#1f77b4",
-    "endoderm": "#ff7f0e",
-    "mesoderm": "#2ca02c",
-    "ectoderm": "#d62728",
-}
-
-df["chromosome"] = df["chromosome"].astype(str)
-df["position_pair"] = list(zip(df["chromosome"], df["position"]))
-
-biomarker_pairs = set(
-    zip(BIOMARKER_POSITIONS["chromosome"], BIOMARKER_POSITIONS["position"])
-)
-
-long_df = (
-    df[df["position_pair"].isin(biomarker_pairs)]
-    .copy()
-    .merge(
-        BIOMARKER_POSITIONS[
-            ["chromosome", "position", "direction", "biomarker", "cg_id"]
-        ],
-        on=["chromosome", "position"],
-        how="left",
+def adjust_for_direction_expr(methylation_col, direction_col):
+    """
+    When the position is defined as hypomethylated we return the complement of the methylation value.
+    """
+    return (
+        pl.when(direction_col == 1).then(methylation_col).otherwise(1 - methylation_col)
     )
-    .melt(
-        id_vars=["chromosome", "position", "direction", "biomarker", "cg_id"],
-        value_vars=list(METHYLATION_COLS.keys()),
-        var_name="layer",
+
+
+def filter_on_biomarker(df, biomarker_positions):
+    """
+    Filter the input data down to the known biomarker CpG positions
+    """
+    matched = df.join(
+        biomarker_positions,
+        on=["chromosome", "position"],
+        how="inner",
+    )
+    long_df = matched.unpivot(
+        index=["chromosome", "position", "direction", "biomarker", "cg_id"],
+        on=list(METH_TO_LAYER.keys()),
+        variable_name="layer",
         value_name="methylation",
     )
-)
-
-long_df["layer"] = long_df["layer"].map(METHYLATION_COLS)
-long_df["methylation"] = long_df["methylation"] / 100
-
-
-def adjust(m, d):
-    return m if d == 1 else 1 - m
-
-
-long_df["adjusted_methylation"] = long_df.apply(
-    lambda r: adjust(r["methylation"], r["direction"]), axis=1
-)
-
-
-long_df["type"] = long_df.apply(
-    lambda r: (
-        "target" if r["layer"] in BIOMARKER_TO_TARGET[r["biomarker"]] else "other"
-    ),
-    axis=1,
-)
-
-
-score_df = (
-    long_df.groupby(["biomarker", "layer"])["adjusted_methylation"].sum().reset_index()
-)
-
-score_map = (
-    score_df.groupby("biomarker")
-    .apply(
-        lambda x: ", ".join(
-            f"{row.layer.replace('derm', '')}: {row.adjusted_methylation:.2f}"
-            for row in x.itertuples()
+    long_df = long_df.with_columns(
+        pl.col("layer").replace(METH_TO_LAYER),
+        (pl.col("methylation") / 100),
+    )
+    long_df = long_df.with_columns(
+        adjust_for_direction_expr(pl.col("methylation"), pl.col("direction")).alias(
+            "adjusted_methylation"
         )
     )
-    .to_dict()
-)
+    long_df = long_df.with_columns(
+        pl.when(
+            pl.struct(["biomarker", "layer"]).map_elements(
+                lambda r: r["layer"] in BIOMARKER_TO_TARGET[r["biomarker"]],
+                return_dtype=pl.Boolean,
+            )
+        )
+        .then(pl.lit("target"))
+        .otherwise(pl.lit("other"))
+        .alias("type")
+    )
 
-long_df["subtitle"] = long_df["biomarker"].map(score_map)
+    return long_df
 
 
-charts = []
-subtitles = {}
-ncols = 2
+def build_biomarker_subtitles(long_df):
+    """
+    Build a per-biomarker subtitle string summarizing the summed adjusted
+    methylation per germ layer
+    """
+    score_df = (
+        long_df.group_by(["biomarker", "layer"])
+        .agg(pl.col("adjusted_methylation").sum())
+        .sort(["biomarker", "layer"])
+    )
 
-for i, biomarker in enumerate(long_df["biomarker"].unique()):
-    df_sub = long_df[long_df["biomarker"] == biomarker]
-    print(df_sub)
-    show_y = i % ncols == 0
-    # show_x = i == 4
-    show_x = True
+    subtitles = {}
+    for biomarker, group in score_df.group_by("biomarker"):
+        # group_by on a single key still returns a 1-tuple key
+        biomarker = biomarker[0]
+        parts = [
+            f"{row['layer'].replace('derm', '')}: {row['adjusted_methylation']:.2f}"
+            for row in group.iter_rows(named=True)
+        ]
+        subtitles[biomarker] = ", ".join(parts)
+    return subtitles
 
-    c = (
-        alt.Chart(df_sub)
+
+def make_biomarker_chart(df_sub, biomarker, subtitle, show_y_axis, is_last_column):
+    """Build a single point chart (methylation vs. cell-fate type) for one biomarker."""
+    # Add jitter
+    rng = np.random.default_rng(42)
+    jitter = rng.normal(loc=0.0, scale=0.06, size=df_sub.height)
+    df_sub = df_sub.with_columns(pl.Series("y_jitter", jitter))
+    return (
+        alt.Chart(df_sub.to_pandas())
         .mark_point(size=100, filled=True)
         .encode(
             x=alt.X(
-                "methylation:Q",
+                "adjusted_methylation:Q",
                 scale=alt.Scale(domain=[0, 1]),
-                title="methylation" if i == 4 else None,
-                axis=alt.Axis(
-                    labels=show_x,
-                    ticks=True,
-                    domain=True,
-                ),
+                title="methylation" if is_last_column else None,
+                axis=alt.Axis(labels=True, ticks=True, domain=True),
             ),
             y=alt.Y(
                 "type:N",
-                title="cell fate" if show_y else None,
-                axis=alt.Axis(
-                    labels=show_y,
-                    ticks=False,
-                    domain=True,
-                ),
+                title="cell fate" if show_y_axis else None,
+                axis=alt.Axis(labels=show_y_axis, ticks=False, domain=True),
+            ),
+            yOffset=alt.YOffset(
+                "y_jitter:Q",
+                scale=alt.Scale(domain=[-1, 1]),
             ),
             color=alt.Color(
                 "layer:N",
@@ -269,15 +263,42 @@ for i, biomarker in enumerate(long_df["biomarker"].unique()):
             height=150,
             title={
                 "text": biomarker,
-                "subtitle": score_map.get(biomarker, ""),
+                "subtitle": subtitle,
                 "subtitleFontSize": 9,
+                "subtitleFontStyle": "Liberation Sans",
             },
         )
     )
 
-    charts.append(c)
+
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+pl.Config.set_tbl_cols(
+    -1
+)  # show all columns when printing, like pandas display.max_columns
+df = pl.read_parquet(snakemake.input[0]).with_columns(
+    pl.col("chromosome").cast(pl.Utf8)
+)
+
+df = filter_on_biomarker(df, BIOMARKER_POSITIONS)
+subtitles = build_biomarker_subtitles(df)
+
+charts = []
+biomarkers = ["psc"] + df["biomarker"].unique(maintain_order=True).to_list()
+ncols = 2
+for i, biomarker in enumerate(biomarkers):
+    df_sub = df.filter(pl.col("biomarker") == biomarker)
+    show_y_axis = i % ncols == 0
+    is_last_column = i == len(biomarkers) - 1
+    print(df_sub)
+    charts.append(
+        make_biomarker_chart(
+            df_sub,
+            biomarker,
+            subtitles.get(biomarker, ""),
+            show_y_axis,
+            is_last_column,
+        )
+    )
 
 chart = alt.concat(*charts, columns=ncols)
 chart.save(snakemake.output[0])
-
-print(f"Chart saved to {snakemake.output[0]}")
