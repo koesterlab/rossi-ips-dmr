@@ -65,7 +65,7 @@ rule pluripotency_score_all:
         "results/{platform}/{caller}/meth_calling/calls_1.0.parquet",
     output:
         report(
-            "results/{platform}/{caller}/plots_paper/pluripotency_score_all.html",
+            "results/{platform}/{caller}/plots_paper/pluripotency_score_all.{plot_type}",
             caption="../report/scatter_plot.rst",
             category="Plots paper",
             subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
@@ -79,7 +79,7 @@ rule pluripotency_score_all:
     resources:
         mem_mb=16000,
     log:
-        "logs/pluripotency_score_all/{platform}_{caller}.log",
+        "logs/pluripotency_score_all/{platform}_{caller}_{plot_type}.log",
     script:
         "../scripts/pluripotency_score_all_heatmap.py"
 
