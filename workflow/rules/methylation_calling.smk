@@ -119,7 +119,7 @@ rule filter_prob_absent:
 
 rule filter_prob_present:
     input:
-        "results/{platform}/varlo/meth_calling/{sample}/{fdr}/calls_{scatteritem}.filtered_absent.bcf",
+        "results/{platform}/varlo/meth_calling/{sample}/calls_{scatteritem}.bcf",
     output:
         "results/{platform}/varlo/meth_calling/{sample}/{fdr}/calls_{scatteritem}.filtered_present.bcf",
     conda:
@@ -143,7 +143,8 @@ rule concatenate_filtered_calls:
     log:
         "logs/varlociraptor/concatenate_filtered_calls/{platform}_{sample}_{scatteritem}_{fdr}.log",
     shell:
-        "bcftools concat -a {input.absent} {input.present} -o {output} 2> {log}"
+        # Concatenate filtered output and delete duplicates
+        "bcftools concat -a {input.absent} {input.present} | bcftools norm -d exact -o {output}"
 
 
 

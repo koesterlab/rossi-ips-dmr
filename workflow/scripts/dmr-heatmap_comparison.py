@@ -15,8 +15,8 @@ def bin_methylation(series: pd.Series, bin_size: int) -> pd.Series:
 
 # We need this to cluster huge data
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
-pd.set_option("display.max_rows", None)
-pd.set_option("display.max_columns", None)
+# pd.set_option("display.max_rows", None)
+# pd.set_option("display.max_columns", None)
 alt.data_transformers.enable("vegafusion")
 
 sys.setrecursionlimit(100000)
@@ -53,18 +53,18 @@ nanopore_input_files = snakemake.input.nanopore
 output = snakemake.output[0]
 dfs = []
 for input_files in [pacbio_input_files, nanopore_input_files]:
-    sample_names = [
-        os.path.basename(os.path.dirname(os.path.dirname(file))) for file in input_files
-    ]
+    sample_names = [file.split(os.sep)[-4] for file in input_files]
 
     aggregated_data = []
     for file, sample_name in zip(input_files, sample_names):
         df = pd.read_csv(
             file, sep="\t", dtype={"chr": str, "transcriptId": str, "annotation": str}
         )
+        print(df, sample_name)
         agg_df = aggregate_by_gene_region(df)
         agg_df = agg_df.rename(columns={"mean_methylation_difference": sample_name})
         aggregated_data.append(agg_df)
+        print(agg_df.head())
 
     heatmap_data = aggregated_data[0]
     for df in aggregated_data[1:]:
@@ -99,6 +99,7 @@ vmax = df_complete.max().max()
 
 layers = ["endoderm", "mesoderm", "ectoderm"]
 charts = []
+print(df_complete.head())
 for idx, layer in enumerate(layers):
     number_nanopore_genes = df_complete[f"{layer}_nanopore"].notna().sum()
     number_pacbio_genes = df_complete[f"{layer}_pacbio"].notna().sum()
@@ -157,15 +158,15 @@ for idx, layer in enumerate(layers):
                 "pacbio_bin:Q",
                 bin=alt.Bin(step=0.1),
                 sort=alt.SortOrder("ascending"),
-                title=alt.Title(text=f"PacBio:\n{number_pacbio_genes}", fontSize=12),
+                title=f"PacBio:\n{number_pacbio_genes}",
+                axis=alt.Axis(titleFontSize=12),
             ),
             y=alt.Y(
                 "nanopore_bin:Q",
                 bin=alt.Bin(step=0.1),
                 sort=alt.SortOrder("ascending"),
-                title=alt.Title(
-                    text=f"Nanopore:\n{number_nanopore_genes}", fontSize=12
-                ),
+                title=f"Nanopore:\n{number_nanopore_genes}",
+                axis=alt.Axis(titleFontSize=12),
             ),
             color=alt.Color(
                 "count:Q",
