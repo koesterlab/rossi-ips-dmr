@@ -228,3 +228,17 @@ rule df_from_calls:
         meth_caller=lambda wildcards: wildcards.caller,
     script:
         "../scripts/df_from_calls.py"
+
+rule annotate_methylation:
+    input:
+        methylation="results/{platform}/{caller}/meth_calling/calls_{fdr}.parquet",
+        txdb="resources/ref/txdb.db",
+        txnames="resources/ref/txnames.rds",
+    output:
+        chipseeker="results/{platform}/{caller}/meth_calling/chipseeker_{fdr}.tsv",
+    log:
+        "logs/annotate_methylation/{platform}_{caller}_{fdr}.log",
+    conda:
+        "../envs/chipseeker.yaml"
+    script:
+        "../scripts/chipseeker_methylation.R"
