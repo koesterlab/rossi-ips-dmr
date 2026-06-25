@@ -108,7 +108,9 @@ rule prepare_kallisto_sleuth:
 #   rna_old/base_{base}/results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv
 #   rna_new/base_{base}/results/tables/diffexp/condition.genes-representative.diffexp_postprocessed.tsv
 
-
+"""
+The direction of the diffexp depends on the order of conditions in the model name. If the requested direction doesn't match how the model is named in the config, we still return the table as defined in the config, but its diffexp values need to be multiplied by -1 to match the requested direction. `directive` selects whether to return the file paths ("input") or these sign multipliers ("params").
+"""
 def compute_diffexp_tables(wildcards, directive):
     computed_diffexp = config["kallisto_sleuth"]["diffexp"]["models"].keys()
     results = []
@@ -146,7 +148,8 @@ rule compare_dmr_to_diffexp_no_tfs:
         val_genes="resources/rna_seq/val_genes.tsv",
     output:
         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
-        html="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.html",
+        dmr_diffexp="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.html",
+        # methylation_diffexp="results/{platform}/{caller}/base_{base}/{rna_data}/methylation_vs_diffexp_{annotation_type}.html",
         # We create a common val_genes file for all annotation_types
         val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",
     # wildcard_constraints:

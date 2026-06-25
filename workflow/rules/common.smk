@@ -79,6 +79,7 @@ def all_input(wildcards):
             for tf in ["no", "with"]
             for annotation_type in [
                 "promoter",
+                "unfiltered",
             ]
         ]
     )
