@@ -52,10 +52,10 @@ rule compute_own_biomarker:
     input:
         nanopore="results/nanopore/{caller}/meth_calling/calls_0.01.parquet",
         pacbio="results/pacbio/{caller}/meth_calling/calls_0.01.parquet",
-        coverage_nanopore="resources/nanopore/coverage.parquet",
-        coverage_pacbio="resources/pacbio/coverage.parquet",
+        # coverage_nanopore="resources/nanopore/coverage.parquet",
+        # coverage_pacbio="resources/pacbio/coverage.parquet",
     output:
-        "results/platforms_combined/{caller}/plots_paper/own_biomarker.parquet"
+        "results/platforms_combined/{caller}/plots_paper/own_biomarker.csv"
     resources:
         mem_mb=16000,
     conda:
