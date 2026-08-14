@@ -115,3 +115,22 @@ rule dmr_scatter_comparison:
         base = "psc"
     script:
         "../scripts/dmr-heatmap_comparison.py"
+
+
+rule concatenate_figure:
+    input:
+        plots=[
+            "results/platforms_combined/varlo/plots_paper/scatter_comparison.pdf",
+            "results/platforms_combined/varlo/base_psc/rna_new/diffexp_vs_dmrs_promoter.pdf",
+            "results/platforms_combined/varlo/base_psc/rna_new/diffexp_vs_dmrs_unfiltered.pdf"
+        ]
+    output:
+        "results/platforms_combined/varlo/plots_paper/concatenated.svg"
+    conda:
+        "../envs/fitz.yaml"
+    log:
+        "logs/concatenate_figure.log",
+    resources:
+        mem_mb=4000,
+    script:
+        "../scripts/concat_plots.py"

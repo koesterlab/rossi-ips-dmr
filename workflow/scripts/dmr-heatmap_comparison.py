@@ -60,11 +60,9 @@ for input_files in [pacbio_input_files, nanopore_input_files]:
         df = pd.read_csv(
             file, sep="\t", dtype={"chr": str, "transcriptId": str, "annotation": str}
         )
-        print(df, sample_name)
         agg_df = aggregate_by_gene_region(df)
         agg_df = agg_df.rename(columns={"mean_methylation_difference": sample_name})
         aggregated_data.append(agg_df)
-        print(agg_df.head())
 
     heatmap_data = aggregated_data[0]
     for df in aggregated_data[1:]:
@@ -99,8 +97,7 @@ vmax = df_complete.max().max()
 
 layers = ["endoderm", "mesoderm", "ectoderm"]
 charts = []
-print(df_complete.head())
-for idx, layer in enumerate(layers):
+for layer in sorted(layers):
     number_nanopore_genes = df_complete[f"{layer}_nanopore"].notna().sum()
     number_pacbio_genes = df_complete[f"{layer}_pacbio"].notna().sum()
     number_common_genes = (
@@ -113,8 +110,6 @@ for idx, layer in enumerate(layers):
 
     df_sorted = df_temp
     corr = df_sorted["nanopore"].corr(df_sorted["pacbio"])
-    print(layer)
-    print("Pearson", corr)
 
     df_sorted["pacbio"] = df_sorted["pacbio"] * 100
     df_sorted["nanopore"] = df_sorted["nanopore"] * 100
@@ -150,7 +145,7 @@ for idx, layer in enumerate(layers):
     plot = (
         alt.Chart(
             counts,
-            title=alt.Title(text=f"{layer}: {number_common_genes}", fontSize=20),
+            title=alt.Title(text=f"{layer}", subtitle=f"N = {number_common_genes}, Pearson = {corr.round(3)}", fontSize=20, subtitleFontSize=14),
         )
         .mark_rect()
         .encode(

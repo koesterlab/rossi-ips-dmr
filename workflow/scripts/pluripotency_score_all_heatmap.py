@@ -23,12 +23,11 @@ BIOMARKER_TO_TARGET = {
 }
 
 LAYER_COLORS = {
-    "psc": "#1f77b4",
-    "endoderm": "#ff7f0e",
-    "mesoderm": "#2ca02c",
-    "ectoderm": "#d62728",
+    "psc": "#05AA8F",
+    "endoderm": "#D81B60",
+    "mesoderm": "#1E88E5",
+    "ectoderm": "#FFC107",
 }
-
 
 BIOMARKER_POSITIONS = pl.DataFrame(
     [
@@ -259,8 +258,6 @@ def make_biomarker_chart(df_sub, biomarker, subtitle, show_y_axis, is_last_colum
             ),
         )
         .properties(
-            width=200,
-            height=150,
             title={
                 "text": biomarker,
                 "subtitle": subtitle,
