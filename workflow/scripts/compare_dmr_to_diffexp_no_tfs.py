@@ -5,13 +5,13 @@ import polars as pl
 
 sys.stderr = open(snakemake.log[0], "w", buffering=1)
 
-pl.Config.set_tbl_rows(100)
+pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(100)
 
 LAYER_COLORS = {
-    "endoderm": "#ff7f0e",
-    "mesoderm": "#2ca02c",
-    "ectoderm": "#d62728",
+    "endoderm": "#D81B60",
+    "mesoderm": "#1E88E5",
+    "ectoderm": "#FFC107",
 }
 
 ANNOTATION_TYPE_NAMES = {
@@ -23,8 +23,9 @@ ANNOTATION_TYPE_NAMES = {
     "5_utr": "5' UTR",
     "downstream": "Downstream",
 }
-
-annotation_type = ANNOTATION_TYPE_NAMES.get(snakemake.params.get("annotation_type"))
+annotation_type = ANNOTATION_TYPE_NAMES.get(
+    snakemake.params["annotation_type"], "unfiltered"
+)
 non_base_layers: list[str] = snakemake.params["non_base_layers"]
 diffexp_inputs = snakemake.input.diffexp
 # Direction of diffexp depends on the order of conditions in the model name.
@@ -227,7 +228,7 @@ def plot_df(
 
     regression_line = (
         base.transform_regression("diffexp", "mean_methylation_difference")
-        .mark_line(size=2, color="blue")
+        .mark_line(size=2, color="#05AA8F")
         .encode(x="diffexp:Q", y="mean_methylation_difference:Q")
     )
 
@@ -275,9 +276,7 @@ combined_df = (
     )
 )
 
-
 combined_df = add_val_genes(combined_df)
-annotation_type = None
 if annotation_type != "unfiltered":
     combined_df = combined_df.filter(
         pl.col("annotation_type") == annotation_type
@@ -299,95 +298,14 @@ for layer in sorted(combined_df["germ_layer"].unique()):
 alt.concat(*charts, columns=2).save(snakemake.output.dmr_diffexp)
 
 
-# This is only for downstream pathway analysis and is not used right now.
-# diffexp_min, diffexp_max = symmetric_domain(combined_df["diffexp"])
-# meth_diff_min, meth_diff_max = symmetric_domain(
-#     combined_df["mean_methylation_difference"]
-# )
-# meth_diff_max_scaled = meth_diff_max * diffexp_max
-
-# ranked_df = (
-#     add_corner_distance_rank(combined_df, diffexp_max, meth_diff_max_scaled)
-#     .select(
-#         "ext_gene",
-#         "ens_gene",
-#         "germ_layer",
-#         "qval_dmr",
-#         "pval_dmr",
-#         "diffexp",
-#         "diffexp_se",
-#         "qval_diffexp",
-#         "pval_diffexp",
-#         "qval_combined",
-#         "pval_combined",
-#         "mean_methylation_difference",
-#         "ranked_meth_diffexp",
-#     )
-#     .with_row_index("row_id")
-# )
-
 combined_df.select(
     "ext_gene",
     "ens_gene",
     "germ_layer",
     "qval_dmr",
-    "pval_dmr",
     "diffexp",
     "diffexp_se",
     "qval_diffexp",
-    "pval_diffexp",
     "qval_combined",
-    "pval_combined",
     "mean_methylation_difference",
-    # "ranked_meth_diffexp",
 ).with_row_index("row_id").write_csv(snakemake.output.tsv, separator="\t")
-
-
-# def symmetric_domain(series: pl.Series) -> tuple[float, float]:
-#     """Return (-m, m) where m is the largest absolute value in `series`."""
-#     bound = max(abs(series.min()), abs(series.max()))
-#     return -bound, bound
-
-
-# def add_corner_distance_rank(
-#     df: pl.DataFrame, x_max: float, y_max: float
-# ) -> pl.DataFrame:
-#     """
-#     Rank genes by how "extreme" their combined diffexp/methylation result is,
-#     i.e. how close they sit to one of the plot's two outer corners
-#     (top-left = down in expression & up in methylation, or the reverse).
-
-#     Both axes are first scaled to comparable ranges, then for each point we
-#     take the smaller of its distance to the top-left and bottom-right
-#     corners. `ranked_meth_diffexp` is this distance converted into a single
-#     signed score: positive and large for points near the top-left corner,
-#     negative and large (more negative = further) for points near the
-#     bottom-right corner. Sorting by |ranked_meth_diffexp| descending then
-#     surfaces the most extreme genes in either direction first.
-#     """
-#     max_dist = (x_max**2 + y_max**2) ** 0.5
-
-#     return (
-#         df.with_columns(
-#             mean_methylation_difference_scaled=pl.col("mean_methylation_difference")
-#             * x_max
-#         )
-#         .with_columns(
-#             dist_top_left=(
-#                 (pl.col("diffexp") - (-x_max)) ** 2
-#                 + (pl.col("mean_methylation_difference_scaled") - y_max) ** 2
-#             ).sqrt(),
-#             dist_bottom_right=(
-#                 (pl.col("diffexp") - x_max) ** 2
-#                 + (pl.col("mean_methylation_difference_scaled") - (-y_max)) ** 2
-#             ).sqrt(),
-#         )
-#         .with_columns(
-#             ranked_meth_diffexp=pl.when(
-#                 pl.col("dist_top_left") < pl.col("dist_bottom_right")
-#             )
-#             .then(max_dist - pl.col("dist_top_left"))
-#             .otherwise(-max_dist + pl.col("dist_bottom_right"))
-#         )
-#         .sort(pl.col("ranked_meth_diffexp").abs(), descending=True)
-#     )
