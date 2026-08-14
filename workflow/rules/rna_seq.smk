@@ -148,7 +148,7 @@ rule compare_dmr_to_diffexp_no_tfs:
         val_genes="resources/rna_seq/val_genes.tsv",
     output:
         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
-        dmr_diffexp="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.html",
+        dmr_diffexp="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.pdf",
         # methylation_diffexp="results/{platform}/{caller}/base_{base}/{rna_data}/methylation_vs_diffexp_{annotation_type}.html",
         # We create a common val_genes file for all annotation_types
         val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",

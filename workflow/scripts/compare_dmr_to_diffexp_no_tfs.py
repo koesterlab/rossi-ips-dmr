@@ -166,7 +166,6 @@ def plot_df(
     x_domain: list[float],
     y_domain: list[float],
     title: str,
-    show_axes: dict[str, bool],
 ) -> alt.Chart:
     """Scatter plot of diffexp vs. methylation difference, with a regression line and validation gene labels."""
     layer_select = alt.selection_point(
@@ -183,8 +182,10 @@ def plot_df(
             "germ_layer:N",
             title="Germ Layer",
             scale=alt.Scale(
-                domain=list(LAYER_COLORS.keys()), range=list(LAYER_COLORS.values())
+                domain=(d := sorted(LAYER_COLORS.keys())),
+                range=[LAYER_COLORS[l] for l in d],
             ),
+            legend=None if annotation_type == "unfiltered" else alt.Legend(),
         ),
         alt.value("lightgray"),
     )
@@ -197,10 +198,15 @@ def plot_df(
         "qval_diffexp",
     ]
 
-    base = alt.Chart(df.to_pandas(), title=title).transform_filter(
+    pearson_r = layer_df.select(
+        pl.corr("diffexp", "mean_methylation_difference")
+    ).item()
+    base = alt.Chart(
+        df.to_pandas(),
+        title=alt.Title(text=" ", subtitle=f"N = {len(df)}, Pearson = {pearson_r:.3f}", fontSize=1, subtitleFontSize=14),
+    ).transform_filter(
         alt.datum.qval_combined <= qval_slider
     )
-
     points = (
         base.mark_point(filled=True)
         .add_params(layer_select, qval_slider)
@@ -208,22 +214,27 @@ def plot_df(
             x=alt.X(
                 "diffexp:Q",
                 scale=alt.Scale(domain=x_domain),
-                title="Differential expression value" if show_axes.get("x") else None,
+                title="Differential expression value" if annotation_type == "unfiltered" else None,
+                axis=alt.Axis(titleFontSize=12),
             ),
             y=alt.Y(
                 "mean_methylation_difference:Q",
                 scale=alt.Scale(domain=y_domain),
-                title="DMR value" if show_axes.get("y") else None,
+                title="DMR value" if df["germ_layer"].unique()[0] == "ectoderm"else "     ",
+                axis=alt.Axis(titleFontSize=12),
             ),
             size=alt.Size(
                 "qval_combined:Q", title="q-value", scale=alt.Scale(range=[50, 1])
             ),
             opacity=alt.Opacity(
-                "qval_combined:Q", scale=alt.Scale(range=[0.8, 0]), title="q-value"
+                "qval_combined:Q", scale=alt.Scale(range=[0.8, 0]), title="q-value", legend=None if annotation_type == "unfiltered" else alt.Legend()
             ),
             color=color,
             tooltip=tooltip_cols,
         )
+    ).properties(
+        width=200,
+        height=200,
     )
 
     regression_line = (
@@ -236,14 +247,14 @@ def plot_df(
         base.transform_filter(alt.datum.val_gene != None)
         .transform_filter(layer_select)
         .mark_text(
-            align="left",
-            dx=3,
-            dy=-3,
-            fontWeight="bold",
-            fontSize=10,
+            align="center",
+            # dx=3,
+            dy=-5,
+            # fontWeight="bold",
+            fontSize=6,
             color="black",
-            stroke="white",
-            strokeWidth=1,
+            # stroke="white",
+            # strokeWidth=1,
         )
         .encode(
             x="diffexp:Q",
@@ -288,14 +299,13 @@ y_domain = [
     combined_df["mean_methylation_difference"].min(),
     combined_df["mean_methylation_difference"].max(),
 ]
-
-charts = [plot_df(combined_df, x_domain, y_domain, "All Layers", {"y": True})]
+# charts = [plot_df(combined_df, x_domain, y_domain, "All Layers", {"y": True})]
+charts = []
 for layer in sorted(combined_df["germ_layer"].unique()):
     layer_df = combined_df.filter(pl.col("germ_layer") == layer)
-    show_axes = {"x": layer in ("endoderm", "mesoderm"), "y": layer == "endoderm"}
-    charts.append(plot_df(layer_df, x_domain, y_domain, layer, show_axes))
 
-alt.concat(*charts, columns=2).save(snakemake.output.dmr_diffexp)
+    charts.append(plot_df(layer_df, x_domain, y_domain, layer))
+alt.concat(*charts, columns=3).save(snakemake.output.dmr_diffexp)
 
 
 combined_df.select(
