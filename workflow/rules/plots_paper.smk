@@ -125,11 +125,11 @@ rule concatenate_figure:
             "results/platforms_combined/varlo/base_psc/rna_new/diffexp_vs_dmrs_unfiltered.pdf"
         ]
     output:
-        "results/platforms_combined/varlo/plots_paper/concatenated.svg"
+        "results/platforms_combined/varlo/plots_paper/concatenated.{plot_type}"
     conda:
         "../envs/fitz.yaml"
     log:
-        "logs/concatenate_figure.log",
+        "logs/concatenate_figure/{plot_type}.log",
     resources:
         mem_mb=4000,
     script:

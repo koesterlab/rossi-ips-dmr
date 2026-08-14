@@ -25,6 +25,7 @@ include: "rules/methylation_calling.smk"
 include: "rules/annotate_dmrs.smk"
 include: "rules/fgsea.smk"
 include: "rules/compute_biomarker.smk"
+include: "rules/expression_to_meth.smk"
 
 
 # ---------------------------------------------------------------------------
