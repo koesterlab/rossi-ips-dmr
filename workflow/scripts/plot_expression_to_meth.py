@@ -71,10 +71,10 @@ df = meth_df.join(expr_df, on="transcriptId")
 
 
 LAYERS = [
-    ("psc_expression", "psc_methylation", "PSC"),
-    ("endoderm_expression", "endoderm_methylation", "Endoderm"),
-    ("ectoderm_expression", "ectoderm_methylation", "Ektoderm"),
-    ("mesoderm_expression", "mesoderm_methylation", "Mesoderm"),
+    ("psc_expression", "psc_methylation", "psc"),
+    ("endoderm_expression", "endoderm_methylation", "endoderm"),
+    ("ectoderm_expression", "ectoderm_methylation", "ectoderm"),
+    ("mesoderm_expression", "mesoderm_methylation", "mesoderm"),
 ]
 
 long_df = pl.concat(
@@ -95,10 +95,10 @@ long_df = pl.concat(
 
 chart = (
     alt.Chart(long_df.to_pandas())
-    .mark_circle(size=25, opacity=0.4)
+    .mark_circle(size=20, opacity=0.4)
     .encode(
-        x=alt.X("log2_expression:Q", title="log₂(Expression + 1)"),
-        y=alt.Y("methylation:Q", title="Methylierung (%)"),
+        x=alt.X("log2_expression:Q", title="log₂(TPM + 1)"),
+        y=alt.Y("methylation:Q", title="Methylation (%)"),
         tooltip=["gene:N", "transcriptId:N", "expression:Q", "methylation:Q"],
         facet=alt.Facet(
             "layer:N",
@@ -108,13 +108,6 @@ chart = (
     )
     .properties(width=250, height=250)
     .resolve_scale(x="independent", y="independent")
-    .properties(
-        title=alt.TitleParams(
-            "Expression vs. Methylierung pro Keimblatt",
-            fontSize=16,
-            fontWeight="bold",
-        )
-    )
 )
 
 chart.save(snakemake.output[0])
