@@ -65,3 +65,56 @@ rule merge_mosdepth:
     script:
         "../../scripts/archive/merge_mosdepth.py"
 
+rule scatter_plot:
+    input:
+        calls="results/{platform}/{caller}/meth_calling/calls_0.05.parquet",
+    output:
+        report(
+            "results/{platform}/{caller}/base_{base}/plots_paper/{group2}/scatter_plot.png",
+            caption="../report/scatter_plot.rst",
+            category="Plots paper",
+            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            labels=lambda wildcards: {
+                "Plot": "1B",
+                "Base": wildcards.base,
+                "Type": wildcards.group2,
+            },
+        ),
+    params:
+        group1=lambda wildcards: wildcards.base,
+        group2=lambda wildcards: wildcards.group2,
+    resources:
+        mem_mb=16000,
+    conda:
+        "../envs/python.yaml"
+    log:
+        "logs/scatter_plot/{platform}_{caller}_{base}_{group2}.log",
+    script:
+        "../scripts/scatter_plot.py"
+
+
+rule scatter_plot_endo_meso:
+    input:
+        calls="results/{platform}/{caller}/meth_calling/calls_1.0.parquet",
+    output:
+        report(
+            "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png",
+            caption="../report/scatter_plot.rst",
+            category="Plots paper",
+            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            labels=lambda wildcards: {
+                "Plot": "1C",
+                "Type": "endo_meso",
+            },
+        ),
+    resources:
+        mem_mb=16000,
+    params:
+        group1="mesoderm",
+        group2="endoderm",
+    conda:
+        "../envs/python.yaml"
+    log:
+        "logs/scatter_plot_endo_meso/{platform}_{caller}.log",
+    script:
+        "../scripts/scatter_plot.py"
