@@ -167,3 +167,21 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd_with_tfs/{platform}_{caller}_{base}_{rna_data}_{annotation_type}.log",
     wrapper:
         "v9.2.0/utils/datavzrd"
+
+
+rule candidates_to_bed:
+    input:
+        "resources/candidates/{candidates}.bcf",
+    output:
+        "resources/candidates/{candidates}.bed",
+    wildcard_constraints:
+        candidates=r"candidates(?:_\d+-of-\d+)?",
+    conda:
+        "../envs/samtools.yaml"
+    log:
+        "logs/candidates_to_bed/{candidates}.log",
+    shell:
+        """
+        bcftools query -f '%CHROM\t%POS\t%REF\n' {input} 2> {log} | \
+        awk '{{print $1 "\t" $2-1 "\t" $2-1+length($3)}}' > {output}
+        """

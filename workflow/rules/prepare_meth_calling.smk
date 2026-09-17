@@ -1,21 +1,3 @@
-rule download_varlociraptor:
-    output:
-        directory(
-            "resources/tools/varlociraptor",
-        ),
-    log:
-        "logs/download_varlociraptor.log",
-    shell:
-        """
-        PARENT_DIR=$(dirname {output})
-        mkdir -p $PARENT_DIR
-        cd $PARENT_DIR
-        git clone git@github.com:varlociraptor/varlociraptor.git
-        cd varlociraptor
-        git checkout methylation-paired-end
-        """
-
-
 rule get_genome:
     output:
         "resources/genome.fasta",
@@ -44,30 +26,35 @@ rule genome_index:
         "samtools faidx {input} 2> {log}"
 
 
+# Indexes both the full alignments and their per-chunk subsets.
 rule index_alignment:
     input:
-        "resources/{platform}/{sample}.bam",
+        "resources/{platform}/{bam}.bam",
     output:
-        "resources/{platform}/{sample}.bam.bai",
+        "resources/{platform}/{bam}.bam.bai",
     conda:
         "../envs/samtools.yaml"
     threads: 10
     log:
-        "logs/index_alignment/{platform}_{sample}.log",
+        "logs/index_alignment/{platform}/{bam}.log",
     shell:
         "samtools index -@ {threads} {input} 2> {log}"
 
 
-# Problem: The candidates span more than one chromosome... We would have to look at each chromosome indiviually
-rule scatter_aligned_reads:
-    input:
-        alignment="resources/{platform}/{sample}.bam",
-        candidate=lambda wildcards: "resources/candidates/candidates_{scatteritem}.bed",
-    output:
-        "resources/{platform}/{sample}/alignment_{scatteritem}.bam",
-    log:
-        "logs/scatter_aligned_reads/{platform}_{sample}_{scatteritem}.log",
-    conda:
-        "../envs/samtools.yaml"
-    shell:
-        "samtools view -b -L {input.candidate} {input.alignment} > {output} 2> {log}"
+
+if not config["use_precomputed_calls"]:
+
+    # Only keep reads overlapping the candidates of one chunk, so that each
+    # varlociraptor job only has to process a small alignment file.
+    rule scatter_aligned_reads:
+        input:
+            alignment="resources/{platform}/{germ_layer}.bam",
+            candidate="resources/candidates/candidates_{scatteritem}.bed",
+        output:
+            "resources/{platform}/{germ_layer}/alignment_{scatteritem}.bam",
+        log:
+            "logs/scatter_aligned_reads/{platform}_{germ_layer}_{scatteritem}.log",
+        conda:
+            "../envs/samtools.yaml"
+        shell:
+            "samtools view -b -L {input.candidate} {input.alignment} > {output} 2> {log}"
