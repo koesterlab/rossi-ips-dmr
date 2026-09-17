@@ -1,18 +1,15 @@
 rule download_metilene:
     output:
-        temp("resources/tools/metilene_v02-8.tar.gz"),
+        temp("resources/tools/metilene_v02-9.tar.gz"),
     log:
         "logs/download_metilene.log",
     shell:
-        """
-        mkdir -p $(dirname {output})
-        wget -O {output} http://www.bioinf.uni-leipzig.de/Software/metilene/metilene_v02-9.tar.gz 2> {log}
-        """
+        "wget -O {output} http://www.bioinf.uni-leipzig.de/Software/metilene/metilene_v02-9.tar.gz 2> {log}"
 
 
 rule unpack_metilene:
     input:
-        "resources/tools/metilene_v02-8.tar.gz",
+        "resources/tools/metilene_v02-9.tar.gz",
     output:
         directory("resources/tools/metilene"),
     log:
@@ -29,9 +26,6 @@ rule metilene_input:
         "results/{platform}/{caller}/meth_calling/calls_{fdr}.parquet",
     output:
         "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/{fdr}/metilene_input.txt",
-    params:
-        base=lambda wildcards: wildcards.base,
-        group2=lambda wildcards: wildcards.group2,
     conda:
         "../envs/python.yaml"
     resources:
@@ -41,7 +35,7 @@ rule metilene_input:
     script:
         "../scripts/metilene_input.py"
 
-
+# Output cols:
 # | chr | start | stop | q-value | mean methylation difference | #CpGs | p (MWU) | p (2D KS) | mean g1 | mean g2 |
 rule call_metilene:
     input:
@@ -54,27 +48,23 @@ rule call_metilene:
     log:
         "logs/call_metilene/{platform}_{caller}_{base}_{group2}_{fdr}.log",
     shell:
-        """
-        metilene -d 0.01 -t {threads} -m 10 -a {wildcards.group2} -b {wildcards.base} {input} > {output} 2> {log}
-        """
+        "metilene -d 0.01 -t {threads} -m 10 -a {wildcards.group2} -b {wildcards.base} {input} > {output} 2> {log}"
 
 
 rule focus_dmrs:
-    """Compute DMRs exclusive to {germ_layer} by subtracting the other two non-base layers."""
+    """Keep only DMRs of {germ_layer} that do not overlap DMRs of the other three non-base layers."""
     input:
         this="results/{platform}/{caller}/base_{base}/dmr_calls/{germ_layer}/{fdr}/metilene_output.bed",
-        other1=lambda wc: expand(
+        others=lambda wildcards: expand(
             "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{layer}/{{fdr}}/metilene_output.bed",
-            layer=[l for l in get_non_base_layers(wc.base) if l != wc.germ_layer][0],
-        ),
-        other2=lambda wc: expand(
-            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{layer}/{{fdr}}/metilene_output.bed",
-            layer=[l for l in get_non_base_layers(wc.base) if l != wc.germ_layer][1],
+            layer=[
+                layer
+                for layer in get_non_base_layers(wildcards.base)
+                if layer != wildcards.germ_layer
+            ],
         ),
     output:
         "results/{platform}/{caller}/base_{base}/dmr_calls/{germ_layer}/{fdr}/metilene_output_focused.bed",
-    wildcard_constraints:
-        germ_layer="|".join(ALL_GERM_LAYERS),
     conda:
         "../envs/bedtools.yaml"
     log:
@@ -101,15 +91,8 @@ rule metilene_plots:
         ),
     conda:
         "../envs/metilene.yaml"
-    params:
-        # path_prefix=lambda wildcards: (
-        #     f"results/{wildcards.platform}/{wildcards.caller}/base_{wildcards.base}/dmr_calls/{wildcards.group2}/plots/dmr"
-        # ),
-        base=lambda wildcards: wildcards.base,
     log:
         "logs/metilene_plots/{platform}_{caller}_{base}_{group2}.log",
     shell:
-        """
-        PARENT_DIR=$(dirname {output.bed})/dmr
-        perl {input.met}/metilene_output.pl -q {input.met_out} -o $PARENT_DIR -a {params.base} -b {wildcards.group2} 2> {log}
-        """
+        # Group order must match the metilene call above (-a group2 -b base).
+        "perl {input.met}/metilene_output.pl -q {input.met_out} -o $(dirname {output.bed})/dmr -a {wildcards.group2} -b {wildcards.base} 2> {log}"

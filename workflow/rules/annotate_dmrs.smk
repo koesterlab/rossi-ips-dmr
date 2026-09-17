@@ -14,7 +14,7 @@ rule download_regulatory_elements:
     shell:
         """
         wget -O {output}.gz https://ftp.ensembl.org/pub/release-{params.release}/regulation/{params.species}/{params.build}/annotation/{params.species_cap}.{params.build}.regulatory_features.v{params.release}.gff3.gz 2> {log}
-        gzip -d {output}.gz
+        gzip -d {output}.gz 2>> {log}
         """
 
 
@@ -122,7 +122,7 @@ rule get_ensembl_gene_names_from_dmrs:
         version=config["resources"]["ref"]["release"],
     log:
         "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{base}_{group2}_{fdr}.log",
-    # Use unrealistc high memory to avoid parallel computation since ensembl then detects DOS attacks
+    # Use unrealistcally high memory to avoid parallel computation since ensembl then detects DOS attacks
     resources:
         mem_mb=16000,
     script:
@@ -145,10 +145,7 @@ rule annotate_dmrs_with_ensembl_gene_names:
 
 rule dmr_heatmap:
     input:
-        lambda wildcards: expand(
-            "results/{{platform}}/{{caller}}/base_{{base}}/dmr_calls/{group2}/genes_transcripts/0.05/chipseeker_postprocessed.tsv",
-            group2=get_non_base_layers(wildcards.base),
-        ),
+        chipseeker_tables,
     output:
         report(
             "results/{platform}/{caller}/base_{base}/dmr_calls/heatmaps/{type}.png",
@@ -167,7 +164,7 @@ rule dmr_heatmap:
     resources:
         mem_mb=16000,
     params:
-        base = lambda wildcards: wildcards.base
+        layers=lambda wildcards: get_non_base_layers(wildcards.base),
     script:
         "../scripts/dmr-heatmap.py"
 
@@ -178,7 +175,7 @@ rule datavzrd_annotations:
         genes_transcripts="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/0.05/chipseeker_postprocessed.tsv",
         regulatory_elements="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/datavzrd-report/{group2}"
+        "results/{platform}/{caller}/base_{base}/dmr_calls/datavzrd-report/{group2}",
     params:
         base_experiment=lambda wildcards: wildcards.base,
     log:
