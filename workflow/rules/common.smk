@@ -76,7 +76,7 @@ def all_input(wildcards):
             for base in get_base_experiments()
             for rna_data in get_rna_data_values()
             # for tf in ["no"]
-            for tf in ["no", "with"]
+            for tf in ["no"]
             for annotation_type in [
                 "promoter",
                 "unfiltered",
@@ -85,20 +85,20 @@ def all_input(wildcards):
     )
 
     # fgsea pathway enrichment – 4 bases × 2 RNA datasets × non-base layers + "all" × annotation × func
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/base_{base}/{rna_data}/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            for rna_data in get_rna_data_values()
-            for germ_layer in get_non_base_layers(base) + ["all"]
-            for annotation_type in [
-                "promoter",
-            ]
-            for func in ["mf", "bp", "cc", "go"]
-        ]
-    )
+    # wanted_input.extend(
+    #     [
+    #         f"results/{platform}/{caller}/base_{base}/{rna_data}/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
+    #         for platform in config["meth_caller"].keys()
+    #         for caller in config["meth_caller"].get(platform, [])
+    #         for base in get_base_experiments()
+    #         for rna_data in get_rna_data_values()
+    #         for germ_layer in get_non_base_layers(base) + ["all"]
+    #         for annotation_type in [
+    #             "promoter",
+    #         ]
+    #         for func in ["mf", "bp", "cc", "go"]
+    #     ]
+    # )
 
     # Metilene plots (PDF) – one per base × non-base group
     wanted_input.extend(

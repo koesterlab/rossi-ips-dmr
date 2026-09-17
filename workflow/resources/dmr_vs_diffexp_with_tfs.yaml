@@ -111,15 +111,6 @@ views:
           display-mode: hidden
         pval_dmr:
           display-mode: hidden
-        ranked_meth_diffexp:
-          plot:
-            heatmap:
-              scale: linear
-              range:
-                - "#e6550d"
-                - "white"
-                - "#6baed6"
-
   diffexp_vs_dmrs_plot_with_tfs:
     dataset: data_with_tfs
     desc:

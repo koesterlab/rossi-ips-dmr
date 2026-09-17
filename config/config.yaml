@@ -27,8 +27,8 @@ rna_accessions_new:
     "SQK-NBD114-24_barcode11": mesoderm
     "SQK-NBD114-24_barcode12": psc
 
-rna_data: ["rna_old", "rna_new"]
-# rna_data: ["rna"]
+# rna_data: ["rna_old", "rna_new"]
+rna_data: ["rna_new"]
 
 resources:
     ref:
@@ -247,6 +247,14 @@ kallisto_sleuth:
                 reduced: ~1
                 primary_variable: mesoderm_vs_endoderm_new
                 base_level: "-"
+
+            # This mdel is just here to generate the cpm gene expression.
+            just_get_counts:
+                full: ~just_get_counts
+                reduced: ~1
+                primary_variable: just_get_counts
+                base_level: "-"
+
         # significance levels to use for volcano, ma- and qq-plots
         sig-level:
             volcano-plot: 0.05

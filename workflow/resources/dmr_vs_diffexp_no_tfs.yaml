@@ -45,11 +45,6 @@ views:
                         url: v1.5.1/stats/p-value
                         with:
                             significance_threshold: 0.05
-                pval_combined:
-                    spell:
-                        url: v1.5.1/stats/p-value
-                        with:
-                            significance_threshold: 0.05
                 mean_methylation_difference:
                     plot:
                         heatmap:
@@ -100,23 +95,6 @@ views:
                     link-to-url:
                         geneontology:
                             url: https://useast.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g={ens_gene}
-                pval_diffexp:
-                    display-mode: detail
-                pval_dmr:
-                    display-mode: detail
-                ranked_meth_diffexp:
-                    plot:
-                        heatmap:
-                            scale: linear
-                            range:
-                                - "#e6550d"
-                                - "white"
-                                - "#6baed6"
-                            domain:
-                                - -10
-                                - 0
-                                - 10
-
     diffexp_vs_dmrs_plot_no_tfs:
         dataset: data_no_tfs
         desc: "Scatter plot with DMR values and DiffExp per gene and germ_layer. Sometimes a gene appears multiple times because there are multiple differentially methylated region within that gene. We show 'qval combined' (the minimum of the qvalues of the DMR and DiffExp analysis) as opacity of each data point. You can click on the Germ Layer legend to filter on specific germ layers. Furthermore you can click on a data point to see its details in a table."
@@ -250,10 +228,3 @@ views:
                         heatmap:
                             scale: ordinal
                             color-scheme: category10
-                synonyms:
-                    display-mode: detail
-                    spell:
-                        url: https://raw.githubusercontent.com/Addimator/separated-links-spell/c86c060be05adba629f7c22f0260de0f6edcbe77/stats/separated-links/spell.yaml
-                        with:
-                            separator: ","
-                            url_template: "https://www.genecards.org/cgi-bin/carddisp.pl?gene=${value}"

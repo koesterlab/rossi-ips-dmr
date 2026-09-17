@@ -49,6 +49,7 @@ for fastq in fastqs:
         else:
             contrast_values[col_name] = ""
 
+    contrast_values["just_get_counts"] = "" if rna_data == "old" else "+" if cell_type == "psc" else "-"
     sample_rows.append(
         {
             "sample": f"{cell_type}_{sample_name[-2:]}",

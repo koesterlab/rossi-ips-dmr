@@ -5,8 +5,11 @@ import altair as alt
 import polars as pl
 
 alt.data_transformers.disable_max_rows()
+alt.data_transformers.enable("vegafusion")
 
-pl.Config.set_tbl_rows(10)
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
+pl.Config.set_tbl_rows(100)
 pl.Config.set_tbl_cols(100)
 
 ANNOTATION_TYPE_NAMES = {
@@ -36,7 +39,6 @@ expr_df = pl.read_csv(
 ).with_columns(
     pl.col("transcript").str.split(".").list.get(0).alias("transcriptId")
 )
-print(annotation_type)
 if annotation_type != None:
     meth_df = meth_df.filter(pl.col("annotation") == annotation_type)
 
@@ -56,7 +58,7 @@ expr_df = expr_df.with_columns(
 )
 meth_df = (
     meth_df
-    .group_by("transcriptId")
+    .group_by(["transcriptId", "annotation"])
     .agg(
         pl.col("psc_methylation").mean(),
         pl.col("endoderm_methylation").mean(),
@@ -82,6 +84,7 @@ long_df = pl.concat(
         df.select(
             pl.col("transcriptId"),
             pl.col("gene"),
+            pl.lit(annotation_type).alias("annotation"),
             pl.col(expr_col).alias("expression"),
             pl.col(meth_col).alias("methylation"),
             pl.lit(label).alias("layer"),
@@ -92,14 +95,18 @@ long_df = pl.concat(
     (pl.col("expression") + 1).log(base=2).alias("log2_expression")
 )
 
-
 chart = (
     alt.Chart(long_df.to_pandas())
-    .mark_circle(size=20, opacity=0.4)
+    .mark_rect()
     .encode(
-        x=alt.X("log2_expression:Q", title="log₂(TPM + 1)"),
-        y=alt.Y("methylation:Q", title="Methylation (%)"),
-        tooltip=["gene:N", "transcriptId:N", "expression:Q", "methylation:Q"],
+        x=alt.X("log2_expression:Q", bin=alt.Bin(maxbins=100),  title="log₂(TPM + 1)"),
+        y=alt.Y("methylation:Q", bin=alt.Bin(maxbins=100), title="Methylation (%)"),
+        color=alt.Color(
+            "count():Q",
+            scale=alt.Scale(type="log"),
+            title="Count",
+            legend=alt.Legend(format=",d"),
+        ),
         facet=alt.Facet(
             "layer:N",
             title=None,
@@ -107,7 +114,6 @@ chart = (
         ),
     )
     .properties(width=250, height=250)
-    .resolve_scale(x="independent", y="independent")
 )
 
 chart.save(snakemake.output[0])

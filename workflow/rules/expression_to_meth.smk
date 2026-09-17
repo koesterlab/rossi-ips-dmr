@@ -1,6 +1,6 @@
 rule plot_expression_to_meth:
     input:
-        expr="results/tables/tpm-matrix/just_get_counts_psc.tpm-matrix.sorted.tsv",
+        expr="results/tables/tpm-matrix/just_get_counts.tpm-matrix.sorted.tsv",
         meth="results/{platform}/{caller}/meth_calling/chipseeker_{fdr}.tsv"
     output:
         "results/{platform}/{caller}/plots_paper/expression_to_meth_{annotation}_{fdr}.pdf"

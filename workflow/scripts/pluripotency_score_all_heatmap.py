@@ -4,6 +4,8 @@ import altair as alt
 import numpy as np
 import polars as pl
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
+
 # Maps the methylation column names in the input dataframe to short layer names.
 METH_TO_LAYER = {
     "psc_methylation": "psc",

@@ -4,6 +4,8 @@ import polars as pl
 pl.Config.set_tbl_rows(10)
 pl.Config.set_tbl_cols(300)
 
+sys.stderr = open(snakemake.log[0], "w")
+
 
 def plot(df, effect_col, gene_col, output_path):
     layer_select = alt.selection_point(

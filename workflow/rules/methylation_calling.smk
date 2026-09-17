@@ -77,7 +77,7 @@ rule call_methylation_single:
     wildcard_constraints:
         platform="(pacbio|nanopore)",
     log:
-        "results/call_methylation_single/{platform}_{sample}_{scatteritem}.log",
+        "logs/call_methylation_single/{platform}_{sample}_{scatteritem}.log",
     shell:
         """
             varlociraptor call variants generic --scenario {input.scenario} --obs normal={input.preprocess_obs} > {output} 2> {log}
