@@ -71,13 +71,6 @@ def all_input(wildcards):
                 wanted_input += [
                     f"{prefix}/base_{base}/dmr_calls/datavzrd-report/{group2}",
                 ]
-                if config["fgsea"]["activate"]:
-                    wanted_input += [
-                        f"{prefix}/base_{base}/{rna_data}/pathways/{germ_layer}-gene_set_promoter-{func}"
-                        for rna_data in config["rna_data"]
-                        for germ_layer in [group2, "all"]
-                        for func in ["mf", "bp", "cc", "go"]
-                    ]
 
         wanted_input += [
             f"{prefix}/plots_paper/pluripotency_score_all.html",

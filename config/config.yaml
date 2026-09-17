@@ -51,29 +51,6 @@ use_precomputed_calls: true
 fdr_absent: 0.05
 fdr_present: 0.05
 
-fgsea:
-    # gene set enrichment analysis (GSEA)
-    # If `activate: true`, the workflow will perform GSEA with fgsea:
-    # https://bioconductor.org/packages/release/bioc/vignettes/fgsea/inst/doc/fgsea-tutorial.html
-    # Make sure you curate a GMT gene sets file and provide it below.
-    activate: false
-    # If activated, you need to provide a GMT file with gene sets of interest.
-    # A GMT file can contain multiple gene sets. So if you want to test for
-    # enrichment in multiple sets of gene sets, please merge your gene sets
-    # into one GMT file and provide this here.
-    # Don't forget to document your gene set sources and to cite them upon
-    # publication. One commonly used source for GMT files is MSigDB:
-    # https://www.gsea-msigdb.org/gsea/msigdb
-    gene_sets_go: "config/gene_sets/c5.go.v2026.1.Hs.symbols.gmt"
-    gene_sets_mf: "config/gene_sets/c5.go.mf.v2026.1.Hs.symbols.gmt"
-    gene_sets_cc: "config/gene_sets/c5.go.cc.v2026.1.Hs.symbols.gmt"
-    gene_sets_bp: "config/gene_sets/c5.go.bp.v2026.1.Hs.symbols.gmt"
-    # threshold on FDR corrected p-value from GSEA, whether to consider a gene
-    # set as significantly enriched in differentially expressed genes
-    fdr_gene_set: 1.0
-    # minimum achievable p-value  (equivalent to the reciprocal of the number of permutations, see fgsea docs)
-    eps: 1.0e-50
-
 kallisto_sleuth:
     samples: config/samples.tsv
     units: config/units.tsv
