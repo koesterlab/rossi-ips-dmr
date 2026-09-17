@@ -28,6 +28,21 @@ if not config["use_precomputed_calls"]:
         shell:
             "rbt vcf-split {input} {output} 2> {log}"
 
+    rule candidates_to_bed:
+        input:
+            "resources/candidates/candidates_{scatteritem}.bcf",
+        output:
+            "resources/candidates/candidates_{scatteritem}.bed",
+        conda:
+            "../envs/samtools.yaml"
+        log:
+            "logs/varlociraptor/candidates_to_bed/{scatteritem}.log",
+        shell:
+            """
+            bcftools query -f '%CHROM\t%POS\t%REF\n' {input} 2> {log} | \
+            awk '{{print $1 "\t" $2-1 "\t" $2-1+length($3)}}' > {output}
+            """
+
     rule compute_meth_observations:
         input:
             genome="resources/genome.fasta",
@@ -159,11 +174,10 @@ rule prepare_wsabi:
 
 rule df_from_calls:
     input:
-        # One call file (plus index) per germ layer, named by layer, e.g. "psc", "psc_index"
+        # One call file per germ layer, named by layer, e.g. "psc"
         **{
-            f"{layer}{key_suffix}": f"results/{{platform}}/{{caller}}/meth_calling/{layer}/{{caller}}_{{fdr}}.bcf{file_suffix}"
+            layer: f"results/{{platform}}/{{caller}}/meth_calling/{layer}/{{caller}}_{{fdr}}.bcf"
             for layer in ALL_GERM_LAYERS
-            for key_suffix, file_suffix in [("", ""), ("_index", ".csi")]
         },
     output:
         "results/{platform}/{caller}/meth_calling/calls_{fdr}.parquet",
