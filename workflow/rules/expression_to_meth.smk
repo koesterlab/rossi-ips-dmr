@@ -1,14 +1,12 @@
 rule plot_expression_to_meth:
     input:
         expr="results/tables/tpm-matrix/just_get_counts.tpm-matrix.sorted.tsv",
-        meth="results/{platform}/{caller}/meth_calling/chipseeker_{fdr}.tsv"
+        meth="results/{platform}/{caller}/meth_calling/chipseeker_{fdr}.tsv",
     output:
-        "results/{platform}/{caller}/plots_paper/expression_to_meth_{annotation}_{fdr}.pdf"
+        "results/{platform}/{caller}/plots_paper/expression_to_meth_{annotation}_{fdr}.pdf",
     conda:
         "../envs/python.yaml"
     log:
-        "logs/plot_expression_to_meth/{platform}_{caller}_{annotation}_{fdr}.log"
-    params:
-        annotation=lambda wildcards: wildcards.annotation
+        "logs/plot_expression_to_meth/{platform}_{caller}_{annotation}_{fdr}.log",
     script:
         "../scripts/plot_expression_to_meth.py"

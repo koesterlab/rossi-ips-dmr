@@ -1,17 +1,13 @@
-
-import polars as pl
+import sys
 
 import altair as alt
 import polars as pl
 
+sys.stderr = open(snakemake.log[0], "w", buffering=1)
 alt.data_transformers.disable_max_rows()
 alt.data_transformers.enable("vegafusion")
 
-sys.stderr = open(snakemake.log[0], "w", buffering=1)
-
-pl.Config.set_tbl_rows(100)
-pl.Config.set_tbl_cols(100)
-
+LAYERS = ["psc", "endoderm", "ectoderm", "mesoderm"]
 ANNOTATION_TYPE_NAMES = {
     "distal_intergenic": "Distal Intergenic",
     "promoter": "Promoter",
@@ -21,85 +17,58 @@ ANNOTATION_TYPE_NAMES = {
     "5_utr": "5' UTR",
     "downstream": "Downstream",
 }
+# Any other value (e.g. "all") disables the annotation filter
+annotation_type = ANNOTATION_TYPE_NAMES.get(snakemake.wildcards.annotation)
 
-annotation_type = ANNOTATION_TYPE_NAMES.get(snakemake.params.get("annotation"), None)
 meth_df = pl.read_csv(
     snakemake.input.meth,
     separator="\t",
     null_values=["NA"],
-    infer_schema_length=None,  # scans entire file to infer types
-).select("chromosome", "position", "annotation", "transcriptId", "psc_methylation", "endoderm_methylation", "ectoderm_methylation", "mesoderm_methylation").with_columns(
-    pl.col("annotation").str.split(" ").list.get(0)
-)
-expr_df = pl.read_csv(
-    snakemake.input.expr,
-    separator="\t",
-    null_values=["NA"],
+    columns=["annotation", "transcriptId", *[f"{layer}_methylation" for layer in LAYERS]],
     infer_schema_length=None,
 ).with_columns(
-    pl.col("transcript").str.split(".").list.get(0).alias("transcriptId")
+    # e.g. "Promoter (<=1kb)" -> "Promoter", "Distal Intergenic" stays as is
+    pl.col("annotation").str.replace(r"\s*\(.*\)$", "")
 )
-if annotation_type != None:
+if annotation_type is not None:
     meth_df = meth_df.filter(pl.col("annotation") == annotation_type)
 
-
-expr_df = expr_df.with_columns(
-    pl.mean_horizontal(pl.col("^ectoderm.*$")).alias("ectoderm_expression"),
-    pl.mean_horizontal(pl.col("^endoderm.*$")).alias("endoderm_expression"),
-    pl.mean_horizontal(pl.col("^mesoderm.*$")).alias("mesoderm_expression"),
-    pl.mean_horizontal(pl.col("^psc.*$")).alias("psc_expression"),
-).select(
-    "transcriptId",
-    "gene",
-    "ectoderm_expression",
-    "endoderm_expression",
-    "mesoderm_expression",
-    "psc_expression",
+# Mean methylation of all CpGs per transcript region.
+meth_df = meth_df.group_by("transcriptId", "annotation").agg(
+    pl.col("psc_methylation").mean(),
+    pl.col("endoderm_methylation").mean(),
+    pl.col("ectoderm_methylation").mean(),
+    pl.col("mesoderm_methylation").mean(),
 )
-meth_df = (
-    meth_df
-    .group_by(["transcriptId", "annotation"])
-    .agg(
-        pl.col("psc_methylation").mean(),
-        pl.col("endoderm_methylation").mean(),
-        pl.col("ectoderm_methylation").mean(),
-        pl.col("mesoderm_methylation").mean(),
-    )
+
+# Mean expression over all replicates (columns are named "<layer>_<replicate>")
+expr_df = pl.read_csv(
+    snakemake.input.expr, separator="\t", null_values=["NA"], infer_schema_length=None
+).select(
+    pl.col("transcript").str.split(".").list.get(0).alias("transcriptId"),
+    *[pl.mean_horizontal(pl.col(f"^{layer}_.*$")).alias(f"{layer}_expression") for layer in LAYERS],
 )
 
 
 df = meth_df.join(expr_df, on="transcriptId")
-
-
-
-LAYERS = [
-    ("psc_expression", "psc_methylation", "psc"),
-    ("endoderm_expression", "endoderm_methylation", "endoderm"),
-    ("ectoderm_expression", "ectoderm_methylation", "ectoderm"),
-    ("mesoderm_expression", "mesoderm_methylation", "mesoderm"),
-]
-
-long_df = pl.concat(
-    [
+long_df = (
+    pl.concat(
         df.select(
-            pl.col("transcriptId"),
-            pl.col("gene"),
-            pl.lit(annotation_type).alias("annotation"),
-            pl.col(expr_col).alias("expression"),
-            pl.col(meth_col).alias("methylation"),
-            pl.lit(label).alias("layer"),
-        ).drop_nulls(["expression", "methylation"])
-        for expr_col, meth_col, label in LAYERS
-    ]
-).with_columns(
-    (pl.col("expression") + 1).log(base=2).alias("log2_expression")
+            pl.lit(layer).alias("layer"),
+            pl.col(f"{layer}_expression").alias("expression"),
+            pl.col(f"{layer}_methylation").alias("methylation"),
+        )
+        for layer in LAYERS
+    )
+    .drop_nulls()
+    .with_columns(log2_expression=(pl.col("expression") + 1).log(base=2))
 )
 
 chart = (
     alt.Chart(long_df.to_pandas())
     .mark_rect()
     .encode(
-        x=alt.X("log2_expression:Q", bin=alt.Bin(maxbins=100),  title="log₂(TPM + 1)"),
+        x=alt.X("log2_expression:Q", bin=alt.Bin(maxbins=100), title="log₂(TPM + 1)"),
         y=alt.Y("methylation:Q", bin=alt.Bin(maxbins=100), title="Methylation (%)"),
         color=alt.Color(
             "count():Q",
@@ -115,5 +84,4 @@ chart = (
     )
     .properties(width=250, height=250)
 )
-
 chart.save(snakemake.output[0])
