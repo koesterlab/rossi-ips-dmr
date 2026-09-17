@@ -1,1 +1,1 @@
-Annotation of DMRs with genetic and regulatory elements. 
+Annotated differentially methylated regions (DMRs) for this experiment vs. the base experiment, combining nearby gene/transcript annotations (via `ChIPseeker <https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html>`_) with overlapping Ensembl regulatory elements.

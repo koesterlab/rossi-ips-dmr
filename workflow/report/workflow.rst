@@ -1,2 +1,7 @@
-Pairwise Differentially methylated region (DMR) calling between a base experiment and any number of other experiments. The DMRs were found with `Metilene <http://legacy.bioinf.uni-leipzig.de/Software/metilene/>`_ and subsequently annotated with genetic and regulatory elements.
-For visualisation we use the standard plots of metilene, as well as a heatmap comparing the different DMRs between the experiments.
+The workflow identifies differentially methylated regions (DMRs) from long-read PacBio and Nanopore sequencing of induced pluripotent stem cells (iPSCs) differentiated into the three germ layers (endoderm, mesoderm, ectoderm).
+
+Methylation is called with `Varlociraptor <https://varlociraptor.github.io/>`_: candidate CpG sites are found genome-wide, preprocessed and called separately per platform, plus an additional joint PacBio+Nanopore call ("platforms_combined"); calls are FDR-controlled and combined per germ layer into a per-site methylation table.
+
+DMRs are called pairwise with `Metilene <http://legacy.bioinf.uni-leipzig.de/Software/metilene/>`_ between the iPSC base experiment and each germ layer, keeping only the DMRs specific to one germ layer. DMRs are then annotated with nearby genes/transcripts (via `ChIPseeker <https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html>`_) and overlapping Ensembl regulatory elements, and compared against differential gene expression from the accompanying RNA-seq (kallisto/sleuth) analysis.
+
+For each platform (PacBio, Nanopore, and the two combined), the report below contains the annotated DMR tables, a comparison of DMR effect sizes to differential expression, a check of known pluripotency/germ-layer biomarkers, and tables prepared for visualization in WSABI, plus a PacBio-vs-Nanopore concordance plot.

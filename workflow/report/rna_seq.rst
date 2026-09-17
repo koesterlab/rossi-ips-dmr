@@ -1,1 +1,1 @@
-Comparison of the Diffexp analysis of the rna data against DMRs between the respective experiments and the base experiment.
+Comparison of differential gene expression (RNA-seq) against DMRs between each experiment and the base experiment.
