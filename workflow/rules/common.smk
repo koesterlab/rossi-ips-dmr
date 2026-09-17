@@ -1,25 +1,32 @@
-sample_tsv_path = config["sample_path"]
 chromosome_conf = config["resources"]["ref"]
 
 ALL_GERM_LAYERS = ["psc", "endoderm", "mesoderm", "ectoderm"]
+ACTIVE_BASE_COMP = ["psc"]
+ANNOTATION_TYPES = ["distal_intergenic", "promoter", "intron", "exon", "3_utr", "5_utr", "unfiltered"]
+# Use ["no", "with"] to additionally create the TF-adjusted comparison reports.
+TF_MODES = ["no"]
 
 
-def read_sample_tsv(sample_tsv_path):
-    samples = {}
-    with open(sample_tsv_path, "r") as file:
-        next(file)
-        for line in file:
-            name, path, sequencer = line.strip().split("\t")
-            samples[name] = (path, sequencer)
-    return samples
-
-
-samples = read_sample_tsv(sample_tsv_path)
+# Constraining wildcards keeps the DAG construction fast: without them, generic
+# patterns (e.g. "{bcf}.bcf.csi") match nearly every path and Snakemake has to
+# try many candidate rules per file. Only names that are not used by the
+# kallisto-sleuth module are constrained globally.
+# wildcard_constraints:
+#     platform="pacbio|nanopore|platforms_combined",
+#     caller="|".join({c for callers in config["meth_caller"].values() for c in callers}),
+#     base="|".join(ALL_GERM_LAYERS),
+#     group2="|".join(ALL_GERM_LAYERS),
+#     germ_layer="|".join(ALL_GERM_LAYERS),
+#     fdr=r"\d+(?:\.\d+)?",
+#     scatteritem=r"\d+-of-\d+",
+#     rna_data="rna_old|rna_new",
+#     annotation_type="|".join(ANNOTATION_TYPES),
+#     plot_type="pdf|png|svg|html",
 
 
 def get_bioc_species_name():
-    first_letter = config["resources"]["ref"]["species"][0]
-    subspecies = config["resources"]["ref"]["species"].split("_")[1]
+    first_letter = chromosome_conf["species"][0]
+    subspecies = chromosome_conf["species"].split("_")[1]
     return first_letter + subspecies
 
 
@@ -28,141 +35,63 @@ def get_non_base_layers(base):
     return [layer for layer in ALL_GERM_LAYERS if layer != base]
 
 
-def get_base_experiments():
-    """All 4 germ layers serve as base experiment once."""
-    return ALL_GERM_LAYERS
+def platform_callers():
+    """Yield all configured (platform, methylation caller) combinations."""
+    for platform, callers in config["meth_caller"].items():
+        for caller in callers:
+            yield platform, caller
 
 
-def get_rna_data_values():
-    """
-    Return the two rna_data wildcard values.
-    The {rna_data} wildcard is always strictly 'rna_old' or 'rna_new'.
-    The base_level is carried by the separate {base} wildcard.
-    The kallisto-sleuth module prefix is rna_{rna_data}/base_{base},
-    so the diffexp tables live at:
-      rna_old/base_{base}/results/tables/diffexp/...
-      rna_new/base_{base}/results/tables/diffexp/...
-    """
-    return config["rna_data"]
+def chipseeker_tables(wildcards, fdr="0.05"):
+    """Postprocessed ChIPseeker DMR annotations of all non-base layers."""
+    return expand(
+        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker_postprocessed.tsv",
+        platform=wildcards.platform,
+        caller=wildcards.caller,
+        base=wildcards.base,
+        group2=get_non_base_layers(wildcards.base),
+        fdr=fdr,
+    )
 
 
 def all_input(wildcards):
     wanted_input = []
 
-    # DMR heatmaps – one set per base experiment
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/base_{base}/dmr_calls/heatmaps/{annotation}.png"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            for annotation in [
-                "distal_intergenic",
-                "promoter",
-                "intron",
-                "exon",
-                "3_utr",
-                "5_utr",
+    for platform, caller in platform_callers():
+        prefix = f"results/{platform}/{caller}"
+
+        for base in ACTIVE_BASE_COMP:
+            wanted_input += [
+                f"{prefix}/base_{base}/{rna_data}/diffexp_vs_dmrs_{tf}_tfs_{annotation_type}"
+                for rna_data in config["rna_data"]
+                for tf in TF_MODES
+                for annotation_type in ANNOTATION_TYPES
             ]
+            for group2 in get_non_base_layers(base):
+                wanted_input += [
+                    f"{prefix}/base_{base}/dmr_calls/datavzrd-report/{group2}",
+                ]
+                if config["fgsea"]["activate"]:
+                    wanted_input += [
+                        f"{prefix}/base_{base}/{rna_data}/pathways/{germ_layer}-gene_set_promoter-{func}"
+                        for rna_data in config["rna_data"]
+                        for germ_layer in [group2, "all"]
+                        for func in ["mf", "bp", "cc", "go"]
+                    ]
+
+        wanted_input += [
+            f"{prefix}/plots_paper/pluripotency_score_all.html",
         ]
-    )
 
-    # DMR vs DiffExp comparisons – 4 bases × 2 RNA datasets × 2 tf modes × annotation types
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{tf}_tfs_{annotation_type}"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            for rna_data in get_rna_data_values()
-            # for tf in ["no"]
-            for tf in ["no"]
-            for annotation_type in [
-                "promoter",
-                "unfiltered",
-            ]
-        ]
-    )
+    wanted_input += [
+        f"results/wsabi/{platform}_{layer}.tsv.gz"
+        for platform in config["meth_caller"]
+        for layer in ALL_GERM_LAYERS
+    ]
 
-    # fgsea pathway enrichment – 4 bases × 2 RNA datasets × non-base layers + "all" × annotation × func
-    # wanted_input.extend(
-    #     [
-    #         f"results/{platform}/{caller}/base_{base}/{rna_data}/pathways/{germ_layer}-gene_set_{annotation_type}-{func}"
-    #         for platform in config["meth_caller"].keys()
-    #         for caller in config["meth_caller"].get(platform, [])
-    #         for base in get_base_experiments()
-    #         for rna_data in get_rna_data_values()
-    #         for germ_layer in get_non_base_layers(base) + ["all"]
-    #         for annotation_type in [
-    #             "promoter",
-    #         ]
-    #         for func in ["mf", "bp", "cc", "go"]
-    #     ]
-    # )
+    wanted_input += [
+        "results/platforms_combined/varlo/plots_paper/scatter_comparison.pdf"
+    ]
 
-    # Metilene plots (PDF) – one per base × non-base group
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            for group2 in get_non_base_layers(base)
-        ]
-    )
-
-    # datavzrd annotation reports – one per base × non-base group
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/base_{base}/dmr_calls/datavzrd-report/{group2}"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            for group2 in get_non_base_layers(base)
-        ]
-    )
-
-    # Scatter plots – one per base × non-base group
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/base_{base}/plots_paper/{group2}/scatter_plot.png"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            for group2 in get_non_base_layers(base)
-        ]
-    )
-
-    # Endo-meso scatter plots – only relevant when neither endoderm nor mesoderm is the base
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-            if base not in ("endoderm", "mesoderm")
-        ]
-    )
-
-    # Pluripotency score heatmaps – one per base (data source is the same parquet,
-    # kept scoped per base for consistency)
-    wanted_input.extend(
-        [
-            f"results/{platform}/{caller}/plots_paper/pluripotency_score_all.html"
-            for platform in config["meth_caller"].keys()
-            for caller in config["meth_caller"].get(platform, [])
-            for base in get_base_experiments()
-        ]
-    )
-
-    "results/platforms_combined/varlo/plots_paper/heatmaps_comparison.pdf",
-
-    wanted_input.extend(
-        [
-            f"results/wsabi/{platform}_{layer}.tsv.gz"
-            for platform in config["meth_caller"].keys()
-            for layer in ["psc", "mesoderm", "endoderm", "ectoderm"]
-        ]
-    )
-
-    return wanted_input
+    # Duplicates (e.g. the "all" fgsea target) are harmless but slow down the DAG.
+    return list(dict.fromkeys(wanted_input))

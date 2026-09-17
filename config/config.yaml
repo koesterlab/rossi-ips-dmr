@@ -27,7 +27,7 @@ rna_accessions_new:
     "SQK-NBD114-24_barcode11": mesoderm
     "SQK-NBD114-24_barcode12": psc
 
-# rna_data: ["rna_old", "rna_new"]
+# Type of RNA data to use (rna_old, rna_new, or both).
 rna_data: ["rna_new"]
 
 resources:
@@ -36,16 +36,16 @@ resources:
         datatype: "dna"
         build: "GRCh38"
         release: "112"
-        chromosome: "21"
     ontology:
         # gene ontology to download, used e.g. in goatools
         gene_ontology: "https://release.geneontology.org/2025-07-22/ontology/go-basic.obo"
 
-#
+# Number of chunks the methylation candidates are split into for parallel calling
 scatter_items: 100
 
-# Path of the sample file
-sample_path: "config/alignment_samples.tsv"
+# Use precomputed calls in (results/{platform}/varlo/meth_calling/{germ_layer}/varlo_{fdr}.bcf)
+# This makes dry-runs and report creation much faster once methylation calling is done.
+use_precomputed_calls: true
 
 # Define threshold for Varlociraptor's FDR control for PROB_ABSENT and PROB_PRESENT
 fdr_absent: 0.05

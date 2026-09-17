@@ -29,14 +29,11 @@ include: "rules/expression_to_meth.smk"
 
 
 # ---------------------------------------------------------------------------
-# Kallisto-sleuth modules – one pair (old + new RNA data) per base experiment.
-# Snakemake modules do not support runtime-dynamic configuration, so we
-# instantiate four explicit pairs.  The only thing that differs between them
-# is `base_level` inside the `diffexp: models: condition:` block.
+# Differential expression via the kallisto-sleuth workflow, used as a module.
+# All contrasts are defined as separate
+# models under `kallisto_sleuth: diffexp: models:` in config/config.yaml.
 # ---------------------------------------------------------------------------
 
-import copy
-import os
 
 inputflags:
     access.sequential
@@ -44,20 +41,15 @@ inputflags:
 
 module kallisto_sleuth:
     snakefile:
-        # github(
-        #     "snakemake-workflows/rna-seq-kallisto-sleuth",
-        #     path="workflow/Snakefile",
-        #     branch="lr-kallisto"
-        # )
-        "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
+        github(
+            "snakemake-workflows/rna-seq-kallisto-sleuth",
+            path="workflow/Snakefile",
+        )
+        # "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: config["kallisto_sleuth"]
 
 use rule * from kallisto_sleuth
 
-
-# ---------------------------------------------------------------------------
-# Top-level target rule
-# ---------------------------------------------------------------------------
 
 rule modified_all:
     default_target: True
