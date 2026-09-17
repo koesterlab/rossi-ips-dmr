@@ -41,7 +41,6 @@ rule prepare_kallisto_sleuth:
     conda:
         "../envs/python.yaml"
     params:
-        labels_old=config["rna_accessions_old"],
         labels_new=config["rna_accessions_new"],
     log:
         "logs/prepare_kallisto_sleuth.log",
@@ -98,7 +97,17 @@ rule compare_dmr_to_diffexp_no_tfs:
         val_genes="resources/rna_seq/val_genes.tsv",
     output:
         tsv="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
-        dmr_diffexp="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.pdf",
+        dmr_diffexp=report(
+            "results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.pdf",
+            caption="../report/diffexp_vs_dmrs.rst",
+            htmlindex="index.html",
+            category=lambda wildcards: f"DiffExp vs. DMRs",
+            subcategory=lambda wildcards: f"{wildcards.platform}",
+            labels=lambda wildcards: {
+                "base": wildcards.base,
+                "region": wildcards.annotation_type,
+            },
+        ),
         val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",
     conda:
         "../envs/python.yaml"
@@ -118,17 +127,8 @@ rule datavzrd_dmr_vs_diffexp_no_tfs:
         table="results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_{annotation_type}.tsv",
         val_genes="results/{platform}/{caller}/base_{base}/{rna_data}/val_genes_{annotation_type}.tsv",
     output:
-        report(
-            directory(
-                "results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_no_tfs_{annotation_type}"
-            ),
-            caption="../report/diffexp_vs_dmrs.rst",
-            htmlindex="index.html",
-            category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory=lambda wildcards: f"{wildcards.platform} - No tfs",
-            labels=lambda wildcards: {
-                "base": wildcards.base,
-            },
+        directory(
+            "results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_no_tfs_{annotation_type}"
         ),
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd/{platform}_{caller}_{base}_{rna_data}_{annotation_type}.log",

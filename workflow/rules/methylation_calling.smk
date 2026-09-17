@@ -163,7 +163,15 @@ rule prepare_wsabi:
     input:
         "results/{platform}/varlo/meth_calling/{germ_layer}/varlo_0.05.bcf",
     output:
-        "results/wsabi/{platform}_{germ_layer}.tsv.gz",
+        report(
+            "results/wsabi/{platform}_{germ_layer}.tsv.gz",
+            caption="../report/wsabi.rst",
+            category="WSABI CpG methylation",
+            subcategory=lambda wildcards: wildcards.platform,
+            labels=lambda wildcards: {
+                "layer": wildcards.germ_layer,
+            },
+        ),
     conda:
         "../envs/pysam.yaml"
     log:

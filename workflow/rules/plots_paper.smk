@@ -34,7 +34,14 @@ rule dmr_scatter_comparison:
             group2=get_non_base_layers("psc"),
         ),
     output:
-        "results/platforms_combined/varlo/plots_paper/scatter_comparison.{plot_type}",
+        report(
+            "results/platforms_combined/varlo/plots_paper/scatter_comparison.{plot_type}",
+            caption="../report/scatter_comparison.rst",
+            category="PacBio vs. Nanopore",
+            labels=lambda wildcards: {
+                "Type": "platform comparison",
+            },
+        ),
     conda:
         "../envs/python.yaml"
     log:

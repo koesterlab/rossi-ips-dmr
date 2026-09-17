@@ -79,16 +79,7 @@ rule metilene_plots:
         met_out="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/0.05/metilene_output_focused.bed",
     output:
         bed="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/plots/dmr_qval.0.05.bedgraph",
-        pdf=report(
-            "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
-            caption="../report/metilene_plots.rst",
-            category="DMR plots",
-            subcategory=lambda wildcards: f"Metilene: {wildcards.platform} - {wildcards.caller}",
-            labels=lambda wildcards: {
-                "base": wildcards.base,
-                "layer": wildcards.group2,
-            },
-        ),
+        pdf="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/plots/dmr_qval.0.05.pdf",
     conda:
         "../envs/metilene.yaml"
     log:
