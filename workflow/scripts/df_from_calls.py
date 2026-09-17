@@ -42,12 +42,6 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                             for v in sample.values()
                         ]
                     )
-                    bias = compute_bias(
-                        [
-                            v[0] if isinstance(v, tuple) and len(v) == 1 else v
-                            for v in sample.values()
-                        ]
-                    )
                     if bias != "normal":
                         sample_bias = bias
                     sample_afs.append(af * 100)
@@ -55,7 +49,10 @@ def read_tool_file(file_path, axis_name, meth_caller="varlo"):
                 except Exception:
                     pass
 
-            meth_rate = sum(sample_afs) / len(sample_afs) if sample_afs else 0
+            # Without any allele frequency the methylation rate is unknown (not 0)
+            if not sample_afs:
+                continue
+            meth_rate = sum(sample_afs) / len(sample_afs)
 
             info = record.info
 
@@ -135,11 +132,11 @@ def merge_dfs(undifferentiated_df, meso_df, endo_df, ecto_df):
 
 
 pd.set_option("display.max_columns", None)
-meth_caller = snakemake.params["meth_caller"]
-undiff_file = snakemake.input["undifferentiated"]
-meso_file = snakemake.input["meso"]
-endo_file = snakemake.input["endo"]
-ecto_file = snakemake.input["ecto"]
+meth_caller = snakemake.wildcards.caller
+undiff_file = snakemake.input["psc"]
+meso_file = snakemake.input["mesoderm"]
+endo_file = snakemake.input["endoderm"]
+ecto_file = snakemake.input["ectoderm"]
 
 print("Starting to read files")
 undiff_df = read_tool_file(undiff_file, "psc", meth_caller)
