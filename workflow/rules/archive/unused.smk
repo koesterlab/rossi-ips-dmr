@@ -168,20 +168,13 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
     wrapper:
         "v9.2.0/utils/datavzrd"
 
-
-rule candidates_to_bed:
-    input:
-        "resources/candidates/{candidates}.bcf",
+rule get_old_rna_seq_fastqs:
     output:
-        "resources/candidates/{candidates}.bed",
-    wildcard_constraints:
-        candidates=r"candidates(?:_\d+-of-\d+)?",
-    conda:
-        "../envs/samtools.yaml"
+        "resources/rna_seq_old/fastqs/{accession}.fastq.gz",
     log:
-        "logs/candidates_to_bed/{candidates}.log",
-    shell:
-        """
-        bcftools query -f '%CHROM\t%POS\t%REF\n' {input} 2> {log} | \
-        awk '{{print $1 "\t" $2-1 "\t" $2-1+length($3)}}' > {output}
-        """
+        "logs/get_old_rna_seq_fastqs/{accession}.log",
+    params:
+        extra="--skip-technical",
+    threads: 6
+    wrapper:
+        "v9.4.0/bio/sra-tools/fasterq-dump"

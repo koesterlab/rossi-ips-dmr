@@ -3,16 +3,6 @@ meth_caller:
     nanopore: [varlo]
     platforms_combined: [varlo]
 
-rna_accessions_old:
-    "SRR29898426": mesoderm #SRS22057145
-    "SRR29898427": ectoderm #SRS22057144
-    "SRR29898428": endoderm #SRS22057149
-    "SRR29898429": psc #SRS22057143
-    "SRR29898430": mesoderm #SRS22057146
-    "SRR29898431": ectoderm #SRS22057142
-    "SRR29898438": endoderm #SRS22057135
-    "SRR29898439": psc #SRS22057134
-
 rna_accessions_new:
     "SQK-NBD114-24_barcode01": ectoderm
     "SQK-NBD114-24_barcode02": endoderm
@@ -26,9 +16,6 @@ rna_accessions_new:
     "SQK-NBD114-24_barcode10": endoderm
     "SQK-NBD114-24_barcode11": mesoderm
     "SQK-NBD114-24_barcode12": psc
-
-# Type of RNA data to use (rna_old, rna_new, or both).
-rna_data: ["rna_new"]
 
 resources:
     ref:
@@ -45,7 +32,7 @@ scatter_items: 100
 
 # Use precomputed calls in (results/{platform}/varlo/meth_calling/{germ_layer}/varlo_{fdr}.bcf)
 # This makes dry-runs and report creation much faster once methylation calling is done.
-use_precomputed_calls: true
+use_precomputed_calls: false
 
 # Define threshold for Varlociraptor's FDR control for PROB_ABSENT and PROB_PRESENT
 fdr_absent: 0.05

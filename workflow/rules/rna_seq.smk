@@ -1,17 +1,6 @@
-rule get_old_rna_seq_fastqs:
-    output:
-        "resources/rna_seq_old/fastqs/{accession}.fastq.gz",
-    log:
-        "logs/get_old_rna_seq_fastqs/{accession}.log",
-    params:
-        extra="--skip-technical",
-    threads: 6
-    wrapper:
-        "v9.4.0/bio/sra-tools/fasterq-dump"
-
 rule unzip_rna_new:
     input:
-        "resources/rna_seq_new/KOLF_Trilineage_RNAseq_new.zip",
+        "resources/rna_seq_new/KOLF_Trilineage_RNAseq.zip",
     output:
         expand(
             "resources/rna_seq_new/bams/{barcode}.bam",
@@ -42,10 +31,6 @@ rule rna_bam_to_fastq_rna_new:
 
 rule prepare_kallisto_sleuth:
     input:
-        old_fastqs=expand(
-            "resources/rna_seq_old/fastqs/{accession}.fastq.gz",
-            accession=config["rna_accessions_old"],
-        ),
         new_fastqs=expand(
             "resources/rna_seq_new/fastqs/{accession}.fastq.gz",
             accession=config["rna_accessions_new"],

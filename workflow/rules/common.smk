@@ -55,8 +55,7 @@ def all_input(wildcards):
 
         for base in ACTIVE_BASE_COMP:
             wanted_input += [
-                f"{prefix}/base_{base}/{rna_data}/diffexp_vs_dmrs_no_tfs_{annotation_type}"
-                for rna_data in config["rna_data"]
+                f"{prefix}/base_{base}/rna_new/diffexp_vs_dmrs_no_tfs_{annotation_type}"
                 for annotation_type in ANNOTATION_TYPES
             ]
             for group2 in get_non_base_layers(base):
