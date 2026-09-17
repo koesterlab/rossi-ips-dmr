@@ -7,8 +7,8 @@ sys.stderr = open(snakemake.log[0], "w", buffering=1)
 pd.set_option("display.max_columns", None)
 
 df = pd.read_parquet(snakemake.input[0], engine="pyarrow")
-base = snakemake.params["base"]
-group2 = snakemake.params["group2"]
+base = snakemake.wildcards.base
+group2 = snakemake.wildcards.group2
 
 with open(str(snakemake.output[0]), "w") as outfile:
     outfile.write(f"chr\tpos\t{base}\t{group2}\n")

@@ -4,7 +4,6 @@ ALL_GERM_LAYERS = ["psc", "endoderm", "mesoderm", "ectoderm"]
 ACTIVE_BASE_COMP = ["psc"]
 ANNOTATION_TYPES = ["distal_intergenic", "promoter", "intron", "exon", "3_utr", "5_utr", "unfiltered"]
 
-
 # Constraining wildcards keeps the DAG construction fast: without them, generic
 # patterns (e.g. "{bcf}.bcf.csi") match nearly every path and Snakemake has to
 # try many candidate rules per file. Only names that are not used by the
@@ -22,10 +21,6 @@ ANNOTATION_TYPES = ["distal_intergenic", "promoter", "intron", "exon", "3_utr", 
 #     plot_type="pdf|png|svg|html",
 
 
-def get_bioc_species_name():
-    first_letter = chromosome_conf["species"][0]
-    subspecies = chromosome_conf["species"].split("_")[1]
-    return first_letter + subspecies
 
 
 def get_non_base_layers(base):
@@ -83,5 +78,5 @@ def all_input(wildcards):
         "results/platforms_combined/varlo/plots_paper/scatter_comparison.pdf"
     ]
 
-    # Duplicates (e.g. the "all" fgsea target) are harmless but slow down the DAG.
+    # Remove duplicate targets, they only slow down the DAG construction
     return list(dict.fromkeys(wanted_input))

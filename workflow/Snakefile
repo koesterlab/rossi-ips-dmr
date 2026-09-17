@@ -23,8 +23,6 @@ include: "rules/prepare_meth_calling.smk"
 include: "rules/rna_seq.smk"
 include: "rules/methylation_calling.smk"
 include: "rules/annotate_dmrs.smk"
-include: "rules/fgsea.smk"
-include: "rules/compute_biomarker.smk"
 include: "rules/expression_to_meth.smk"
 
 
@@ -44,6 +42,7 @@ module kallisto_sleuth:
         github(
             "snakemake-workflows/rna-seq-kallisto-sleuth",
             path="workflow/Snakefile",
+            tag="v4.1.0",
         )
         # "../../rna-seq-kallisto-sleuth/workflow/Snakefile"
     config: config["kallisto_sleuth"]

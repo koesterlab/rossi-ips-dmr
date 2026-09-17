@@ -24,7 +24,7 @@ ANNOTATION_TYPE_NAMES = {
     "downstream": "Downstream",
 }
 annotation_type = ANNOTATION_TYPE_NAMES.get(
-    snakemake.params["annotation_type"], "unfiltered"
+    snakemake.wildcards.annotation_type, "unfiltered"
 )
 non_base_layers: list[str] = snakemake.params["non_base_layers"]
 diffexp_inputs = snakemake.input.diffexp
@@ -32,8 +32,9 @@ diffexp_inputs = snakemake.input.diffexp
 # If the requested direction doesn't match how the model is named in the
 # config, the table is still returned as defined in the config, but its
 # diffexp values need to be multiplied by -1 to match the requested direction.
-diffexp_base_signs = snakemake.params["diffexp_base_signs"]
-layer_inputs = [snakemake.input.layer1, snakemake.input.layer2, snakemake.input.layer3]
+diffexp_signs = snakemake.params["diffexp_signs"]
+# DMR tables, ordered like non_base_layers
+layer_inputs = snakemake.input.dmrs
 
 DMR_COLUMNS = [
     "ext_gene",
@@ -84,7 +85,6 @@ def read_diffexp(path: str, layer: str, sign: int) -> pl.DataFrame:
     """
     Load one germ layer's differential expression table, tag it with its
     layer name, and flip the sign of its effect-size columns if `sign == -1`
-    (see diffexp_base_signs comment above).
     """
     df = pl.read_csv(path, separator="\t", null_values="NA")
 
@@ -198,7 +198,7 @@ def plot_df(
         "qval_diffexp",
     ]
 
-    pearson_r = layer_df.select(
+    pearson_r = layer_df.filter(pl.col("qval_combined") <= 0.05).select(
         pl.corr("diffexp", "mean_methylation_difference")
     ).item()
     base = alt.Chart(
@@ -268,7 +268,7 @@ def plot_df(
 
 diffexp_df = pl.concat(
     read_diffexp(path, layer, sign)
-    for path, layer, sign in zip(diffexp_inputs, non_base_layers, diffexp_base_signs)
+    for path, layer, sign in zip(diffexp_inputs, non_base_layers, diffexp_signs)
 )
 dmrs_df = pl.concat(
     read_dmrs(path, layer) for path, layer in zip(layer_inputs, non_base_layers)

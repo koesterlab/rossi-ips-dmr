@@ -42,9 +42,8 @@ def aggregate_by_gene_region(df):
 input_files = snakemake.input
 output = snakemake.output[0]
 
-sample_names = [
-    os.path.basename(os.path.dirname(os.path.dirname(file))) for file in input_files
-]
+# Germ layer names in the same order as the input files (see rule dmr_heatmap)
+sample_names = snakemake.params.layers
 
 aggregated_data = []
 for file, sample_name in zip(input_files, sample_names):
@@ -101,7 +100,7 @@ else:
     )
 
     heatmap.ax_heatmap.set_title(
-        f"DMRs between Samples and psc for annotation type {annotation_type}"
+        f"DMRs between Samples and {snakemake.wildcards.base} for annotation type {annotation_type}"
     )
     heatmap.ax_row_dendrogram.set_visible(False)
     heatmap.ax_col_dendrogram.set_visible(False)

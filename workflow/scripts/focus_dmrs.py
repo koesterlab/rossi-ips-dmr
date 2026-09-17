@@ -34,8 +34,8 @@ def load_bedtool(path, name):
 
 try:
     this = load_bedtool(snakemake.input["this"], "this")
-    other1 = load_bedtool(snakemake.input["other1"][0], "other1")
-    other2 = load_bedtool(snakemake.input["other2"][0], "other2")
+    other1 = load_bedtool(snakemake.input["others"][0], "other1")
+    other2 = load_bedtool(snakemake.input["others"][1], "other2")
 
     # Find exclusive regions
     this_only = this.intersect(other1, v=True).intersect(other2, v=True)

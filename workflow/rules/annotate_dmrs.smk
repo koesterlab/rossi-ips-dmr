@@ -109,24 +109,21 @@ rule annotate_dmrs_with_gene_elements:
         "../scripts/chipseeker_metilene.R"
 
 
-# We want real gene names like SOX2 instead of Ensembl transcript IDs.
+# We want real gene names like SOX2 instead of Ensembl transcript IDs. They are
+# taken from the same Ensembl annotation that ChIPseeker uses, so no online
+# query (biomaRt) is needed and the release always matches.
 rule get_ensembl_gene_names_from_dmrs:
     input:
-        "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker.tsv",
+        chipseeker="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/chipseeker.tsv",
+        gtf="resources/ref/annotation.gtf.gz",
     output:
         "results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/{fdr}/ensembl_genes.tsv",
     conda:
-        "../envs/biomart.yaml"
-    params:
-        species=get_bioc_species_name(),
-        version=config["resources"]["ref"]["release"],
+        "../envs/python.yaml"
     log:
         "logs/get_ensembl_gene_names_from_dmrs/{platform}_{caller}_{base}_{group2}_{fdr}.log",
-    # Use unrealistcally high memory to avoid parallel computation since ensembl then detects DOS attacks
-    resources:
-        mem_mb=16000,
     script:
-        "../scripts/get_ensembl_genes.R"
+        "../scripts/gene_names_from_gtf.py"
 
 
 rule annotate_dmrs_with_ensembl_gene_names:

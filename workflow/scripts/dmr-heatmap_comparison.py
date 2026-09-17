@@ -20,7 +20,6 @@ sys.stderr = open(snakemake.log[0], "w", buffering=1)
 alt.data_transformers.enable("vegafusion")
 
 sys.setrecursionlimit(100000)
-base = snakemake.params["base"]
 
 filename_to_name = {
     "distal_intergenic": "Distal Intergenic",
