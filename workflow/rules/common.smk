@@ -3,8 +3,6 @@ chromosome_conf = config["resources"]["ref"]
 ALL_GERM_LAYERS = ["psc", "endoderm", "mesoderm", "ectoderm"]
 ACTIVE_BASE_COMP = ["psc"]
 ANNOTATION_TYPES = ["distal_intergenic", "promoter", "intron", "exon", "3_utr", "5_utr", "unfiltered"]
-# Use ["no", "with"] to additionally create the TF-adjusted comparison reports.
-TF_MODES = ["no"]
 
 
 # Constraining wildcards keeps the DAG construction fast: without them, generic
@@ -62,9 +60,8 @@ def all_input(wildcards):
 
         for base in ACTIVE_BASE_COMP:
             wanted_input += [
-                f"{prefix}/base_{base}/{rna_data}/diffexp_vs_dmrs_{tf}_tfs_{annotation_type}"
+                f"{prefix}/base_{base}/{rna_data}/diffexp_vs_dmrs_no_tfs_{annotation_type}"
                 for rna_data in config["rna_data"]
-                for tf in TF_MODES
                 for annotation_type in ANNOTATION_TYPES
             ]
             for group2 in get_non_base_layers(base):
