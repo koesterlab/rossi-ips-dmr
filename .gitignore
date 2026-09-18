@@ -11,9 +11,9 @@ config/units.tsv
 .snakemake
 .snakemake/**
 report.zip
-report/**
+/report/**
 results_old/**
 rna_new/**
 rna_old/**
 Rplots.pdf
-report**
+/report**

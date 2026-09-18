@@ -1,0 +1,1 @@
+Comparison of DMR effect sizes (mean methylation difference per gene region, relative to the base experiment) between PacBio and Nanopore, to assess concordance of DMR calls between the two platforms.
