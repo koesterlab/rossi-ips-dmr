@@ -55,7 +55,7 @@ def all_input(wildcards):
 
         for base in ACTIVE_BASE_COMP:
             wanted_input += [
-                f"{prefix}/base_{base}/rna_new/diffexp_vs_dmrs_no_tfs_{annotation_type}.pdf"
+                f"{prefix}/base_{base}/rna_new/diffexp_vs_dmrs_{annotation_type}.pdf"
                 for annotation_type in ANNOTATION_TYPES
             ]
             for group2 in get_non_base_layers(base):
@@ -64,7 +64,7 @@ def all_input(wildcards):
                 ]
 
         wanted_input += [
-            f"{prefix}/plots_paper/pluripotency_score_all.html",
+            f"{prefix}/plots_paper/pluripotency_score_all.pdf",
         ]
 
     wanted_input += [
@@ -76,6 +76,11 @@ def all_input(wildcards):
     wanted_input += [
         "results/platforms_combined/varlo/plots_paper/scatter_comparison.pdf"
     ]
+
+    for annotation_type in ANNOTATION_TYPES:
+        wanted_input += [
+            f"{prefix}/plots_paper/expression_to_meth_{annotation_type}_0.05.pdf"
+        ]
 
     # Remove duplicate targets, they only slow down the DAG construction
     return list(dict.fromkeys(wanted_input))

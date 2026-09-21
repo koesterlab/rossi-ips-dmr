@@ -57,6 +57,11 @@ if exists(config["kallisto_sleuth"]["samples"]):
         input:
             all_input,
             rules.all.input,
+
+    # Narrower target for `snakemake --report`: excludes the kallisto-sleuth module's own targets
+    rule report_targets:
+        input:
+            all_input,
 else:
     rule modified_all:
         default_target: True

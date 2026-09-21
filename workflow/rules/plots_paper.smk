@@ -4,12 +4,11 @@ rule pluripotency_score_all:
     output:
         report(
             "results/{platform}/{caller}/plots_paper/pluripotency_score_all.{plot_type}",
-            caption="../report/scatter_plot.rst",
-            category="Plots paper",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
+            caption="../report/pluripotency_score.rst",
+            category="Pluripotency biomarkers",
+            subcategory=lambda wildcards: wildcards.platform,
             labels=lambda wildcards: {
-                "Plot": "3B",
-                "Type": "differentiated",
+                "Type": "biomarker methylation",
             },
         ),
     conda:

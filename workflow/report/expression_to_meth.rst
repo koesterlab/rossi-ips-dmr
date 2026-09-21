@@ -1,0 +1,1 @@
+Density heatmap of gene expression against mean methylation, one panel per germ layer (psc, endoderm, ectoderm, mesoderm). Expression is given as log2(TPM + 1), averaged over all replicates; methylation is averaged over all CpGs of a transcript region within the selected annotation class. Color encodes the number of transcript regions per bin on a logarithmic scale.

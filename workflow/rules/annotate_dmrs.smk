@@ -163,18 +163,8 @@ rule datavzrd_annotations:
         genes_transcripts="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/genes_transcripts/0.05/chipseeker_postprocessed.tsv",
         regulatory_elements="results/{platform}/{caller}/base_{base}/dmr_calls/{group2}/regulatory_elements/regulatory_elements_postprocessed.tsv",
     output:
-        report(
-            directory(
-                "results/{platform}/{caller}/base_{base}/dmr_calls/datavzrd-report/{group2}"
-            ),
-            caption="../report/annotations.rst",
-            htmlindex="index.html",
-            category="DMR Annotations",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
-            labels=lambda wildcards: {
-                "base": wildcards.base,
-                "layer": wildcards.group2,
-            },
+        directory(
+            "results/{platform}/{caller}/base_{base}/dmr_calls/datavzrd-report/{group2}"
         ),
     params:
         base_experiment=lambda wildcards: wildcards.base,

@@ -69,17 +69,8 @@ rule scatter_plot:
     input:
         calls="results/{platform}/{caller}/meth_calling/calls_0.05.parquet",
     output:
-        report(
-            "results/{platform}/{caller}/base_{base}/plots_paper/{group2}/scatter_plot.png",
-            caption="../report/scatter_plot.rst",
-            category="Plots paper",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
-            labels=lambda wildcards: {
-                "Plot": "1B",
-                "Base": wildcards.base,
-                "Type": wildcards.group2,
-            },
-        ),
+        "results/{platform}/{caller}/base_{base}/plots_paper/{group2}/scatter_plot.png",
+
     params:
         group1=lambda wildcards: wildcards.base,
         group2=lambda wildcards: wildcards.group2,
@@ -97,18 +88,7 @@ rule scatter_plot_endo_meso:
     input:
         calls="results/{platform}/{caller}/meth_calling/calls_1.0.parquet",
     output:
-        report(
-            "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png",
-            caption="../report/scatter_plot.rst",
-            category="Plots paper",
-            subcategory=lambda wildcards: f"{wildcards.platform} - {wildcards.caller}",
-            labels=lambda wildcards: {
-                "Plot": "1C",
-                "Type": "endo_meso",
-            },
-        ),
-    resources:
-        mem_mb=16000,
+        "results/{platform}/{caller}/plots_paper/endo_meso/scatter_plot.png",
     params:
         group1="mesoderm",
         group2="endoderm",
@@ -151,18 +131,10 @@ rule datavzrd_dmr_vs_diffexp_with_tfs:
         complete="results/{platform}/{caller}/base_{base}/{rna_data}/tfs/diffexp_vs_dmrs_{annotation_type}.tsv",
         focus_tfs="results/{platform}/{caller}/base_{base}/{rna_data}/tfs/diffexp_vs_dmrs_tfs_only_{annotation_type}.tsv",
     output:
-        report(
-            directory(
-                "results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_with_tfs_{annotation_type}"
-            ),
-            caption="../report/diffexp_vs_dmrs.rst",
-            htmlindex="index.html",
-            category=lambda wildcards: f"DiffExp-DMRs Comparison - {wildcards.rna_data}",
-            subcategory=lambda wildcards: f"{wildcards.platform} - With tfs",
-            labels=lambda wildcards: {
-                "base": wildcards.base,
-            },
+        directory(
+            "results/{platform}/{caller}/base_{base}/{rna_data}/diffexp_vs_dmrs_with_tfs_{annotation_type}"
         ),
+
     log:
         "logs/diffexp_dmvzrd/diffexp_dmr_datavzrd_with_tfs/{platform}_{caller}_{base}_{rna_data}_{annotation_type}.log",
     wrapper:
